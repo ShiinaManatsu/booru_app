@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:yande_web/controllors/search_box.dart';
 import 'package:yande_web/models/booru_posts.dart';
@@ -22,10 +21,10 @@ class _HomePageState extends State<HomePage> {
     _booruPosts = new BooruPosts();
   }
 
+  var type = ClientType.Yande;
   @override
   Widget build(BuildContext context) {
-    if (posts.length == 0) {
-      return Scaffold(
+    return Scaffold(
         drawer: _appDrawer(),
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(64),
@@ -33,66 +32,105 @@ class _HomePageState extends State<HomePage> {
             title: SearchBox(),
             iconTheme: IconThemeData(color: baseBlackColor),
             centerTitle: true,
-          ),
-        ),
-        body: Center(child: Text("Loading")),
-      );
-    } else {
-      return Scaffold(
-        drawer: _appDrawer(),
-        appBar: PreferredSize(
-          preferredSize: Size.fromHeight(64),
-          child: AppBar(
-            title: SearchBox(),
-            iconTheme: IconThemeData(color: baseBlackColor),
-            centerTitle: true,
-          ),
-        ),
-        body: _buildRow(context),
-      );
-    }
-  }
-
-  Row _buildRow(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        // Left panel
-        Container(
-          width: 86,
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              SizedBox(
-                height: 20,
-              ),
+            actions: <Widget>[
               Container(
-                width: 86,
-                height: 86,
+                width: 64,
                 child: FlatButton(
-                  onPressed: (){},
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Icon(Icons.search),
-                      Text("Search")
-                    ],
-                  ),
-                  
+                  onPressed: () {},
+                  child: Icon(Icons.person),
                   //padding: EdgeInsets.all(10),
-                  shape:RoundedRectangleBorder(borderRadius: new BorderRadius.circular(43.0)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: new BorderRadius.circular(32.0)),
                 ),
-              )
+              ),
+              Center(
+                child: DropdownButton(
+                  items: [
+                    DropdownMenuItem(
+                      child: Text("Yande.re"),
+                      value: ClientType.Yande,
+                    ),
+                    DropdownMenuItem(
+                      child: Text("Konachan"),
+                      value: ClientType.Konachan,
+                    )
+                  ],
+                  onChanged: (item) {
+                    var opt = item as ClientType;
+                    switch (opt) {
+                      case ClientType.Yande:
+                        AppSettings.currentClient = ClientType.Yande;
+                        setState(() {
+                          type = ClientType.Yande;
+                        });
+                        break;
+                      case ClientType.Konachan:
+                        AppSettings.currentClient = ClientType.Konachan;
+                        setState(() {
+                          type = ClientType.Konachan;
+                        });
+                        break;
+                      default:
+                        break;
+                    }
+                  },
+                  icon: Icon(Icons.settings),
+                  value: type,
+                ),
+              ),
             ],
           ),
         ),
-        Expanded(
-          child: buildWidght(),
-        )
-      ],
-    );
+        body: _buildRow(context));
+  }
+
+  Widget _buildRow(BuildContext context) {
+    if (posts.length == 0) {
+      return Center(child: Text("Loading"));
+    } else {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          // Left panel
+          Container(
+            width: 86,
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                SizedBox(
+                  height: 20,
+                ),
+                Container(
+                  width: 86,
+                  height: 86,
+                  child: FlatButton(
+                    onPressed: () {},
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Icon(Icons.whatshot),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text("Popular"),
+                        )
+                      ],
+                    ),
+                    //padding: EdgeInsets.all(10),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: new BorderRadius.circular(43.0)),
+                  ),
+                )
+              ],
+            ),
+          ),
+          Expanded(
+            child: buildWidght(),
+          )
+        ],
+      );
+    }
   }
 
   // Page content
@@ -100,20 +138,20 @@ class _HomePageState extends State<HomePage> {
     _controller = ScrollController();
     var s = Container(
         child: SingleChildScrollView(
-          controller: _controller,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
-            child: Wrap(
-              children: <Widget>[]..addAll(posts
-                  .asMap()
-                  .map((index, data) {
-                    return MapEntry(index, PostPreview(post: data));
-                  })
-                  .values
-                  .toList()),
-            ),
-          ),
-        ));
+      controller: _controller,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
+        child: Wrap(
+          children: <Widget>[]..addAll(posts
+              .asMap()
+              .map((index, data) {
+                return MapEntry(index, PostPreview(post: data));
+              })
+              .values
+              .toList()),
+        ),
+      ),
+    ));
     _controller.addListener(_scrollListener);
     return s;
   }
@@ -123,6 +161,17 @@ class _HomePageState extends State<HomePage> {
     if (_controller.offset >= _controller.position.maxScrollExtent - 800 &&
         !_controller.position.outOfRange) {
       print('Reach the bottom');
+
+      if (isFinishedFetch) {
+        isFinishedFetch = false;
+        _booruPosts.page++;
+        _booruPosts.setType(FetchType.Home).fetchPosts().then((value) {
+              setState(() {
+                posts.addAll(value.where((o) => !posts.contains(o)));
+                isFinishedFetch = true;
+              });
+            });
+      }
     }
     // // Reach the top
     // if (_controller.offset <= _controller.position.minScrollExtent &&
@@ -139,124 +188,10 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _booruPosts.setType(FetchType.Weekly).fetchPosts().then((value) {
+    _booruPosts.setType(FetchType.Home).fetchPosts().then((value) {
       setState(() {
         posts.addAll(value);
       });
     });
   }
 }
-
-class _Tile extends StatelessWidget {
-  const _Tile(this.index, this.post);
-
-  final Post post;
-  final int index;
-
-  @override
-  Widget build(BuildContext context) {
-    return new Card(
-      child: new Column(
-        children: <Widget>[
-          new Stack(
-            children: <Widget>[
-              //new Center(child: new CircularProgressIndicator()),
-              new Center(
-                child: new FadeInImage.memoryNetwork(
-                  placeholder: kTransparentImage,
-                  image: post.preview_url,
-                ),
-              ),
-            ],
-          ),
-          new Padding(
-            padding: const EdgeInsets.all(4.0),
-            child: new Column(
-              children: <Widget>[
-                new Text(
-                  'Image number $index',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                new Text(
-                  'Width: ${post.preview_width}',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-                new Text(
-                  'Height: ${post.preview_height}',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-}
-
-final Uint8List kTransparentImage = new Uint8List.fromList(<int>[
-  0x89,
-  0x50,
-  0x4E,
-  0x47,
-  0x0D,
-  0x0A,
-  0x1A,
-  0x0A,
-  0x00,
-  0x00,
-  0x00,
-  0x0D,
-  0x49,
-  0x48,
-  0x44,
-  0x52,
-  0x00,
-  0x00,
-  0x00,
-  0x01,
-  0x00,
-  0x00,
-  0x00,
-  0x01,
-  0x08,
-  0x06,
-  0x00,
-  0x00,
-  0x00,
-  0x1F,
-  0x15,
-  0xC4,
-  0x89,
-  0x00,
-  0x00,
-  0x00,
-  0x0A,
-  0x49,
-  0x44,
-  0x41,
-  0x54,
-  0x78,
-  0x9C,
-  0x63,
-  0x00,
-  0x01,
-  0x00,
-  0x00,
-  0x05,
-  0x00,
-  0x01,
-  0x0D,
-  0x0A,
-  0x2D,
-  0xB4,
-  0x00,
-  0x00,
-  0x00,
-  0x00,
-  0x49,
-  0x45,
-  0x4E,
-  0x44,
-  0xAE,
-]);
