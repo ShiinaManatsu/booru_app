@@ -12,9 +12,9 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin{
   List<Post> posts = List<Post>();
-  List<Post> fixedPosts = List<Post>();
+  List<List<Post>> fixedPosts = List<List<Post>>();
   double panelWidth = 1000;
   double leftPanelWidth = 86;
 
@@ -29,6 +29,7 @@ class _HomePageState extends State<HomePage> {
   var type = ClientType.Yande;
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     panelWidth = MediaQuery.of(context).size.width;
     return Scaffold(
         drawer: _appDrawer(),
@@ -143,25 +144,31 @@ class _HomePageState extends State<HomePage> {
   Container buildWidght() {
     _controller = ScrollController();
     var s = Container(
-        child: SingleChildScrollView(
+      child: SingleChildScrollView(
       controller: _controller,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
         child: Wrap(
           spacing: 10,
           runSpacing: 10,
-          children: <Widget>[]..addAll(fixedPosts
-              .asMap()
-              .map((index, data) {
-                return MapEntry(index, PostPreview(post: data));
-              })
-              .values
-              .toList()),
-        ),
+          children: <Widget>[]..addAll(_buildPostPreview()),
+        )
       ),
     ));
     _controller.addListener(_scrollListener);
     return s;
+  }
+
+  _buildPostPreview() {
+    var list=new List<PostPreview> ();
+    fixedPosts.forEach((x) {
+      x.forEach((f) {
+        list.add(PostPreview(
+          post: f,
+        ));
+      });
+    });
+    return list;
   }
 
   _scrollListener() {
@@ -176,43 +183,15 @@ class _HomePageState extends State<HomePage> {
         _booruPosts.setType(FetchType.Home).fetchPosts().then((value) {
           setState(() {
             posts.addAll(value.where((o) => !posts.contains(o)));
-            print(posts.length);
             fixedPosts.addAllPost(posts, panelWidth - leftPanelWidth - 10);
             isFinishedFetch = true;
           });
         });
-        // _booruPosts.testFetch().then((value) {
-        //   setState(() {
-        //     posts = value;
-        //     fixedPosts.addAllPost(posts, panelWidth - leftPanelWidth - 10);
-        //     isFinishedFetch = true;
-        //   });
-        // });
       }
     }
-    // Reach the top
+    // //  Reach the top
     // if (_controller.offset <= _controller.position.minScrollExtent &&
     //     !_controller.position.outOfRange) {
-    //   if (_booruPosts.page > 1) {
-    //     if (isFinishedFetch) {
-    //       isFinishedFetch = false;
-    //       _booruPosts.page--;
-    //       _booruPosts.setType(FetchType.Home).fetchPosts().then((value) {
-    //         setState(() {
-    //           posts.addAll(value.where((o) => !posts.contains(o)));
-    //           fixedPosts.addAllPost(posts, panelWidth - leftPanelWidth-10);
-    //           isFinishedFetch = true;
-    //         });
-    //       });
-    //       // _booruPosts.testFetch().then((value) {
-    //       //   setState(() {
-    //       //     posts = value;
-    //       //     fixedPosts.addAllPost(posts, panelWidth - leftPanelWidth - 10);
-    //       //     isFinishedFetch = true;
-    //       //   });
-    //       // });
-    //     }
-    //   }
     // }
   }
 
@@ -228,9 +207,13 @@ class _HomePageState extends State<HomePage> {
     _booruPosts.setType(FetchType.Home).fetchPosts().then((value) {
       setState(() {
         posts.addAll(value);
-        print(posts.length);
         fixedPosts.addAllPost(posts, panelWidth - leftPanelWidth - 15);
+        print(fixedPosts.length);
       });
     });
   }
+
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
 }

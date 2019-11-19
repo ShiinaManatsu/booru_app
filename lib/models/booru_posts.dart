@@ -56,34 +56,6 @@ class BooruPosts {
     _limit = value > 0 ? value : _limit;
   }
 
-  Future<List<Post>> testFetch() async {
-    if (page < 2) {
-      List<Post> a;
-      _httpClient.urlFetchPosts(_homeUrl).then((onValue) {
-        a = onValue;
-      });
-      return a;
-    } else {
-      List<Post> a, b, c;
-      page--;
-      _httpClient.urlFetchPosts(_homeUrl).then((v) {
-        a = v;
-      });
-      page++;
-      _httpClient.urlFetchPosts(_homeUrl).then((v) {
-        b = v;
-      });
-
-      page++;
-      _httpClient.urlFetchPosts(_homeUrl).then((v) {
-        c = v;
-      });
-
-      page--;
-      return a + b + c;
-    }
-  }
-
   // Return a url specified by the type
   HttpClient setType(FetchType type) {
     switch (type) {

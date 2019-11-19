@@ -4,15 +4,14 @@ import 'package:yande_web/themes/theme_light.dart';
 
 // Search box in the app bar
 class SearchBox extends StatefulWidget {
-  String searchTerm = "";
-
-  SearchBox({this.searchTerm, Key key}) : super(key: key);
 
   @override
   _SearchBoxState createState() => _SearchBoxState();
 }
 
 class _SearchBoxState extends State<SearchBox> {
+  String searchTerm = "";
+
   @override
   void initState() {
     super.initState();
@@ -46,7 +45,7 @@ class _SearchBoxState extends State<SearchBox> {
                   maxLines: 1,
                   decoration: InputDecoration(
                       border: InputBorder.none,
-                      hintText: "Search Sometings"),
+                      hintText: "Search tags"),
                 ),
               ),
             )

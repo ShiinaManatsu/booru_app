@@ -16,6 +16,7 @@ class _PostPreviewState extends State<PostPreview> with AutomaticKeepAliveClient
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Container(
       child: GestureDetector(
         onTap: () {},
@@ -30,5 +31,5 @@ class _PostPreviewState extends State<PostPreview> with AutomaticKeepAliveClient
   }
 
   @override
-  bool get wantKeepAlive => false;
+  bool get wantKeepAlive => true;
 }

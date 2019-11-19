@@ -1,22 +1,22 @@
 import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/settings/app_settings.dart';
+// We are moving all the fetched post to the optimized list
 
-extension ListExtension on List<Post> {
-  void addAllPost(List<Post> postList,double panelWidth,) 
+extension ListExtension on List<List<Post>> {
+  void addAllPost(List<Post> posts,double panelWidth,) 
   {
-    var posts = List.from(postList);
     var panelRatio = panelWidth / AppSettings.fixedPostHeight;
-    double ratioFactor = 0.5;
-    var row = new List<Post>();
-    var fixedPosts = new List<Post>();
-    //print(panelWidth);
+    double ratioFactor = 0.7;
+    if(this.length==0){
+      this.add(new List<Post>());
+    }
+    List<Post> row;
     while (posts.length != 0) {
+      row = this.last;
       double rowSumRatio = 0;
       row.forEach((item) {
         rowSumRatio += item.ratio;
       });
-      //print("${posts.first.ratio + rowSumRatio} + ${panelRatio + ratioFactor}");
-
       // Row can contain more
       if (posts.first.ratio + rowSumRatio < panelRatio + ratioFactor) {
         row.add(posts.first);
@@ -32,21 +32,12 @@ extension ListExtension on List<Post> {
         var widthFactor = remainWidth / row.length; // Add to each one
         row.forEach((item) {
           item.widthInPanel = item.preferredWidth + widthFactor;
-          //print("$widthFactor pWidth: ${item.widthInPanel}  width:${item.preferredWidth}");
         });
-        //print("${row.length}");
-        fixedPosts.addAll(row);
-        row.clear();
+        this.add(new List<Post>());
+        row = this.last;
         row.add(posts.first);
         posts.removeAt(0);
       }
     }
-
-    if (row.length != 0) {
-      fixedPosts.addAll(row);
-      row.clear();
-    }
-    this.clear();
-    this.addAll(fixedPosts);
   }
 }
