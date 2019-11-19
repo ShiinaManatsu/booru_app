@@ -6,8 +6,8 @@ import 'themes/theme_light.dart';
 void main() => runApp(MyApp());
 
 // Routes
-const String _HomePage = '/';
-const String _SearchTaggedPostsPage = '/searchTaggedPostsPage';
+const String homePage = '/';
+const String searchTaggedPostsPage = '/searchTaggedPostsPage';
 
 class MyApp extends StatelessWidget {
   @override
@@ -21,10 +21,10 @@ class MyApp extends StatelessWidget {
       //final Map<String, dynamic> arg = settings.arguments;
       Widget screen;
       switch (settings.name) {
-        case _HomePage:
+        case homePage:
           screen = HomePage();
           break;
-        case _SearchTaggedPostsPage:
+        case searchTaggedPostsPage:
           screen = SearchTaggedPostsPage();
           break;
         default:
@@ -33,4 +33,12 @@ class MyApp extends StatelessWidget {
       return MaterialPageRoute(builder: (BuildContext contex) => screen);
     };
   }
+}
+
+Key _drawer=Key("drawer");
+Drawer appDrawer() {
+  return Drawer(
+    key: _drawer,
+    child: Text("Drawer"),
+  );
 }

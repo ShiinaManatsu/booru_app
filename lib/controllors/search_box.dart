@@ -8,7 +8,7 @@ class SearchBox extends StatefulWidget {
   final BooruPosts client;
   final bool autoFocus;
 
-  SearchBox({this.client, this.autoFocus});
+  SearchBox({this.client, this.autoFocus, Key key}) : super(key: key);
 
   @override
   _SearchBoxState createState() => _SearchBoxState();

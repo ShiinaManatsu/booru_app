@@ -10,7 +10,7 @@ class PostWaterfall extends StatefulWidget {
   @required
   final double panelWidth ;
 
-  PostWaterfall({this.panelWidth});
+  PostWaterfall({this.panelWidth,Key key}):super(key:key);
 
   @override
   _PostWaterfallState createState() => _PostWaterfallState();
@@ -23,11 +23,17 @@ class _PostWaterfallState extends State<PostWaterfall> {
   List<List<Post>> fixedPosts = List<List<Post>>();
   BooruPosts _booruPosts;
 
+  _PostWaterfallState(){
+    _booruPosts=new BooruPosts();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      
-    );
+    if (fixedPosts.length == 0) {
+      return Center(child: Text("Loading"));
+    } else {
+      return buildWidght();
+    }
   }
 
     // Page content
@@ -83,4 +89,18 @@ class _PostWaterfallState extends State<PostWaterfall> {
     });
     return list;
   }
+  
+  @override
+  void initState() {
+    super.initState();
+    isFinishedFetch=false;
+    _booruPosts.setType(FetchType.Post).fetchPosts().then((value) {
+      setState(() {
+        posts.addAll(value);
+        fixedPosts.addAllPost(posts, widget.panelWidth - 15);
+        isFinishedFetch=true;
+      });
+    });
+  }
+
 }

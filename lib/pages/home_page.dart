@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:yande_web/controllors/search_box.dart';
-import 'package:yande_web/models/booru_posts.dart';
-import 'package:yande_web/models/yande/post.dart';
-import 'package:yande_web/pages/post_preview.dart';
+import 'package:yande_web/pages/post_waterfall_widget.dart';
 import 'package:yande_web/settings/app_settings.dart';
 import 'package:yande_web/themes/theme_light.dart';
-import 'package:yande_web/extensions/list_extension.dart';
+
+import '../main.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -14,18 +13,11 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin {
-  List<Post> posts = List<Post>();
-  List<List<Post>> fixedPosts = List<List<Post>>();
   double panelWidth = 1000;
   double leftPanelWidth = 86;
+  Key _homeWaterfall=Key("_homeWaterfall");
+  Key _homePageBar=Key("homePageBar");
 
-  BooruPosts _booruPosts;
-  ScrollController _controller;
-  bool isFinishedFetch = true;
-
-  _HomePageState() {
-    _booruPosts = new BooruPosts();
-  }
 
   var type = ClientType.Yande;
   @override
@@ -33,20 +25,18 @@ class _HomePageState extends State<HomePage>
     super.build(context);
     panelWidth = MediaQuery.of(context).size.width;
     return Scaffold(
-        drawer: _appDrawer(),
+        drawer: appDrawer(),
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(64),
           child: AppBar(
-            title: SearchBox(
-              client: _booruPosts,
-            ),
+            title: SearchBox(key: _homePageBar,),
             iconTheme: IconThemeData(color: baseBlackColor),
             centerTitle: true,
             actions: <Widget>[
               Container(
                 width: 64,
                 child: FlatButton(
-                  onPressed: () {},
+                  onPressed: () {Navigator.pushNamed(context, searchTaggedPostsPage);},
                   child: Icon(Icons.person),
                   //padding: EdgeInsets.all(10),
                   shape: RoundedRectangleBorder(
@@ -97,125 +87,27 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _buildRow(BuildContext context) {
-    if (fixedPosts.length == 0) {
-      return Center(child: Text("Loading"));
-    } else {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          // Left panel
-          Container(
-            width: leftPanelWidth,
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                SizedBox(
-                  height: 20,
-                ),
-                Container(
-                  width: 86,
-                  height: 86,
-                  child: FlatButton(
-                    onPressed: () {fixedPosts.clear();},
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Icon(Icons.whatshot),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text("Popular"),
-                        )
-                      ],
-                    ),
-                    //padding: EdgeInsets.all(10),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: new BorderRadius.circular(43.0)),
-                  ),
-                )
-              ],
-            ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        // Left panel
+        //container,
+        Expanded(
+          child: PostWaterfall(
+            panelWidth: panelWidth,
+            key: _homeWaterfall,
           ),
-          Expanded(
-            child: buildWidght(),
-          )
-        ],
-      );
-    }
-  }
-
-  // Page content
-  Container buildWidght() {
-    _controller = ScrollController();
-    var s = Container(
-        child: SingleChildScrollView(
-      controller: _controller,
-      child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
-          child: Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: <Widget>[]..addAll(_buildPostPreview()),
-          )),
-    ));
-    _controller.addListener(_scrollListener);
-    return s;
-  }
-
-  _buildPostPreview() {
-    var list = new List<PostPreview>();
-    fixedPosts.forEach((x) {
-      x.forEach((f) {
-        list.add(PostPreview(
-          post: f,
-        ));
-      });
-    });
-    return list;
-  }
-
-  _scrollListener() {
-    // Reach the bottom
-    if (_controller.offset >= _controller.position.maxScrollExtent - 800 &&
-        !_controller.position.outOfRange) {
-      print('Reach the bottom');
-
-      if (isFinishedFetch) {
-        isFinishedFetch = false;
-        _booruPosts.page++;
-        _booruPosts.setType(FetchType.Post).fetchPosts().then((value) {
-          setState(() {
-            posts.addAll(value.where((o) => !posts.contains(o)));
-            fixedPosts.addAllPost(posts, panelWidth - leftPanelWidth - 10);
-            isFinishedFetch = true;
-          });
-        });
-      }
-    }
-    // //  Reach the top
-    // if (_controller.offset <= _controller.position.minScrollExtent &&
-    //     !_controller.position.outOfRange) {
-    // }
-  }
-
-  Drawer _appDrawer() {
-    return Drawer(
-      child: Text("Drawer"),
+        )
+      ],
     );
   }
+
+ 
 
   @override
   void initState() {
     super.initState();
-    isFinishedFetch=false;
-    _booruPosts.setType(FetchType.Post).fetchPosts().then((value) {
-      setState(() {
-        posts.addAll(value);
-        fixedPosts.addAllPost(posts, panelWidth - leftPanelWidth - 15);
-        isFinishedFetch=true;
-      });
-    });
   }
 
   @override
