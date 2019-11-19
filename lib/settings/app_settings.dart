@@ -24,7 +24,7 @@ enum ClientType { Yande, Konachan }
 
 // Enum of the type we want fetch
 enum FetchType {
-  Home,
-  Daily,
-  Weekly,
+  Post,
+  PopularDaily,
+  PopularWeekly,
 }

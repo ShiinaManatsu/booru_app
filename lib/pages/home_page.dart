@@ -12,7 +12,8 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin{
+class _HomePageState extends State<HomePage>
+    with AutomaticKeepAliveClientMixin {
   List<Post> posts = List<Post>();
   List<List<Post>> fixedPosts = List<List<Post>>();
   double panelWidth = 1000;
@@ -36,7 +37,9 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin{
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(64),
           child: AppBar(
-            title: SearchBox(),
+            title: SearchBox(
+              client: _booruPosts,
+            ),
             iconTheme: IconThemeData(color: baseBlackColor),
             centerTitle: true,
             actions: <Widget>[
@@ -62,25 +65,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin{
                       value: ClientType.Konachan,
                     )
                   ],
-                  onChanged: (item) {
-                    var opt = item as ClientType;
-                    switch (opt) {
-                      case ClientType.Yande:
-                        AppSettings.currentClient = ClientType.Yande;
-                        setState(() {
-                          type = ClientType.Yande;
-                        });
-                        break;
-                      case ClientType.Konachan:
-                        AppSettings.currentClient = ClientType.Konachan;
-                        setState(() {
-                          type = ClientType.Konachan;
-                        });
-                        break;
-                      default:
-                        break;
-                    }
-                  },
+                  onChanged: onDropdownChanged,
                   icon: Icon(Icons.settings),
                   value: type,
                 ),
@@ -89,6 +74,26 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin{
           ),
         ),
         body: _buildRow(context));
+  }
+
+  void onDropdownChanged(item) {
+    var opt = item as ClientType;
+    switch (opt) {
+      case ClientType.Yande:
+        AppSettings.currentClient = ClientType.Yande;
+        setState(() {
+          type = ClientType.Yande;
+        });
+        break;
+      case ClientType.Konachan:
+        AppSettings.currentClient = ClientType.Konachan;
+        setState(() {
+          type = ClientType.Konachan;
+        });
+        break;
+      default:
+        break;
+    }
   }
 
   Widget _buildRow(BuildContext context) {
@@ -113,7 +118,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin{
                   width: 86,
                   height: 86,
                   child: FlatButton(
-                    onPressed: () {},
+                    onPressed: () {fixedPosts.clear();},
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
@@ -144,23 +149,22 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin{
   Container buildWidght() {
     _controller = ScrollController();
     var s = Container(
-      child: SingleChildScrollView(
+        child: SingleChildScrollView(
       controller: _controller,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
-        child: Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: <Widget>[]..addAll(_buildPostPreview()),
-        )
-      ),
+          padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
+          child: Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: <Widget>[]..addAll(_buildPostPreview()),
+          )),
     ));
     _controller.addListener(_scrollListener);
     return s;
   }
 
   _buildPostPreview() {
-    var list=new List<PostPreview> ();
+    var list = new List<PostPreview>();
     fixedPosts.forEach((x) {
       x.forEach((f) {
         list.add(PostPreview(
@@ -180,7 +184,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin{
       if (isFinishedFetch) {
         isFinishedFetch = false;
         _booruPosts.page++;
-        _booruPosts.setType(FetchType.Home).fetchPosts().then((value) {
+        _booruPosts.setType(FetchType.Post).fetchPosts().then((value) {
           setState(() {
             posts.addAll(value.where((o) => !posts.contains(o)));
             fixedPosts.addAllPost(posts, panelWidth - leftPanelWidth - 10);
@@ -204,16 +208,16 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin{
   @override
   void initState() {
     super.initState();
-    _booruPosts.setType(FetchType.Home).fetchPosts().then((value) {
+    isFinishedFetch=false;
+    _booruPosts.setType(FetchType.Post).fetchPosts().then((value) {
       setState(() {
         posts.addAll(value);
         fixedPosts.addAllPost(posts, panelWidth - leftPanelWidth - 15);
-        print(fixedPosts.length);
+        isFinishedFetch=true;
       });
     });
   }
 
   @override
-  // TODO: implement wantKeepAlive
   bool get wantKeepAlive => true;
 }

@@ -1,17 +1,20 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:yande_web/models/booru_posts.dart';
 import 'package:yande_web/themes/theme_light.dart';
 
 // Search box in the app bar
 class SearchBox extends StatefulWidget {
+  final BooruPosts client;
+  final bool autoFocus;
+
+  SearchBox({this.client, this.autoFocus});
 
   @override
   _SearchBoxState createState() => _SearchBoxState();
 }
 
 class _SearchBoxState extends State<SearchBox> {
-  String searchTerm = "";
-
   @override
   void initState() {
     super.initState();
@@ -34,18 +37,20 @@ class _SearchBoxState extends State<SearchBox> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Icon(
-                Icons.search,
-                size: 30,
-                color: baseBlackColor,
-              ),
+              Icons.search,
+              size: 30,
+              color: baseBlackColor,
+            ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(left:10.0),
+                padding: const EdgeInsets.only(left: 10.0),
                 child: TextField(
                   maxLines: 1,
                   decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: "Search tags"),
+                      border: InputBorder.none, hintText: "Search tags"),
+                  onSubmitted: onSubmitted,
+                  autofocus:
+                      widget.autoFocus == null ? false : widget.autoFocus,
                 ),
               ),
             )
@@ -53,5 +58,9 @@ class _SearchBoxState extends State<SearchBox> {
         ),
       ),
     );
+  }
+
+  onSubmitted(String text) {
+    print(text);
   }
 }

@@ -22,13 +22,15 @@ import 'package:yande_web/settings/app_settings.dart';
 class BooruPosts {
   int _page = 1;
   int _limit = 30;
+  String tags="";
   String baseUrl;
   DateTime _time = DateTime.now();
   HttpClient _httpClient;
 
-  String _homeUrl;
-  String _dailyUrl;
+  String _posts;
+  String _popularRecent;
   String _weeklyUrl;
+  String _taggedPosts;
 
   BooruPosts() {
     baseUrl = AppSettings.currentBaseUrl;
@@ -37,10 +39,17 @@ class BooruPosts {
   }
 
   buildUrl() {
-    _homeUrl = '$baseUrl/post.json?limit=$_limit&page=$_page';
-    _dailyUrl = '$baseUrl/post/popular_recent.json';
+    _taggedPosts= '$baseUrl/post.json?limit=$_limit&page=$_page&tags=$tags';
+    _posts = '$baseUrl/post.json?limit=$_limit&page=$_page';
+    _popularRecent = '$baseUrl/post/popular_recent.json';
     _weeklyUrl =
         '$baseUrl/post/popular_by_week.json?day=${_time.day}&month=${_time.month}&year=${_time.year}';
+  }
+
+  Future<List<Post>> fetchTaggedPosts() async {
+    http.Response response = await http.get(_taggedPosts);
+    List responseJson = json.decode(response.body);
+    return responseJson.map((m) => Post.fromJson(m)).toList();
   }
 
   set page(int value) {
@@ -59,15 +68,15 @@ class BooruPosts {
   // Return a url specified by the type
   HttpClient setType(FetchType type) {
     switch (type) {
-      case FetchType.Home:
-        _httpClient.url = _homeUrl;
+      case FetchType.Post:
+        _httpClient.url = _posts;
         return _httpClient;
         break;
-      case FetchType.Daily:
-        _httpClient.url = _dailyUrl;
+      case FetchType.PopularDaily:
+        _httpClient.url = _popularRecent;
         return _httpClient;
         break;
-      case FetchType.Weekly:
+      case FetchType.PopularWeekly:
         _httpClient.url = _weeklyUrl;
         return _httpClient;
         break;
@@ -82,12 +91,6 @@ class HttpClient {
   HttpClient({this.url});
   String url;
   Future<List<Post>> fetchPosts() async {
-    http.Response response = await http.get(url);
-    List responseJson = json.decode(response.body);
-    return responseJson.map((m) => Post.fromJson(m)).toList();
-  }
-
-  Future<List<Post>> urlFetchPosts(String url) async {
     http.Response response = await http.get(url);
     List responseJson = json.decode(response.body);
     return responseJson.map((m) => Post.fromJson(m)).toList();
