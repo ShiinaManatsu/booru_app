@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:yande_web/models/yande/post.dart';
+import 'package:yande_web/settings/app_settings.dart';
 
 class PostPreview extends StatefulWidget {
   final Post post;
@@ -10,21 +11,24 @@ class PostPreview extends StatefulWidget {
   _PostPreviewState createState() => _PostPreviewState();
 }
 
-class _PostPreviewState extends State<PostPreview> {
-  final double fixedHeight = 200.0;
+class _PostPreviewState extends State<PostPreview> with AutomaticKeepAliveClientMixin {
+  final double fixedHeight = 256.0;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.fromLTRB(0, 0, 10, 10),
       child: GestureDetector(
         onTap: () {},
         child: Image(
-          image: Image.network(widget.post.preview_url).image,
-          height: fixedHeight,
-          fit: BoxFit.fitHeight,
+          image: Image.network(widget.post.previewUrl).image,
+          height: AppSettings.fixedPostHeight,
+          width: widget.post.widthInPanel-10,
+          fit: BoxFit.cover,
         ),
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => false;
 }

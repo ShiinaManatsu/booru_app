@@ -1,14 +1,19 @@
+import 'package:flutter/cupertino.dart';
+import 'package:yande_web/settings/app_settings.dart';
+
 class Post {
   int id;
-  String preview_url;
-  String jpeg_url;
-  String file_url;
-  String sample_url;
-  int preview_width;
-  int preview_height;
+  String previewUrl;
+  String jpegUrl;
+  String fileUrl;
+  String sampleUrl;
+  int width;
+  int height;
   String _rating;
 
-  Rating get rating{
+  double _widthInPanel = 0;
+
+  Rating get rating {
     switch (_rating) {
       case 's':
         return Rating.safe;
@@ -20,20 +25,35 @@ class Post {
         return Rating.explicit;
         break;
       default:
+        return Rating.safe;
+        break;
     }
   }
 
-  Post(this.id, this.preview_url, this.preview_height, this.preview_width);
+  // Post ratio
+  double get ratio => width / height;
+
+  // Ratio in panel
+  double get preferredRatio => (width ) / (height );
+
+  double get preferredWidth => ratio * AppSettings.fixedPostHeight;
+
+  double get widthInPanel =>
+      _widthInPanel == 0 ? preferredWidth : _widthInPanel;
+
+  set widthInPanel(double value) => _widthInPanel = value;
+
+  Post(this.id, this.previewUrl, this.height, this.width);
 
   Post.fromJson(Map<String, dynamic> json)
       : id = json['id'],
         _rating = json['rating'],
-        preview_url = json['preview_url'],
-        sample_url = json['sample_url'],
-        jpeg_url = json['jpeg_url'],
-        file_url = json['file_url'],
-        preview_width = json['preview_width'],
-        preview_height = json['preview_height'];
+        previewUrl = json['preview_url'],
+        sampleUrl = json['sample_url'],
+        jpegUrl = json['jpeg_url'],
+        fileUrl = json['file_url'],
+        width = json['width'],
+        height = json['height'];
 }
 
 enum Rating { safe, questionable, explicit }

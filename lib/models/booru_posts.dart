@@ -33,6 +33,10 @@ class BooruPosts {
   BooruPosts() {
     baseUrl = AppSettings.currentBaseUrl;
     _httpClient = new HttpClient(url: baseUrl);
+    buildUrl();
+  }
+
+  buildUrl() {
     _homeUrl = '$baseUrl/post.json?limit=$_limit&page=$_page';
     _dailyUrl = '$baseUrl/post/popular_recent.json';
     _weeklyUrl =
@@ -41,6 +45,7 @@ class BooruPosts {
 
   set page(int value) {
     _page = value > 0 ? value : _page;
+    buildUrl();
   }
 
   get page {
@@ -49,6 +54,34 @@ class BooruPosts {
 
   set limit(int value) {
     _limit = value > 0 ? value : _limit;
+  }
+
+  Future<List<Post>> testFetch() async {
+    if (page < 2) {
+      List<Post> a;
+      _httpClient.urlFetchPosts(_homeUrl).then((onValue) {
+        a = onValue;
+      });
+      return a;
+    } else {
+      List<Post> a, b, c;
+      page--;
+      _httpClient.urlFetchPosts(_homeUrl).then((v) {
+        a = v;
+      });
+      page++;
+      _httpClient.urlFetchPosts(_homeUrl).then((v) {
+        b = v;
+      });
+
+      page++;
+      _httpClient.urlFetchPosts(_homeUrl).then((v) {
+        c = v;
+      });
+
+      page--;
+      return a + b + c;
+    }
   }
 
   // Return a url specified by the type
@@ -77,6 +110,12 @@ class HttpClient {
   HttpClient({this.url});
   String url;
   Future<List<Post>> fetchPosts() async {
+    http.Response response = await http.get(url);
+    List responseJson = json.decode(response.body);
+    return responseJson.map((m) => Post.fromJson(m)).toList();
+  }
+
+  Future<List<Post>> urlFetchPosts(String url) async {
     http.Response response = await http.get(url);
     List responseJson = json.decode(response.body);
     return responseJson.map((m) => Post.fromJson(m)).toList();

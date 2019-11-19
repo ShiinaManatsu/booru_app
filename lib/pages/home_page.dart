@@ -5,6 +5,7 @@ import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/pages/post_preview.dart';
 import 'package:yande_web/settings/app_settings.dart';
 import 'package:yande_web/themes/theme_light.dart';
+import 'package:yande_web/extensions/list_extension.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -13,6 +14,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Post> posts = List<Post>();
+  List<Post> fixedPosts = List<Post>();
+  double panelWidth = 1000;
+  double leftPanelWidth = 86;
+
   BooruPosts _booruPosts;
   ScrollController _controller;
   bool isFinishedFetch = true;
@@ -24,6 +29,7 @@ class _HomePageState extends State<HomePage> {
   var type = ClientType.Yande;
   @override
   Widget build(BuildContext context) {
+    panelWidth = MediaQuery.of(context).size.width;
     return Scaffold(
         drawer: _appDrawer(),
         appBar: PreferredSize(
@@ -85,7 +91,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildRow(BuildContext context) {
-    if (posts.length == 0) {
+    if (fixedPosts.length == 0) {
       return Center(child: Text("Loading"));
     } else {
       return Row(
@@ -94,7 +100,7 @@ class _HomePageState extends State<HomePage> {
         children: <Widget>[
           // Left panel
           Container(
-            width: 86,
+            width: leftPanelWidth,
             child: Column(
               mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.start,
@@ -142,7 +148,9 @@ class _HomePageState extends State<HomePage> {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
         child: Wrap(
-          children: <Widget>[]..addAll(posts
+          spacing: 10,
+          runSpacing: 10,
+          children: <Widget>[]..addAll(fixedPosts
               .asMap()
               .map((index, data) {
                 return MapEntry(index, PostPreview(post: data));
@@ -166,17 +174,46 @@ class _HomePageState extends State<HomePage> {
         isFinishedFetch = false;
         _booruPosts.page++;
         _booruPosts.setType(FetchType.Home).fetchPosts().then((value) {
-              setState(() {
-                posts.addAll(value.where((o) => !posts.contains(o)));
-                isFinishedFetch = true;
-              });
-            });
+          setState(() {
+            posts.addAll(value.where((o) => !posts.contains(o)));
+            print(posts.length);
+            fixedPosts.addAllPost(posts, panelWidth - leftPanelWidth - 10);
+            isFinishedFetch = true;
+          });
+        });
+        // _booruPosts.testFetch().then((value) {
+        //   setState(() {
+        //     posts = value;
+        //     fixedPosts.addAllPost(posts, panelWidth - leftPanelWidth - 10);
+        //     isFinishedFetch = true;
+        //   });
+        // });
       }
     }
-    // // Reach the top
+    // Reach the top
     // if (_controller.offset <= _controller.position.minScrollExtent &&
     //     !_controller.position.outOfRange) {
+    //   if (_booruPosts.page > 1) {
+    //     if (isFinishedFetch) {
+    //       isFinishedFetch = false;
+    //       _booruPosts.page--;
+    //       _booruPosts.setType(FetchType.Home).fetchPosts().then((value) {
+    //         setState(() {
+    //           posts.addAll(value.where((o) => !posts.contains(o)));
+    //           fixedPosts.addAllPost(posts, panelWidth - leftPanelWidth-10);
+    //           isFinishedFetch = true;
+    //         });
+    //       });
+    //       // _booruPosts.testFetch().then((value) {
+    //       //   setState(() {
+    //       //     posts = value;
+    //       //     fixedPosts.addAllPost(posts, panelWidth - leftPanelWidth - 10);
+    //       //     isFinishedFetch = true;
+    //       //   });
+    //       // });
     //     }
+    //   }
+    // }
   }
 
   Drawer _appDrawer() {
@@ -191,6 +228,8 @@ class _HomePageState extends State<HomePage> {
     _booruPosts.setType(FetchType.Home).fetchPosts().then((value) {
       setState(() {
         posts.addAll(value);
+        print(posts.length);
+        fixedPosts.addAllPost(posts, panelWidth - leftPanelWidth - 15);
       });
     });
   }

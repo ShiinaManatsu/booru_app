@@ -1,10 +1,11 @@
 import 'package:yande_web/models/konachan/konachan_client.dart';
 import 'package:yande_web/models/yande/yande_client.dart';
 
-class AppSettings{
-  static ClientType currentClient=ClientType.Yande;  // Current client
+class AppSettings {
+  static ClientType currentClient = ClientType.Yande; // Current client
+  static const double fixedPostHeight = 256.0;  // The height of post in the post list
 
-  static String get currentBaseUrl{
+  static String get currentBaseUrl {
     switch (currentClient) {
       case ClientType.Yande:
         return YandeClient.baseUrl;
@@ -19,10 +20,7 @@ class AppSettings{
   }
 }
 
-enum ClientType{
-  Yande,
-  Konachan
-}
+enum ClientType { Yande, Konachan }
 
 // Enum of the type we want fetch
 enum FetchType {
