@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yande_web/controllors/search_box.dart';
-import 'package:yande_web/pages/post_waterfall_widget.dart';
+import 'package:yande_web/pages/widgets/post_waterfall_widget.dart';
 import 'package:yande_web/settings/app_settings.dart';
 import 'package:yande_web/themes/theme_light.dart';
 
