@@ -11,7 +11,8 @@ class SliverPostWaterfall extends StatefulWidget {
   final double panelWidth;
   final ScrollController controller;
 
-  SliverPostWaterfall({this.panelWidth,this.controller, Key key}) : super(key: key);
+  SliverPostWaterfall({this.panelWidth, this.controller, Key key})
+      : super(key: key);
 
   @override
   _SliverPostWaterfallState createState() => _SliverPostWaterfallState();
@@ -46,15 +47,19 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
   // Page content
   Container buildWidght() {
     var s = Container(
+      child: Scrollbar(
         child: SingleChildScrollView(
-      child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
-          child: Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: <Widget>[]..addAll(_buildPostPreview()),
-          )),
-    ));
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: <Widget>[]..addAll(_buildPostPreview()),
+            )
+          ),
+        ),
+      )
+    );
     return s;
   }
 
@@ -97,7 +102,7 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
   @override
   void initState() {
     super.initState();
-    _controller=widget.controller;
+    _controller = widget.controller;
     _controller.addListener(_scrollListener);
 
     isFinishedFetch = false;

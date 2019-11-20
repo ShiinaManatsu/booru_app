@@ -8,9 +8,9 @@ import 'post_preview.dart';
 class PostWaterfall extends StatefulWidget {
   // The width this widght will take
   @required
-  final double panelWidth ;
+  final double panelWidth;
 
-  PostWaterfall({this.panelWidth,Key key}):super(key:key);
+  PostWaterfall({this.panelWidth, Key key}) : super(key: key);
 
   @override
   _PostWaterfallState createState() => _PostWaterfallState();
@@ -23,8 +23,8 @@ class _PostWaterfallState extends State<PostWaterfall> {
   List<List<Post>> fixedPosts = List<List<Post>>();
   BooruPosts _booruPosts;
 
-  _PostWaterfallState(){
-    _booruPosts=new BooruPosts();
+  _PostWaterfallState() {
+    _booruPosts = new BooruPosts();
   }
 
   @override
@@ -36,25 +36,29 @@ class _PostWaterfallState extends State<PostWaterfall> {
     }
   }
 
-    // Page content
+  // Page content
   Container buildWidght() {
     _controller = ScrollController();
     var s = Container(
+      child: Scrollbar(
         child: SingleChildScrollView(
-      controller: _controller,
-      child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
-          child: Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: <Widget>[]..addAll(_buildPostPreview()),
-          )),
-    ));
+          controller: _controller,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: <Widget>[]..addAll(_buildPostPreview()),
+            )
+          ),
+        ),
+      )
+    );
     _controller.addListener(_scrollListener);
     return s;
   }
 
-   _scrollListener() {
+  _scrollListener() {
     // Reach the bottom
     if (_controller.offset >= _controller.position.maxScrollExtent - 800 &&
         !_controller.position.outOfRange) {
@@ -89,18 +93,17 @@ class _PostWaterfallState extends State<PostWaterfall> {
     });
     return list;
   }
-  
+
   @override
   void initState() {
     super.initState();
-    isFinishedFetch=false;
+    isFinishedFetch = false;
     _booruPosts.setType(FetchType.Post).fetchPosts().then((value) {
       setState(() {
         posts.addAll(value);
         fixedPosts.addAllPost(posts, widget.panelWidth - 15);
-        isFinishedFetch=true;
+        isFinishedFetch = true;
       });
     });
   }
-
 }
