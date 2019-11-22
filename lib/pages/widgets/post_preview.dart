@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:yande_web/main.dart';
 import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/settings/app_settings.dart';
 
@@ -19,12 +20,17 @@ class _PostPreviewState extends State<PostPreview> with AutomaticKeepAliveClient
     super.build(context);
     return Container(
       child: GestureDetector(
-        onTap: () {},
-        child: Image(
-          image: Image.network(widget.post.previewUrl).image,
-          height: AppSettings.fixedPostHeight,
-          width: widget.post.widthInPanel-10,
-          fit: BoxFit.cover,
+        onTap: () {
+          Navigator.pushNamed(context, postViewPage,arguments: {"post":widget.post});
+        },
+        child: Hero(
+          tag: widget.post,
+          child: Image(
+            image: Image.network(widget.post.previewUrl).image,
+            height: AppSettings.fixedPostHeight,
+            width: widget.post.widthInPanel-10,
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );
