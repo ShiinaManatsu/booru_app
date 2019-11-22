@@ -35,32 +35,24 @@ class MyApp extends StatelessWidget {
         default:
           return null;
       }
-      var route = PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => screen,
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          var begin = Offset(0.0, 1.0);
-          var end = Offset.zero;
-          var curve = Curves.ease;
+      // var route = PageRouteBuilder(
+      //   pageBuilder: (context, animation, secondaryAnimation) => screen,
+      //   transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      //     var begin = Offset(0.0, 1.0);
+      //     var end = Offset.zero;
+      //     var curve = Curves.ease;
 
-          var tween =
-              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+      //     var tween =
+      //         Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
 
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-      );
-      //return MaterialPageRoute(builder: (BuildContext contex) => screen);
-      return route;
+      //     return SlideTransition(
+      //       position: animation.drive(tween),
+      //       child: child,
+      //     );
+      //   },
+      // );
+      //return route;
+      return MaterialPageRoute(builder: (BuildContext contex) => screen);
     };
   }
-}
-
-Key _drawer = Key("drawer");
-Drawer appDrawer() {
-  return Drawer(
-    key: _drawer,
-    child: Text("Drawer"),
-  );
 }
