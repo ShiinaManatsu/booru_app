@@ -21,10 +21,3 @@ class AppSettings {
 }
 
 enum ClientType { Yande, Konachan }
-
-// Enum of the type we want fetch
-enum FetchType {
-  Post,
-  PopularDaily,
-  PopularWeekly,
-}
