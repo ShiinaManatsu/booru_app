@@ -1,9 +1,9 @@
-import 'package:floating_search_bar/floating_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:yande_web/models/yande/post.dart';
+import 'package:yande_web/models/yande/tags.dart';
 
 class PostViewPage extends StatefulWidget {
   @required
@@ -18,14 +18,13 @@ class PostViewPage extends StatefulWidget {
 class _PostViewPageState extends State<PostViewPage> {
   int buttonCount = 3;
   double barHeight = 64;
-  double top=0;
-  double topTarget=0;
+  double top = 0;
+  double topTarget = 0;
 
-  _PostViewPageState(){    
-    Observable.timer((){},Duration(milliseconds: 10))
-    .listen((x){
+  _PostViewPageState() {
+    Observable.timer(() {}, Duration(milliseconds: 10)).listen((x) {
       setState(() {
-        top=topTarget;
+        top = topTarget;
       });
     });
   }
@@ -36,21 +35,25 @@ class _PostViewPageState extends State<PostViewPage> {
     return Scaffold(
       extendBody: true,
       body: Stack(children: <Widget>[
-        PhotoViewGallery(
-          backgroundDecoration: BoxDecoration(color: Colors.white),
-          pageOptions: [
-            PhotoViewGalleryPageOptions(
-                imageProvider: NetworkImage(widget.post.sampleUrl),
-                heroAttributes: PhotoViewHeroAttributes(tag: widget.post))
-          ],
-        ),
+        _buildMobelGallery(),
         _buildBar(context),
       ]),
     );
   }
 
+  PhotoViewGallery _buildMobelGallery() {
+    return PhotoViewGallery(
+      backgroundDecoration: BoxDecoration(color: Colors.white),
+      pageOptions: [
+        PhotoViewGalleryPageOptions(
+            imageProvider: NetworkImage(widget.post.sampleUrl),
+            heroAttributes: PhotoViewHeroAttributes(tag: widget.post))
+      ],
+    );
+  }
+
   AnimatedPositioned _buildBar(BuildContext context) {
-    topTarget=20 + MediaQuery.of(context).padding.vertical;
+    topTarget = 20 + MediaQuery.of(context).padding.vertical;
     return AnimatedPositioned(
       duration: Duration(milliseconds: 500),
       curve: Curves.easeIn,
@@ -76,15 +79,17 @@ class _PostViewPageState extends State<PostViewPage> {
           AspectRatio(
             aspectRatio: 1,
             child: FlatButton(
-              onPressed: () {},
-              child: Icon(Icons.file_download),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Icon(Icons.arrow_back),
             ),
           ),
           AspectRatio(
             aspectRatio: 1,
             child: FlatButton(
               onPressed: () {},
-              child: Icon(Icons.search),
+              child: Icon(Icons.file_download),
             ),
           ),
           AspectRatio(
