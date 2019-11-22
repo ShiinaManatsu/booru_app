@@ -3,7 +3,7 @@ import 'package:yande_web/controllors/search_box.dart';
 import 'package:yande_web/pages/widgets/post_waterfall_widget.dart';
 import 'package:yande_web/settings/app_settings.dart';
 import 'package:yande_web/themes/theme_light.dart';
-
+import 'package:yande_web/models/booru_posts.dart';
 import '../main.dart';
 
 class HomePage extends StatefulWidget {
@@ -15,9 +15,10 @@ class _HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin {
   double panelWidth = 1000;
   double leftPanelWidth = 86;
-  Key _homeWaterfall=Key("_homeWaterfall");
-  Key _homePageBar=Key("homePageBar");
+  Key _homeWaterfall = Key("_homeWaterfall");
+  Key _homePageBar = Key("homePageBar");
 
+  bool fetchCommonPosts = true;
 
   var type = ClientType.Yande;
   @override
@@ -25,18 +26,22 @@ class _HomePageState extends State<HomePage>
     super.build(context);
     panelWidth = MediaQuery.of(context).size.width;
     return Scaffold(
-        drawer: appDrawer(),
+        drawer: _appDrawer(),
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(64),
           child: AppBar(
-            title: SearchBox(key: _homePageBar,),
+            title: SearchBox(
+              key: _homePageBar,
+            ),
             iconTheme: IconThemeData(color: baseBlackColor),
             centerTitle: true,
             actions: <Widget>[
               Container(
                 width: 64,
                 child: FlatButton(
-                  onPressed: () {Navigator.pushNamed(context, searchTaggedPostsPage);},
+                  onPressed: () {
+                    Navigator.pushNamed(context, searchTaggedPostsPage);
+                  },
                   child: Icon(Icons.person),
                   //padding: EdgeInsets.all(10),
                   shape: RoundedRectangleBorder(
@@ -87,23 +92,79 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _buildRow(BuildContext context) {
+    var _postWaterfall = PostWaterfall(
+      panelWidth: panelWidth,
+      key: _homeWaterfall,
+    );
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        // Left panel
-        //container,
         Expanded(
-          child: PostWaterfall(
-            panelWidth: panelWidth,
-            key: _homeWaterfall,
-          ),
+          child: _postWaterfall,
         )
       ],
     );
   }
 
- 
+  Key _drawer = Key("drawer");
+  Drawer _appDrawer() {
+    return Drawer(
+      key: _drawer,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            // Title
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                Text(AppSettings.currentClient.toString()),
+              ],
+            ),
+            // Spliter
+            Container(
+              height: 2,
+              margin: EdgeInsets.symmetric(horizontal: 0, vertical: 5),
+              padding: EdgeInsets.symmetric(horizontal: 2),
+              decoration: BoxDecoration(
+                color: Colors.black45,
+              ),
+            ),
+            // TODO: Add buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                Column(
+                  
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Container(
+                      width: 400,
+                      height: 60,
+                      child: FlatButton(
+                        onPressed: () {},
+                        child: Text("butn"),
+                      ),
+                    ),
+                    FlatButton(
+                      onPressed: () {},
+                      child: Text("butn"),
+                    ),
+                    FlatButton(
+                      onPressed: () {},
+                      child: Text("butn"),
+                    )
+                  ],
+                ),
+              ],
+            )
+          ],
+        ),
+    );
+  }
 
   @override
   void initState() {
