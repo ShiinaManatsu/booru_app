@@ -24,6 +24,8 @@ dependencies:
   flutter_staggered_grid_view: ^0.3.0
   rxdart: ^0.22.6
   sqflite: ^1.1.7+1
+  floating_search_bar: ^0.2.0
+  photo_view: ^0.5.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
