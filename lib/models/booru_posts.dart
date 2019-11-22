@@ -20,79 +20,65 @@ import 'package:yande_web/settings/app_settings.dart';
 */
 
 class BooruPosts {
-  int _page = 1;
-  int _limit = 30;
-  String tags="";
-  String baseUrl;
-  DateTime _time = DateTime.now();
-  HttpClient _httpClient;
 
-  String _posts;
-  String _popularRecent;
-  String _weeklyUrl;
-  String _taggedPosts;
-
-  BooruPosts() {
-    baseUrl = AppSettings.currentBaseUrl;
-    _httpClient = new HttpClient(url: baseUrl);
-    buildUrl();
-  }
-
-  buildUrl() {
-    _taggedPosts= '$baseUrl/post.json?limit=$_limit&page=$_page&tags=$tags';
-    _posts = '$baseUrl/post.json?limit=$_limit&page=$_page';
-    _popularRecent = '$baseUrl/post/popular_recent.json';
-    _weeklyUrl =
-        '$baseUrl/post/popular_by_week.json?day=${_time.day}&month=${_time.month}&year=${_time.year}';
-  }
-
-  Future<List<Post>> fetchTaggedPosts() async {
-    http.Response response = await http.get(_taggedPosts);
-    List responseJson = json.decode(response.body);
-    return responseJson.map((m) => Post.fromJson(m)).toList();
-  }
-
-  set page(int value) {
-    _page = value > 0 ? value : _page;
-    buildUrl();
-  }
-
-  get page {
-    return _page;
-  }
-
-  set limit(int value) {
-    _limit = value > 0 ? value : _limit;
-  }
-
-  // Return a url specified by the type
-  HttpClient setType(FetchType type) {
-    switch (type) {
-      case FetchType.Post:
-        _httpClient.url = _posts;
-        return _httpClient;
-        break;
-      case FetchType.PopularDaily:
-        _httpClient.url = _popularRecent;
-        return _httpClient;
-        break;
-      case FetchType.PopularWeekly:
-        _httpClient.url = _weeklyUrl;
-        return _httpClient;
-        break;
-      default:
-        return null;
-        break;
-    }
-  }
-}
-
-class HttpClient {
-  HttpClient({this.url});
-  String url;
-  Future<List<Post>> fetchPosts() async {
+  /// Base http call for fetch any url
+  Future<List<Post>> _httpGet(String url) async {
     http.Response response = await http.get(url);
     List responseJson = json.decode(response.body);
     return responseJson.map((m) => Post.fromJson(m)).toList();
   }
+
+  /// Fetch tagged posts
+  Future<List<Post>> fetchTagsSearch(
+      {String tags, int limit = 50, int page = 1}) async {
+    if (tags.length < 1) {
+      return null;
+    }
+    var url =
+        '${AppSettings.currentBaseUrl}/post.json?limit=$limit&page=$page&tags=$tags';
+    return await _httpGet(url);
+  }
+
+  /// Fetch posts
+  Future<List<Post>> fetchPosts({int limit = 50, int page = 1}) async {
+    var url =
+        '${AppSettings.currentBaseUrl}/post.json?limit=$limit&page=$page';
+    return await _httpGet(url);
+  }
+
+  /// Fetch popular posts by recent
+  Future<List<Post>> fetchPopularRecent({Period period = Period.None}) async {
+    var url =
+        "${AppSettings.currentBaseUrl}/post/popular_recent?period=$period";
+    return await _httpGet(url);
+  }
+
+  /// Fetch popular posts by week
+  Future<List<Post>> fetchPopularByWeek({int day, int month, int year}) async {
+    var url =
+        "${AppSettings.currentBaseUrl}/post/popular_by_week.json?day=$day&month=$month&year=$year";
+    return await _httpGet(url);
+  }
+
+  /// Fetch popular posts by month
+  Future<List<Post>> fetchPopularByMonth({int month, int year}) async {
+    var url =
+        "${AppSettings.currentBaseUrl}/post/popular_by_month.json?&month=$month&year=$year";
+    return await _httpGet(url);
+  }
+}
+
+enum Period {
+  None,
+  Week,
+  Month,
+  Year,
+}
+
+// Enum of the type we want fetch
+enum FetchType {
+  Posts,
+  PopularRecent,
+  PopularByWeek,
+  PopularByMonth
 }
