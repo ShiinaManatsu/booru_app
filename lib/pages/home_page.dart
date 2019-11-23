@@ -50,6 +50,7 @@ class _HomePageState extends State<HomePage>
               ),
               Center(
                 child: DropdownButton(
+                  underline: Container(),
                   items: [
                     DropdownMenuItem(
                       child: Text("Yande.re"),
@@ -139,11 +140,13 @@ class _HomePageState extends State<HomePage>
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 Container(
-                  margin: EdgeInsets.fromLTRB(0,10,10,0),
+                  margin: EdgeInsets.fromLTRB(0, 10, 10, 0),
                   height: 60,
                   child: FlatButton(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(bottomRight: Radius.circular(30),topRight: Radius.circular(30))),
+                        borderRadius: BorderRadius.only(
+                            bottomRight: Radius.circular(30),
+                            topRight: Radius.circular(30))),
                     highlightColor: Colors.lightBlue[300],
                     color: Colors.lightBlue[50],
                     hoverColor: Colors.lightBlue[100],
@@ -153,16 +156,17 @@ class _HomePageState extends State<HomePage>
                       updadePost(FetchType.Posts);
                     },
                     child: Container(
-                        alignment: Alignment.centerLeft
-                        , child: Text("Posts")),
+                        alignment: Alignment.centerLeft, child: Text("Posts")),
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.fromLTRB(0,10,10,0),
+                  margin: EdgeInsets.fromLTRB(0, 10, 10, 0),
                   height: 60,
                   child: FlatButton(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(bottomRight: Radius.circular(30),topRight: Radius.circular(30))),
+                        borderRadius: BorderRadius.only(
+                            bottomRight: Radius.circular(30),
+                            topRight: Radius.circular(30))),
                     highlightColor: Colors.lightBlue[300],
                     color: Colors.lightBlue[50],
                     hoverColor: Colors.lightBlue[100],
@@ -172,16 +176,18 @@ class _HomePageState extends State<HomePage>
                       updadePost(FetchType.PopularRecent);
                     },
                     child: Container(
-                        alignment: Alignment.centerLeft
-                        , child: Text("Popular posts by recent")),
+                        alignment: Alignment.centerLeft,
+                        child: Text("Popular posts by recent")),
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.fromLTRB(0,10,10,0),
+                  margin: EdgeInsets.fromLTRB(0, 10, 10, 0),
                   height: 60,
                   child: FlatButton(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(bottomRight: Radius.circular(30),topRight: Radius.circular(30))),
+                        borderRadius: BorderRadius.only(
+                            bottomRight: Radius.circular(30),
+                            topRight: Radius.circular(30))),
                     highlightColor: Colors.lightBlue[300],
                     color: Colors.lightBlue[50],
                     hoverColor: Colors.lightBlue[100],
@@ -191,16 +197,18 @@ class _HomePageState extends State<HomePage>
                       updadePost(FetchType.PopularByWeek);
                     },
                     child: Container(
-                        alignment: Alignment.centerLeft
-                        , child: Text("Popular posts by week")),
+                        alignment: Alignment.centerLeft,
+                        child: Text("Popular posts by week")),
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.fromLTRB(0,10,10,0),
+                  margin: EdgeInsets.fromLTRB(0, 10, 10, 0),
                   height: 60,
                   child: FlatButton(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(bottomRight: Radius.circular(30),topRight: Radius.circular(30))),
+                        borderRadius: BorderRadius.only(
+                            bottomRight: Radius.circular(30),
+                            topRight: Radius.circular(30))),
                     highlightColor: Colors.lightBlue[300],
                     color: Colors.lightBlue[50],
                     hoverColor: Colors.lightBlue[100],
@@ -210,8 +218,8 @@ class _HomePageState extends State<HomePage>
                       updadePost(FetchType.PopularByMonth);
                     },
                     child: Container(
-                        alignment: Alignment.centerLeft
-                        , child: Text("Popular posts by month")),
+                        alignment: Alignment.centerLeft,
+                        child: Text("Popular posts by month")),
                   ),
                 ),
               ],
