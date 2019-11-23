@@ -109,7 +109,10 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+  FetchType _type = FetchType.Posts;
+  double _drawerButtonHeight = 60;
   Key _drawer = Key("drawer");
+
   Drawer _appDrawer() {
     return Drawer(
       key: _drawer,
@@ -119,113 +122,87 @@ class _HomePageState extends State<HomePage>
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             // Title
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Text(AppSettings.currentClient.toString()),
-              ],
-            ),
-            // Spliter
             Container(
-              height: 2,
-              margin: EdgeInsets.symmetric(horizontal: 0, vertical: 5),
-              padding: EdgeInsets.symmetric(horizontal: 2),
-              decoration: BoxDecoration(
-                color: Colors.black45,
-              ),
-            ),
+                margin: EdgeInsets.fromLTRB(15, 20, 0, 20),
+                alignment: Alignment.centerLeft,
+                child: Text(AppSettings.currentClient.toString())),
+            // Spliter
+            _spliter("Posts"),
             // TODO: Add buttons
             Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
-                Container(
-                  margin: EdgeInsets.fromLTRB(0, 10, 10, 0),
-                  height: 60,
-                  child: FlatButton(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.only(
-                            bottomRight: Radius.circular(30),
-                            topRight: Radius.circular(30))),
-                    highlightColor: Colors.lightBlue[300],
-                    color: Colors.lightBlue[50],
-                    hoverColor: Colors.lightBlue[100],
-                    splashColor: Colors.lightBlue[200],
-                    onPressed: () {
-                      Navigator.pop(context);
-                      updadePost(FetchType.Posts);
-                    },
-                    child: Container(
-                        alignment: Alignment.centerLeft, child: Text("Posts")),
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.fromLTRB(0, 10, 10, 0),
-                  height: 60,
-                  child: FlatButton(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.only(
-                            bottomRight: Radius.circular(30),
-                            topRight: Radius.circular(30))),
-                    highlightColor: Colors.lightBlue[300],
-                    color: Colors.lightBlue[50],
-                    hoverColor: Colors.lightBlue[100],
-                    splashColor: Colors.lightBlue[200],
-                    onPressed: () {
-                      Navigator.pop(context);
-                      updadePost(FetchType.PopularRecent);
-                    },
-                    child: Container(
-                        alignment: Alignment.centerLeft,
-                        child: Text("Popular posts by recent")),
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.fromLTRB(0, 10, 10, 0),
-                  height: 60,
-                  child: FlatButton(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.only(
-                            bottomRight: Radius.circular(30),
-                            topRight: Radius.circular(30))),
-                    highlightColor: Colors.lightBlue[300],
-                    color: Colors.lightBlue[50],
-                    hoverColor: Colors.lightBlue[100],
-                    splashColor: Colors.lightBlue[200],
-                    onPressed: () {
-                      Navigator.pop(context);
-                      updadePost(FetchType.PopularByWeek);
-                    },
-                    child: Container(
-                        alignment: Alignment.centerLeft,
-                        child: Text("Popular posts by week")),
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.fromLTRB(0, 10, 10, 0),
-                  height: 60,
-                  child: FlatButton(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.only(
-                            bottomRight: Radius.circular(30),
-                            topRight: Radius.circular(30))),
-                    highlightColor: Colors.lightBlue[300],
-                    color: Colors.lightBlue[50],
-                    hoverColor: Colors.lightBlue[100],
-                    splashColor: Colors.lightBlue[200],
-                    onPressed: () {
-                      Navigator.pop(context);
-                      updadePost(FetchType.PopularByMonth);
-                    },
-                    child: Container(
-                        alignment: Alignment.centerLeft,
-                        child: Text("Popular posts by month")),
-                  ),
-                ),
+                _buildDrawerButton(() {
+                  Navigator.pop(context);
+                  updadePost(FetchType.Posts);
+                }, "Posts", FetchType.Posts),
+                // Spliter popular
+                _spliter("Popular Posts"),
+                _buildDrawerButton(() {
+                  Navigator.pop(context);
+                  updadePost(FetchType.PopularRecent);
+                }, "Popular posts by recent", FetchType.PopularRecent),
+                _buildDrawerButton(() {
+                  Navigator.pop(context);
+                  updadePost(FetchType.PopularByWeek);
+                }, "Popular posts by week", FetchType.PopularByWeek),
+                _buildDrawerButton(() {
+                  Navigator.pop(context);
+                  updadePost(FetchType.PopularByMonth);
+                }, "Popular posts by month", FetchType.PopularByMonth),
               ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDrawerButton(
+      Function() onPressed, String text, FetchType fetchType) {
+    var func = () {
+      onPressed();
+      setState(() {
+        _type = fetchType;
+      });
+    };
+    return Container(
+      margin: EdgeInsets.fromLTRB(0, 10, 20, 10),
+      height: _drawerButtonHeight,
+      child: FlatButton(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+                bottomRight: Radius.circular(30),
+                topRight: Radius.circular(30))),
+        highlightColor: Colors.lightBlue[300],
+        color: fetchType == _type ? Colors.lightBlue[50] : Colors.transparent,
+        hoverColor: Colors.lightBlue[100],
+        splashColor: Colors.lightBlue[200],
+        onPressed: func,
+        child: Container(alignment: Alignment.centerLeft, child: Text(text)),
+      ),
+    );
+  }
+
+  Container _spliter(String text) {
+    return Container(
+      margin: EdgeInsets.fromLTRB(15, 5, 20, 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: <Widget>[
+          Text(text),
+          Flexible(
+            fit: FlexFit.tight,
+            child: Container(
+              height: 0.5,
+              margin: EdgeInsets.only(left: 10),
+              decoration: BoxDecoration(
+                color: Colors.black45,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
