@@ -1,10 +1,14 @@
+import 'package:floating_search_bar/ui/sliver_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:yande_web/controllors/search_box.dart';
 import 'package:yande_web/pages/widgets/post_waterfall_widget.dart';
+import 'package:yande_web/pages/widgets/sliver_post_waterfall_widget.dart';
 import 'package:yande_web/settings/app_settings.dart';
 import 'package:yande_web/themes/theme_light.dart';
 import 'package:yande_web/models/booru_posts.dart';
 import '../main.dart';
+
+Function(FetchType) updadePost;
 
 class HomePage extends StatefulWidget {
   @override
@@ -25,51 +29,131 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     super.build(context);
     panelWidth = MediaQuery.of(context).size.width;
+    // return Scaffold(
+    //     drawer: _appDrawer(),
+    //     appBar: PreferredSize(
+    //       preferredSize: Size.fromHeight(64),
+    //       child: AppBar(
+    //         title: SearchBox(
+    //           key: _homePageBar,
+    //         ),
+    //         iconTheme: IconThemeData(color: baseBlackColor),
+    //         centerTitle: true,
+    //         actions: <Widget>[
+    //           Container(
+    //             width: 64,
+    //             child: FlatButton(
+    //               onPressed: () {
+    //                 Navigator.pushNamed(context, searchTaggedPostsPage);
+    //               },
+    //               child: Icon(Icons.person),
+    //               //padding: EdgeInsets.all(10),
+    //               shape: RoundedRectangleBorder(
+    //                   borderRadius: new BorderRadius.circular(32.0)),
+    //             ),
+    //           ),
+    //           Center(
+    //             child: DropdownButton(
+    //               underline: Container(),
+    //               items: [
+    //                 DropdownMenuItem(
+    //                   child: Text("Yande.re"),
+    //                   value: ClientType.Yande,
+    //                 ),
+    //                 DropdownMenuItem(
+    //                   child: Text("Konachan"),
+    //                   value: ClientType.Konachan,
+    //                 )
+    //               ],
+    //               onChanged: onDropdownChanged,
+    //               icon: Icon(Icons.settings),
+    //               value: type,
+    //             ),
+    //           ),
+    //         ],
+    //       ),
+    //     ),
+    //     body: _buildRow(context));
+
+    var _controller = new ScrollController();
     return Scaffold(
         drawer: _appDrawer(),
-        appBar: PreferredSize(
-          preferredSize: Size.fromHeight(64),
-          child: AppBar(
-            title: SearchBox(
-              key: _homePageBar,
-            ),
-            iconTheme: IconThemeData(color: baseBlackColor),
-            centerTitle: true,
-            actions: <Widget>[
-              Container(
-                width: 64,
-                child: FlatButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, searchTaggedPostsPage);
-                  },
-                  child: Icon(Icons.person),
-                  //padding: EdgeInsets.all(10),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: new BorderRadius.circular(32.0)),
-                ),
-              ),
-              Center(
-                child: DropdownButton(
-                  underline: Container(),
-                  items: [
-                    DropdownMenuItem(
-                      child: Text("Yande.re"),
-                      value: ClientType.Yande,
+        body: Builder(
+          builder: (context) => CustomScrollView(
+            primary: false,
+            controller: _controller,
+            physics: BouncingScrollPhysics(),
+            slivers: <Widget>[
+              SliverFloatingBar(
+                automaticallyImplyLeading: false,
+                //snap: false,
+                pinned: true,
+                backgroundColor: Color.fromARGB(240, 255, 255, 255),
+                //floating: true,
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: FlatButton(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: new BorderRadius.circular(50.0)),
+                        onPressed: () => Scaffold.of(context).openDrawer(),
+                        child: Icon(Icons.menu),
+                      ),
                     ),
-                    DropdownMenuItem(
-                      child: Text("Konachan"),
-                      value: ClientType.Konachan,
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: FlatButton(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: new BorderRadius.circular(50.0)),
+                        onPressed: () => {},
+                        child: Icon(Icons.search),
+                      ),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        AspectRatio(
+                          aspectRatio: 1,
+                          child: FlatButton(
+                            onPressed: () {},
+                            child: Icon(Icons.person),
+                            //padding: EdgeInsets.all(10),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: new BorderRadius.circular(50.0)),
+                          ),
+                        ),
+                        Center(
+                          child: DropdownButton(
+                            underline: Container(),
+                            items: [
+                              DropdownMenuItem(
+                                child: Text("Yande.re"),
+                                value: ClientType.Yande,
+                              ),
+                              DropdownMenuItem(
+                                child: Text("Konachan"),
+                                value: ClientType.Konachan,
+                              )
+                            ],
+                            onChanged: onDropdownChanged,
+                            icon: Icon(Icons.settings),
+                            value: type,
+                          ),
+                        )
+                      ],
                     )
                   ],
-                  onChanged: onDropdownChanged,
-                  icon: Icon(Icons.settings),
-                  value: type,
                 ),
               ),
+              SliverPostWaterfall(
+                controller: _controller,
+                panelWidth: panelWidth,
+              )
             ],
           ),
-        ),
-        body: _buildRow(context));
+        ));
   }
 
   void onDropdownChanged(item) {
@@ -90,6 +174,25 @@ class _HomePageState extends State<HomePage>
       default:
         break;
     }
+    // TODO: This need a indicator
+    //updadePost(FetchType.PopularRecent);
+  }
+
+  Widget _buildSliverRow(BuildContext context) {
+    var _postWaterfall = SliverPostWaterfall(
+      panelWidth: panelWidth,
+      key: _homeWaterfall,
+    );
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Expanded(
+          child: _postWaterfall,
+        )
+      ],
+    );
   }
 
   Widget _buildRow(BuildContext context) {
@@ -117,43 +220,50 @@ class _HomePageState extends State<HomePage>
     return Drawer(
       key: _drawer,
       child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            // Title
-            Container(
-                margin: EdgeInsets.fromLTRB(15, 20, 0, 20),
-                alignment: Alignment.centerLeft,
-                child: Text(AppSettings.currentClient.toString())),
-            // Spliter
-            _spliter("Posts"),
-            // TODO: Add buttons
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                _buildDrawerButton(() {
-                  Navigator.pop(context);
-                  updadePost(FetchType.Posts);
-                }, "Posts", FetchType.Posts),
-                // Spliter popular
-                _spliter("Popular Posts"),
-                _buildDrawerButton(() {
-                  Navigator.pop(context);
-                  updadePost(FetchType.PopularRecent);
-                }, "Popular posts by recent", FetchType.PopularRecent),
-                _buildDrawerButton(() {
-                  Navigator.pop(context);
-                  updadePost(FetchType.PopularByWeek);
-                }, "Popular posts by week", FetchType.PopularByWeek),
-                _buildDrawerButton(() {
-                  Navigator.pop(context);
-                  updadePost(FetchType.PopularByMonth);
-                }, "Popular posts by month", FetchType.PopularByMonth),
-              ],
-            ),
-          ],
+        child: SingleChildScrollView(
+          physics: BouncingScrollPhysics(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              // Title
+              Container(
+                  margin: EdgeInsets.fromLTRB(15, 20, 0, 20),
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    AppSettings.currentClient == ClientType.Yande
+                        ? "Yande.re"
+                        : "Konachan",
+                    style: TextStyle(fontSize: 30),
+                  )),
+              // Spliter
+              _spliter("Posts"),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  _buildDrawerButton(() {
+                    Navigator.pop(context);
+                    updadePost(FetchType.Posts);
+                  }, "Posts", FetchType.Posts),
+                  // Spliter popular
+                  _spliter("Popular Posts"),
+                  _buildDrawerButton(() {
+                    Navigator.pop(context);
+                    updadePost(FetchType.PopularRecent);
+                  }, "Popular posts by recent", FetchType.PopularRecent),
+                  _buildDrawerButton(() {
+                    Navigator.pop(context);
+                    updadePost(FetchType.PopularByWeek);
+                  }, "Popular posts by week", FetchType.PopularByWeek),
+                  _buildDrawerButton(() {
+                    Navigator.pop(context);
+                    updadePost(FetchType.PopularByMonth);
+                  }, "Popular posts by month", FetchType.PopularByMonth),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -168,7 +278,7 @@ class _HomePageState extends State<HomePage>
       });
     };
     return Container(
-      margin: EdgeInsets.fromLTRB(0, 10, 20, 10),
+      margin: EdgeInsets.fromLTRB(0, 0, 20, 0),
       height: _drawerButtonHeight,
       child: FlatButton(
         shape: RoundedRectangleBorder(

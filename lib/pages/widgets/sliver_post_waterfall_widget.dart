@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:yande_web/models/booru_posts.dart';
 import 'package:yande_web/models/yande/post.dart';
-import 'package:yande_web/settings/app_settings.dart';
 import 'package:yande_web/extensions/list_extension.dart';
+import 'package:yande_web/pages/home_page.dart';
+import 'package:yande_web/settings/app_settings.dart';
 import 'post_preview.dart';
 
 class SliverPostWaterfall extends StatefulWidget {
@@ -10,10 +11,8 @@ class SliverPostWaterfall extends StatefulWidget {
   @required
   final double panelWidth;
   final ScrollController controller;
-  
-  Function(FetchType) updadePost;
 
-  SliverPostWaterfall({this.panelWidth,this.updadePost, this.controller, Key key})
+  SliverPostWaterfall({this.panelWidth, this.controller, Key key})
       : super(key: key);
 
   @override
@@ -25,13 +24,19 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
   bool isFinishedFetch = true;
   List<Post> posts = List<Post>();
   List<List<Post>> fixedPosts = List<List<Post>>();
-  BooruPosts _booruPosts;
-  int page = 1;
   FetchType currentFetchType = FetchType.Posts;
+  BooruPosts _booruPosts;
+  DateTime _dateTime = DateTime.now();
+  int page = 1;
 
   _SliverPostWaterfallState() {
+    updadePost = _updateCall;
     _booruPosts = new BooruPosts();
-    widget.updadePost = _updateCall;
+  }
+
+  _setDateTime(DateTime dateTime) {
+    _dateTime = dateTime;
+    _fetchByType(currentFetchType);
   }
 
   _updateCall(FetchType fetchType) {
@@ -39,6 +44,7 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
       return;
     } else {
       setState(() {
+        _dateTime = DateTime.now();
         fixedPosts.clear();
         currentFetchType = fetchType;
         page = 1;
@@ -48,33 +54,51 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
   }
 
   _fetchByType(FetchType t) {
+    isFinishedFetch = false;
     switch (t) {
       case FetchType.Posts:
         _booruPosts.fetchPosts().then((value) {
-          posts.addAll(value.where((o) => !posts.contains(o)));
-          fixedPosts.addAllPost(posts, widget.panelWidth - 10);
-          isFinishedFetch = true;
+          setState(() {
+            posts.addAll(value.where((o) => !posts.contains(o)));
+            fixedPosts.addAllPost(posts, widget.panelWidth - 10);
+            isFinishedFetch = true;
+          });
         });
         break;
       case FetchType.PopularRecent:
         _booruPosts.fetchPopularRecent().then((value) {
-          posts.addAll(value.where((o) => !posts.contains(o)));
-          fixedPosts.addAllPost(posts, widget.panelWidth - 10);
-          isFinishedFetch = true;
+          setState(() {
+            posts.addAll(value.where((o) => !posts.contains(o)));
+            fixedPosts.addAllPost(posts, widget.panelWidth - 10);
+            isFinishedFetch = true;
+          });
         });
         break;
       case FetchType.PopularByWeek:
-        _booruPosts.fetchPopularByWeek().then((value) {
-          posts.addAll(value.where((o) => !posts.contains(o)));
-          fixedPosts.addAllPost(posts, widget.panelWidth - 10);
-          isFinishedFetch = true;
+        _booruPosts
+            .fetchPopularByWeek(
+                day: _dateTime.day,
+                month: _dateTime.month,
+                year: _dateTime.year)
+            .then((value) {
+          setState(() {
+            fixedPosts.clear();
+            posts.addAll(value.where((o) => !posts.contains(o)));
+            fixedPosts.addAllPost(posts, widget.panelWidth - 10);
+            isFinishedFetch = true;
+          });
         });
         break;
       case FetchType.PopularByMonth:
-        _booruPosts.fetchPopularByMonth().then((value) {
-          posts.addAll(value.where((o) => !posts.contains(o)));
-          fixedPosts.addAllPost(posts, widget.panelWidth - 10);
-          isFinishedFetch = true;
+        _booruPosts
+            .fetchPopularByMonth(month: _dateTime.month, year: _dateTime.year)
+            .then((value) {
+          setState(() {
+            fixedPosts.clear();
+            posts.addAll(value.where((o) => !posts.contains(o)));
+            fixedPosts.addAllPost(posts, widget.panelWidth - 10);
+            isFinishedFetch = true;
+          });
         });
         break;
       default:
@@ -93,25 +117,63 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
     if (fixedPosts.length == 0) {
       return Center(child: Text("Loading"));
     } else {
-      return buildWidght();
+      return _buildWidght();
+    }
+  }
+
+  Widget _datePicker() {
+    if (currentFetchType == FetchType.PopularByWeek ||
+        currentFetchType == FetchType.PopularByMonth) {
+      return Container(
+        height: 60,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+            FlatButton(
+              child: Icon(Icons.arrow_back),
+              onPressed: () {},
+            ),
+            FlatButton(
+              child:
+                  Text("${_dateTime.month} ${_dateTime.day} ${_dateTime.year}"),
+              onPressed: () {
+                showDatePicker(
+                        firstDate: AppSettings.currentClient == ClientType.Yande
+                            ? AppSettings.yandeFirstday
+                            : AppSettings.konachanFirstday,
+                        lastDate: DateTime(DateTime.now().year,
+                            DateTime.now().month, DateTime.now().day + 1),
+                        context: context,
+                        initialDate: DateTime.now())
+                    .then((x) {
+                  if (x != null) _setDateTime(x);
+                });
+              },
+            ),
+            FlatButton(
+              child: Icon(Icons.arrow_forward),
+              onPressed: () {},
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Container();
     }
   }
 
   // Page content
-  Container buildWidght() {
+  Container _buildWidght() {
     var s = Container(
-      child: Scrollbar(
-        child: SingleChildScrollView(
-          child: Padding(
+      child: SingleChildScrollView(
+        child: Padding(
             padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
             child: Wrap(
               spacing: 10,
               runSpacing: 10,
               children: <Widget>[]..addAll(_buildPostPreview()),
-            )
-          ),
-        ),
-      )
+            )),
+      ),
     );
     return s;
   }
@@ -122,7 +184,7 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
         !_controller.position.outOfRange) {
       print('Reach the bottom');
 
-      if (isFinishedFetch&& currentFetchType == FetchType.Posts) {
+      if (isFinishedFetch && currentFetchType == FetchType.Posts) {
         isFinishedFetch = false;
         page++;
         _booruPosts.fetchPosts(page: page).then((value) {
@@ -157,7 +219,6 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
     super.initState();
     _controller = widget.controller;
     _controller.addListener(_scrollListener);
-
     isFinishedFetch = false;
     _booruPosts.fetchPosts().then((value) {
       setState(() {

@@ -1,12 +1,10 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/extensions/list_extension.dart';
 import 'package:yande_web/models/booru_posts.dart';
+import 'package:yande_web/pages/home_page.dart';
 import 'package:yande_web/pages/widgets/post_preview.dart';
 import 'package:yande_web/settings/app_settings.dart';
-
-Function(FetchType) updadePost;
 
 class PostWaterfall extends StatefulWidget {
   // The width this widght will take
@@ -20,6 +18,7 @@ class PostWaterfall extends StatefulWidget {
 }
 
 class _PostWaterfallState extends State<PostWaterfall> {
+
   ScrollController _controller;
   bool isFinishedFetch = true;
   List<Post> posts = List<Post>();
@@ -27,7 +26,6 @@ class _PostWaterfallState extends State<PostWaterfall> {
   FetchType currentFetchType = FetchType.Posts;
   BooruPosts _booruPosts;
   DateTime _dateTime = DateTime.now();
-
   int page = 1;
 
   _PostWaterfallState() {
@@ -113,7 +111,7 @@ class _PostWaterfallState extends State<PostWaterfall> {
       return Center(child: Text("Loading"));
     } else {
       return Stack(
-        children: <Widget>[buildWidght(), _datePicker()],
+        children: <Widget>[_buildWidght(), _datePicker()],
       );
     }
   }
@@ -161,7 +159,7 @@ class _PostWaterfallState extends State<PostWaterfall> {
   }
 
   // Page content
-  Container buildWidght() {
+  Container _buildWidght() {
     _controller = ScrollController();
     var s = Container(
       child: SingleChildScrollView(
