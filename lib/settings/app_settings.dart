@@ -4,6 +4,8 @@ import 'package:yande_web/models/yande/yande_client.dart';
 class AppSettings {
   static ClientType currentClient = ClientType.Yande; // Current client
   static const double fixedPostHeight = 256.0;  // The height of post in the post list
+  static DateTime yandeFirstday= DateTime(2006,9);
+  static DateTime konachanFirstday= DateTime(2008,2);
 
   static String get currentBaseUrl {
     switch (currentClient) {

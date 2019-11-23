@@ -20,7 +20,6 @@ import 'package:yande_web/settings/app_settings.dart';
 */
 
 class BooruPosts {
-
   /// Base http call for fetch any url
   Future<List<Post>> _httpGet(String url) async {
     http.Response response = await http.get(url);
@@ -34,6 +33,7 @@ class BooruPosts {
     if (tags.length < 1) {
       return null;
     }
+
     var url =
         '${AppSettings.currentBaseUrl}/post.json?limit=$limit&page=$page&tags=$tags';
     return await _httpGet(url);
@@ -41,15 +41,14 @@ class BooruPosts {
 
   /// Fetch posts
   Future<List<Post>> fetchPosts({int limit = 50, int page = 1}) async {
-    var url =
-        '${AppSettings.currentBaseUrl}/post.json?limit=$limit&page=$page';
+    var url = '${AppSettings.currentBaseUrl}/post.json?limit=$limit&page=$page';
     return await _httpGet(url);
   }
 
   /// Fetch popular posts by recent
   Future<List<Post>> fetchPopularRecent({Period period = Period.None}) async {
     var url =
-        "${AppSettings.currentBaseUrl}/post/popular_recent?period=$period";
+        "${AppSettings.currentBaseUrl}/post/popular_recent.json?period=$period";
     return await _httpGet(url);
   }
 
@@ -76,9 +75,4 @@ enum Period {
 }
 
 // Enum of the type we want fetch
-enum FetchType {
-  Posts,
-  PopularRecent,
-  PopularByWeek,
-  PopularByMonth
-}
+enum FetchType { Posts, PopularRecent, PopularByWeek, PopularByMonth }

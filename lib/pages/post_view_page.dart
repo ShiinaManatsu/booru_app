@@ -31,7 +31,6 @@ class _PostViewPageState extends State<PostViewPage> {
 
   @override
   Widget build(BuildContext context) {
-    print(widget.post.id);
     return Scaffold(
       extendBody: true,
       body: Stack(children: <Widget>[
@@ -64,6 +63,7 @@ class _PostViewPageState extends State<PostViewPage> {
       child: Container(
         margin: EdgeInsets.all(10),
         alignment: Alignment.center,
+        height: barHeight,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(3),
             color: Colors.white,
@@ -74,7 +74,6 @@ class _PostViewPageState extends State<PostViewPage> {
                 spreadRadius: 3,
               )
             ]),
-        height: barHeight,
         child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
           AspectRatio(
             aspectRatio: 1,
@@ -96,7 +95,7 @@ class _PostViewPageState extends State<PostViewPage> {
             aspectRatio: 1,
             child: FlatButton(
               onPressed: () {},
-              child: Icon(Icons.search),
+              child: Icon(Icons.favorite_border),
             ),
           ),
         ]),

@@ -1,8 +1,10 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/extensions/list_extension.dart';
 import 'package:yande_web/models/booru_posts.dart';
 import 'package:yande_web/pages/widgets/post_preview.dart';
+import 'package:yande_web/settings/app_settings.dart';
 
 Function(FetchType) updadePost;
 
@@ -11,8 +13,7 @@ class PostWaterfall extends StatefulWidget {
   @required
   final double panelWidth;
 
-  PostWaterfall({this.panelWidth, Key key}) : super(key: key){
-  }
+  PostWaterfall({this.panelWidth, Key key}) : super(key: key) {}
 
   @override
   _PostWaterfallState createState() => _PostWaterfallState();
@@ -25,6 +26,7 @@ class _PostWaterfallState extends State<PostWaterfall> {
   List<List<Post>> fixedPosts = List<List<Post>>();
   FetchType currentFetchType = FetchType.Posts;
   BooruPosts _booruPosts;
+  DateTime _dateTime = DateTime.now();
 
   int page = 1;
 
@@ -33,11 +35,17 @@ class _PostWaterfallState extends State<PostWaterfall> {
     _booruPosts = new BooruPosts();
   }
 
+  _setDateTime(DateTime dateTime) {
+    _dateTime = dateTime;
+    _fetchByType(currentFetchType);
+  }
+
   _updateCall(FetchType fetchType) {
     if (fetchType == currentFetchType) {
       return;
     } else {
       setState(() {
+        _dateTime = DateTime.now();
         fixedPosts.clear();
         currentFetchType = fetchType;
         page = 1;
@@ -51,30 +59,47 @@ class _PostWaterfallState extends State<PostWaterfall> {
     switch (t) {
       case FetchType.Posts:
         _booruPosts.fetchPosts().then((value) {
-          posts.addAll(value.where((o) => !posts.contains(o)));
-          fixedPosts.addAllPost(posts, widget.panelWidth - 10);
-          isFinishedFetch = true;
+          setState(() {
+            posts.addAll(value.where((o) => !posts.contains(o)));
+            fixedPosts.addAllPost(posts, widget.panelWidth - 10);
+            isFinishedFetch = true;
+          });
         });
         break;
       case FetchType.PopularRecent:
         _booruPosts.fetchPopularRecent().then((value) {
-          posts.addAll(value.where((o) => !posts.contains(o)));
-          fixedPosts.addAllPost(posts, widget.panelWidth - 10);
-          isFinishedFetch = true;
+          setState(() {
+            posts.addAll(value.where((o) => !posts.contains(o)));
+            fixedPosts.addAllPost(posts, widget.panelWidth - 10);
+            isFinishedFetch = true;
+          });
         });
         break;
       case FetchType.PopularByWeek:
-        _booruPosts.fetchPopularByWeek().then((value) {
-          posts.addAll(value.where((o) => !posts.contains(o)));
-          fixedPosts.addAllPost(posts, widget.panelWidth - 10);
-          isFinishedFetch = true;
+        _booruPosts
+            .fetchPopularByWeek(
+                day: _dateTime.day,
+                month: _dateTime.month,
+                year: _dateTime.year)
+            .then((value) {
+          setState(() {
+            fixedPosts.clear();
+            posts.addAll(value.where((o) => !posts.contains(o)));
+            fixedPosts.addAllPost(posts, widget.panelWidth - 10);
+            isFinishedFetch = true;
+          });
         });
         break;
       case FetchType.PopularByMonth:
-        _booruPosts.fetchPopularByMonth().then((value) {
-          posts.addAll(value.where((o) => !posts.contains(o)));
-          fixedPosts.addAllPost(posts, widget.panelWidth - 10);
-          isFinishedFetch = true;
+        _booruPosts
+            .fetchPopularByMonth(month: _dateTime.month, year: _dateTime.year)
+            .then((value) {
+          setState(() {
+            fixedPosts.clear();
+            posts.addAll(value.where((o) => !posts.contains(o)));
+            fixedPosts.addAllPost(posts, widget.panelWidth - 10);
+            isFinishedFetch = true;
+          });
         });
         break;
       default:
@@ -87,7 +112,51 @@ class _PostWaterfallState extends State<PostWaterfall> {
     if (fixedPosts.length == 0) {
       return Center(child: Text("Loading"));
     } else {
-      return buildWidght();
+      return Stack(
+        children: <Widget>[buildWidght(), _datePicker()],
+      );
+    }
+  }
+
+  Widget _datePicker() {
+    if (currentFetchType == FetchType.PopularByWeek ||
+        currentFetchType == FetchType.PopularByMonth) {
+      return Container(
+        height: 60,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+            FlatButton(
+              child: Icon(Icons.arrow_back),
+              onPressed: () {},
+            ),
+            FlatButton(
+              child:
+                  Text("${_dateTime.month} ${_dateTime.day} ${_dateTime.year}"),
+              onPressed: () {
+                showDatePicker(
+                        firstDate: AppSettings.currentClient == ClientType.Yande
+                            ? AppSettings.yandeFirstday
+                            : AppSettings.konachanFirstday,
+                        lastDate: DateTime(DateTime.now().year,
+                            DateTime.now().month, DateTime.now().day + 1),
+                        context: context,
+                        initialDate: DateTime.now())
+                    .then((x) {
+                  if (x != null) _setDateTime(x);
+                });
+              },
+            ),
+            FlatButton(
+              child: Icon(Icons.arrow_forward),
+              onPressed: () {},
+            ),
+          ],
+        ),
+      );
+    }
+    else{
+      return Container();
     }
   }
 
@@ -95,8 +164,8 @@ class _PostWaterfallState extends State<PostWaterfall> {
   Container buildWidght() {
     _controller = ScrollController();
     var s = Container(
-        child: Scrollbar(
       child: SingleChildScrollView(
+        physics: BouncingScrollPhysics(),
         controller: _controller,
         child: Padding(
             padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
@@ -106,7 +175,7 @@ class _PostWaterfallState extends State<PostWaterfall> {
               children: <Widget>[]..addAll(_buildPostPreview()),
             )),
       ),
-    ));
+    );
     _controller.addListener(_scrollListener);
     return s;
   }
