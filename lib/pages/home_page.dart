@@ -1,12 +1,8 @@
 import 'package:floating_search_bar/ui/sliver_search_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:yande_web/controllors/search_box.dart';
-import 'package:yande_web/pages/widgets/post_waterfall_widget.dart';
 import 'package:yande_web/pages/widgets/sliver_post_waterfall_widget.dart';
 import 'package:yande_web/settings/app_settings.dart';
-import 'package:yande_web/themes/theme_light.dart';
 import 'package:yande_web/models/booru_posts.dart';
-import '../main.dart';
 
 Function(FetchType) updadePost;
 
@@ -29,52 +25,6 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     super.build(context);
     panelWidth = MediaQuery.of(context).size.width;
-    // return Scaffold(
-    //     drawer: _appDrawer(),
-    //     appBar: PreferredSize(
-    //       preferredSize: Size.fromHeight(64),
-    //       child: AppBar(
-    //         title: SearchBox(
-    //           key: _homePageBar,
-    //         ),
-    //         iconTheme: IconThemeData(color: baseBlackColor),
-    //         centerTitle: true,
-    //         actions: <Widget>[
-    //           Container(
-    //             width: 64,
-    //             child: FlatButton(
-    //               onPressed: () {
-    //                 Navigator.pushNamed(context, searchTaggedPostsPage);
-    //               },
-    //               child: Icon(Icons.person),
-    //               //padding: EdgeInsets.all(10),
-    //               shape: RoundedRectangleBorder(
-    //                   borderRadius: new BorderRadius.circular(32.0)),
-    //             ),
-    //           ),
-    //           Center(
-    //             child: DropdownButton(
-    //               underline: Container(),
-    //               items: [
-    //                 DropdownMenuItem(
-    //                   child: Text("Yande.re"),
-    //                   value: ClientType.Yande,
-    //                 ),
-    //                 DropdownMenuItem(
-    //                   child: Text("Konachan"),
-    //                   value: ClientType.Konachan,
-    //                 )
-    //               ],
-    //               onChanged: onDropdownChanged,
-    //               icon: Icon(Icons.settings),
-    //               value: type,
-    //             ),
-    //           ),
-    //         ],
-    //       ),
-    //     ),
-    //     body: _buildRow(context));
-
     var _controller = new ScrollController();
     return Scaffold(
         drawer: _appDrawer(),
@@ -178,40 +128,6 @@ class _HomePageState extends State<HomePage>
     //updadePost(FetchType.PopularRecent);
   }
 
-  Widget _buildSliverRow(BuildContext context) {
-    var _postWaterfall = SliverPostWaterfall(
-      panelWidth: panelWidth,
-      key: _homeWaterfall,
-    );
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Expanded(
-          child: _postWaterfall,
-        )
-      ],
-    );
-  }
-
-  Widget _buildRow(BuildContext context) {
-    var _postWaterfall = PostWaterfall(
-      panelWidth: panelWidth,
-      key: _homeWaterfall,
-    );
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Expanded(
-          child: _postWaterfall,
-        )
-      ],
-    );
-  }
-
   FetchType _type = FetchType.Posts;
   double _drawerButtonHeight = 60;
   Key _drawer = Key("drawer");
@@ -301,7 +217,7 @@ class _HomePageState extends State<HomePage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
-          Text(text),
+          Text(text,style: TextStyle(fontSize: 20),),
           Flexible(
             fit: FlexFit.tight,
             child: Container(

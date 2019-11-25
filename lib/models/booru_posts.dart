@@ -1,4 +1,5 @@
 import 'package:http/http.dart' as http;
+import 'package:yande_web/models/yande/comment.dart';
 import 'dart:convert';
 import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/settings/app_settings.dart';
@@ -64,6 +65,19 @@ class BooruPosts {
     var url =
         "${AppSettings.currentBaseUrl}/post/popular_by_month.json?&month=$month&year=$year";
     return await _httpGet(url);
+  }
+
+  /// Fetch post comment
+  static Future<List<Comment>> fetchPostsComments({int postID}) async {
+    var url = "${AppSettings.currentBaseUrl}/comment.json?post_id=$postID";
+    http.Response response = await http.get(url);
+    List responseJson = json.decode(response.body);
+    if(responseJson.length==0){
+      List<Comment> l=new List<Comment>();
+      l.add(new Comment(isEmpty: true));
+      return l;
+    }
+    return responseJson.map((m) => Comment.fromJson(m)).toList();
   }
 }
 
