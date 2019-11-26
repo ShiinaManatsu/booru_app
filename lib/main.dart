@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
           screen = HomePage();
           break;
         case searchTaggedPostsPage:
-          screen = SearchTaggedPostsPage();
+          screen = SearchTaggedPostsPage(key: arg["key"]);
           break;
         case postViewPage:
           screen = PostViewPage(post: arg["post"]);

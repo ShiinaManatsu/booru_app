@@ -8,7 +8,7 @@ enum TagType { None, Artist, NotUsed, Copyright, Character, Circle, Faults }
 class TagDataBase{
 
   /// Search for tag suggestion
-  Future<List<String>> searchTags(String tag)async{
+  static Future<List<String>> searchTags(String tag)async{
     var url="${AppSettings.currentBaseUrl}/tag.json?order=count&limit=10&name=$tag";
     http.Response response = await http.get(url);
     List decodedjson=json.decode(response.body);

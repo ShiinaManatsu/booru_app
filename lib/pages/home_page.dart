@@ -1,5 +1,6 @@
 import 'package:floating_search_bar/ui/sliver_search_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:yande_web/main.dart';
 import 'package:yande_web/pages/widgets/sliver_post_waterfall_widget.dart';
 import 'package:yande_web/settings/app_settings.dart';
 import 'package:yande_web/models/booru_posts.dart';
@@ -17,6 +18,7 @@ class _HomePageState extends State<HomePage>
   double leftPanelWidth = 86;
   Key _homeWaterfall = Key("_homeWaterfall");
   Key _homePageBar = Key("homePageBar");
+  Key _searchPage = Key("searchPage");
 
   bool fetchCommonPosts = true;
 
@@ -57,7 +59,9 @@ class _HomePageState extends State<HomePage>
                       child: FlatButton(
                         shape: RoundedRectangleBorder(
                             borderRadius: new BorderRadius.circular(50.0)),
-                        onPressed: () => {},
+                        onPressed: () => {
+                          Navigator.pushNamed(context, searchTaggedPostsPage,arguments: {"key":_searchPage})
+                        },
                         child: Icon(Icons.search),
                       ),
                     ),
