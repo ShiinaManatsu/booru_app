@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:yande_web/models/yande/comment.dart';
 import 'dart:convert';
@@ -30,7 +31,7 @@ class BooruPosts {
 
   /// Fetch tagged posts
   Future<List<Post>> fetchTagsSearch(
-      {String tags, int limit = 50, int page = 1}) async {
+      {@required String tags, int limit = 50, int page = 1}) async {
     if (tags.length < 1) {
       return null;
     }
@@ -72,8 +73,8 @@ class BooruPosts {
     var url = "${AppSettings.currentBaseUrl}/comment.json?post_id=$postID";
     http.Response response = await http.get(url);
     List responseJson = json.decode(response.body);
-    if(responseJson.length==0){
-      List<Comment> l=new List<Comment>();
+    if (responseJson.length == 0) {
+      List<Comment> l = new List<Comment>();
       l.add(new Comment(isEmpty: true));
       return l;
     }
@@ -89,4 +90,4 @@ enum Period {
 }
 
 // Enum of the type we want fetch
-enum FetchType { Posts, PopularRecent, PopularByWeek, PopularByMonth }
+enum FetchType { Posts, PopularRecent, PopularByWeek, PopularByMonth, Search }
