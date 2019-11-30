@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
@@ -25,7 +26,7 @@ class _PostViewPageState extends State<PostViewPage> {
   double top = 0;
   double topTarget = 0;
 
-  List<Comment> _comments=new List<Comment>();
+  List<Comment> _comments = new List<Comment>();
 
   @override
   void initState() {
@@ -54,6 +55,8 @@ class _PostViewPageState extends State<PostViewPage> {
             backdropColor: Colors.black,
             backdropOpacity: 0.5,
             minHeight: 60,
+            maxHeight: 800,
+            parallaxEnabled: true,
             backdropEnabled: true,
             // When coollapsed
             collapsed: Center(
@@ -75,39 +78,76 @@ class _PostViewPageState extends State<PostViewPage> {
       );
     } else {
       return Container(
-        margin: EdgeInsets.fromLTRB(30,50,30,30),
+        margin: EdgeInsets.fromLTRB(30, 50, 30, 30),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
+          textDirection: TextDirection.rtl,
           children: <Widget>[
-            _buildTitleSpliter(Text("Size",style: TextStyle(fontSize: 20),)),
+            _buildTitleSpliter(Text(
+              "Size",
+              style: TextStyle(fontSize: 20),
+            )),
             Text("${widget.post.width}x${widget.post.height}"),
-            _buildTitleSpliter(Text("Author",style: TextStyle(fontSize: 20),)),            
+            _buildTitleSpliter(Text(
+              "Author",
+              style: TextStyle(fontSize: 20),
+            )),
             Text("${widget.post.author}"),
-            _buildTitleSpliter(Text("Score",style: TextStyle(fontSize: 20),)),
+            _buildTitleSpliter(Text(
+              "Score",
+              style: TextStyle(fontSize: 20),
+            )),
             Text("${widget.post.score}"),
-            _buildTitleSpliter(Text("Rating",style: TextStyle(fontSize: 20),)),
+            _buildTitleSpliter(Text(
+              "Tags",
+              style: TextStyle(fontSize: 20),
+            )),
+            Text("${widget.post.tags}",textDirection: TextDirection.rtl,),
+            _buildTitleSpliter(Text(
+              "Rating",
+              style: TextStyle(fontSize: 20),
+            )),
             Text("${widget.post.rating.toString()}"),
-            _buildTitleSpliter(Text("Source",style: TextStyle(fontSize: 20),)),
-            RawMaterialButton(
-              onPressed: () => _launchURL(widget.post.sourceUrl),
-              //onPressed: ()=>l(widget.post.sourceUrl),
-              child: Text(widget.post.sourceUrl),
+            _buildTitleSpliter(Text(
+              "Source",
+              style: TextStyle(fontSize: 20),
+            )),
+            // RawMaterialButton(
+            //   onPressed: () => _launchURL(widget.post.sourceUrl),
+            //   //onPressed: ()=>l(widget.post.sourceUrl),
+            //   child: Text(widget.post.sourceUrl == ""
+            //       ? "No source"
+            //       : widget.post.sourceUrl),
+            // ),
+            RichText(
+              text: new TextSpan(
+                semanticsLabel: "Open Source Link",
+                text: widget.post.sourceUrl == ""
+                    ? "No source"
+                    : widget.post.sourceUrl,
+                style: new TextStyle(color: Colors.blue),
+                recognizer: new TapGestureRecognizer()
+                  ..onTap = () => _launchURL(widget.post.sourceUrl),
+              ),
             ),
-            _buildTitleSpliter(Text("Comments",style: TextStyle(fontSize: 20),)),
-            Text(_comments.first.isEmpty ? "No comments" : _comments.first.body),
+            _buildTitleSpliter(Text(
+              "Comments",
+              style: TextStyle(fontSize: 20),
+            )),
+            Text(
+                _comments.first.isEmpty ? "No comments" : _comments.first.body),
           ],
         ),
       );
     }
   }
 
-  Widget _buildTitleSpliter(Widget title){
+  Widget _buildTitleSpliter(Widget title) {
     return Container(
-      margin: EdgeInsets.only(top: 10),
-      alignment: Alignment.centerLeft,
-      child: title
-    );
+        margin: EdgeInsets.only(top: 10),
+        alignment: Alignment.centerLeft,
+        child: title);
   }
 
   // Use for web
@@ -118,8 +158,7 @@ class _PostViewPageState extends State<PostViewPage> {
 
   _launchURL(String url) async {
     if (await canLaunch(url)) {
-      await launch(url,
-          forceWebView: true, enableJavaScript: true, enableDomStorage: true);
+      await launch(url);
     } else {
       throw 'Could not launch $url';
     }

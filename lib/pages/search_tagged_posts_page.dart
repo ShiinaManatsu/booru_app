@@ -1,7 +1,9 @@
 import 'package:floating_search_bar/floating_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:yande_web/models/booru_posts.dart';
 import 'package:yande_web/models/yande/tags.dart';
+import 'home_page.dart';
 
 class SearchTaggedPostsPage extends StatefulWidget {
   SearchTaggedPostsPage({Key key}) : super(key: key);
@@ -31,9 +33,9 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
         .where((x) => x != "")
         .switchMap<List<String>>((mapper) => _search(mapper));
 
-    search.listen((x){
+    search.listen((x) {
       setState(() {
-        _tags=x;
+        _tags = x;
       });
     });
   }
@@ -54,17 +56,38 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
       itemBuilder: (BuildContext context, int index) {
         return ListTile(
           leading: Text(_tags[index]),
-          onTap: (){},
+          onTap: () {
+            updadePost(FetchType.Search, term: _tags[index]);
+            Navigator.pop(context);
+          },
         );
       },
-      trailing: CircleAvatar(
-        child: Text("RD"),
+      trailing: IconButton(
+        icon: Icon(Icons.search),
+        onPressed: () {
+          if (_searchPattern != "") {
+            updadePost(FetchType.Search, term: _searchPattern);
+            Navigator.pop(context);
+          } else {
+            return;
+          }
+        },
       ),
       // drawer: Drawer(
       //   child: Container(),
       // ),
-      onChanged: _onTextChanged.add,
-      onTap: () {},
+      onChanged: (x) {
+        _onTextChanged.add(x);
+        _searchPattern = x;
+      },
+      onSubmitted: (x) {
+        if (_searchPattern != "") {
+          updadePost(FetchType.Search, term: _searchPattern);
+          Navigator.pop(context);
+        } else {
+          return;
+        }
+      },
       decoration: InputDecoration.collapsed(
         hintText: "Search...",
       ),

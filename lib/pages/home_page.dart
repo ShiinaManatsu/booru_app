@@ -5,7 +5,7 @@ import 'package:yande_web/pages/widgets/sliver_post_waterfall_widget.dart';
 import 'package:yande_web/settings/app_settings.dart';
 import 'package:yande_web/models/booru_posts.dart';
 
-Function(FetchType) updadePost;
+Function(FetchType, {String term}) updadePost;
 
 class HomePage extends StatefulWidget {
   @override
@@ -45,38 +45,23 @@ class _HomePageState extends State<HomePage>
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    AspectRatio(
-                      aspectRatio: 1,
-                      child: FlatButton(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: new BorderRadius.circular(50.0)),
-                        onPressed: () => Scaffold.of(context).openDrawer(),
-                        child: Icon(Icons.menu),
-                      ),
+                    IconButton(
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                      icon: Icon(Icons.menu),
                     ),
-                    AspectRatio(
-                      aspectRatio: 1,
-                      child: FlatButton(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: new BorderRadius.circular(50.0)),
-                        onPressed: () => {
-                          Navigator.pushNamed(context, searchTaggedPostsPage,arguments: {"key":_searchPage})
-                        },
-                        child: Icon(Icons.search),
-                      ),
+                    IconButton(
+                      onPressed: () => {
+                        Navigator.pushNamed(context, searchTaggedPostsPage,
+                            arguments: {"key": _searchPage})
+                      },
+                      icon: Icon(Icons.search),
                     ),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
-                        AspectRatio(
-                          aspectRatio: 1,
-                          child: FlatButton(
-                            onPressed: () {},
-                            child: Icon(Icons.person),
-                            //padding: EdgeInsets.all(10),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: new BorderRadius.circular(50.0)),
-                          ),
+                        IconButton(
+                          onPressed: () {},
+                          icon: Icon(Icons.person),
                         ),
                         Center(
                           child: DropdownButton(
@@ -166,6 +151,11 @@ class _HomePageState extends State<HomePage>
                     Navigator.pop(context);
                     updadePost(FetchType.Posts);
                   }, "Posts", FetchType.Posts),
+                  _buildDrawerButton(
+                      () => Navigator.pushNamed(context, searchTaggedPostsPage,
+                          arguments: {"key": _searchPage}),
+                      "Search",
+                      FetchType.Search),
                   // Spliter popular
                   _spliter("Popular Posts"),
                   _buildDrawerButton(() {
@@ -221,7 +211,10 @@ class _HomePageState extends State<HomePage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
-          Text(text,style: TextStyle(fontSize: 20),),
+          Text(
+            text,
+            style: TextStyle(fontSize: 20),
+          ),
           Flexible(
             fit: FlexFit.tight,
             child: Container(

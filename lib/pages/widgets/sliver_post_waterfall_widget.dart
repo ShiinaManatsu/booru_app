@@ -39,8 +39,8 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
     _fetchByType(currentFetchType);
   }
 
-  _updateCall(FetchType fetchType) {
-    if (fetchType == currentFetchType) {
+  _updateCall(FetchType fetchType, {String term}) {
+    if (fetchType == currentFetchType && currentFetchType != FetchType.Search) {
       return;
     } else {
       setState(() {
@@ -48,12 +48,16 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
         fixedPosts.clear();
         currentFetchType = fetchType;
         page = 1;
-        _fetchByType(fetchType);
+        if (fetchType != FetchType.Search) {
+          _fetchByType(fetchType);
+        } else {
+          _fetchByType(fetchType, term: term);
+        }
       });
     }
   }
 
-  _fetchByType(FetchType t) {
+  _fetchByType(FetchType t, {String term}) {
     isFinishedFetch = false;
     switch (t) {
       case FetchType.Posts:
@@ -93,6 +97,16 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
         _booruPosts
             .fetchPopularByMonth(month: _dateTime.month, year: _dateTime.year)
             .then((value) {
+          setState(() {
+            fixedPosts.clear();
+            posts.addAll(value.where((o) => !posts.contains(o)));
+            fixedPosts.addAllPost(posts, widget.panelWidth - 10);
+            isFinishedFetch = true;
+          });
+        });
+        break;
+      case FetchType.Search:
+        _booruPosts.fetchTagsSearch(tags: term, page: page).then((value) {
           setState(() {
             fixedPosts.clear();
             posts.addAll(value.where((o) => !posts.contains(o)));

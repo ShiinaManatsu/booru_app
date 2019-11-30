@@ -3,6 +3,7 @@ import 'package:yande_web/pages/post_view_page.dart';
 import 'pages/home_page.dart';
 import 'pages/search_tagged_posts_page.dart';
 import 'themes/theme_light.dart';
+import 'package:flutter/services.dart';
 
 void main() => runApp(MyApp());
 
@@ -14,6 +15,9 @@ const String postViewPage = '/postViewPage';
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(
+        SystemUiOverlayStyle(statusBarColor: Colors.transparent));
+
     return MaterialApp(
         onGenerateRoute: _routes(), title: 'Home', theme: lightTheme);
   }
