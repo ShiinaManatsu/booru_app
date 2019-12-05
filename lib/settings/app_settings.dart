@@ -22,6 +22,7 @@ class AppSettings {
     }
   }
 
+  // 125*125
   static String get avatorUrl {
     switch (currentClient) {
       case ClientType.Yande:

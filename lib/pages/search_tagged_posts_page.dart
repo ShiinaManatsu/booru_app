@@ -13,9 +13,6 @@ class SearchTaggedPostsPage extends StatefulWidget {
 }
 
 class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
-  Key _searchPageBar = Key("searchPageBar");
-  Key _searchWaterfall = Key("searchPage");
-  ScrollController _controller;
 
   List<String> _tags = List<String>();
   String _searchPattern = "";
@@ -25,7 +22,6 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     search = _onTextChanged
         .distinct()
