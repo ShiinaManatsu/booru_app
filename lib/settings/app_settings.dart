@@ -21,21 +21,6 @@ class AppSettings {
         break;
     }
   }
-
-  // 125*125
-  static String get avatorUrl {
-    switch (currentClient) {
-      case ClientType.Yande:
-        return "$currentBaseUrl/data/avatars/{UserID}.jpg";
-        break;
-      case ClientType.Konachan:
-        return "$currentBaseUrl/data/avatars/{UserID}.jpg";
-        break;
-      default:
-        return null;
-        break;
-    }
-  }
 }
 
 enum ClientType { Yande, Konachan }

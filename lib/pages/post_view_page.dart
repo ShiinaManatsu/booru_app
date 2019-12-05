@@ -37,7 +37,7 @@ class _PostViewPageState extends State<PostViewPage> {
       });
     });
   }
-
+  
   _PostViewPageState() {
     Observable.timer(() {}, Duration(milliseconds: 10)).listen((x) {
       setState(() {
@@ -103,7 +103,10 @@ class _PostViewPageState extends State<PostViewPage> {
               "Tags",
               style: TextStyle(fontSize: 20),
             )),
-            Text("${widget.post.tags}",textDirection: TextDirection.rtl,),
+            Text(
+              "${widget.post.tags}",
+              textDirection: TextDirection.rtl,
+            ),
             _buildTitleSpliter(Text(
               "Rating",
               style: TextStyle(fontSize: 20),
@@ -178,8 +181,10 @@ class _PostViewPageState extends State<PostViewPage> {
     );
   }
 
+
   // Top floating bar
   AnimatedPositioned _buildBar(BuildContext context) {
+    print("build bar called");
     topTarget = 20 + MediaQuery.of(context).padding.vertical;
     return AnimatedPositioned(
       duration: Duration(milliseconds: 500),
