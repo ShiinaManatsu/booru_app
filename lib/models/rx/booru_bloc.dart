@@ -8,17 +8,22 @@ import 'package:yande_web/extensions/list_extension.dart';
 class BooruBloc {
   final PublishSubject<UpdateArg> onUpdate;
   final PublishSubject onRefresh;
+  final PublishSubject<bool> onPage;
+  final PublishSubject onReset;
   final Stream<PostState> state;
+  static int page = 1;
 
   //BooruPosts booru=new  BooruPosts();
 
   factory BooruBloc(BooruAPI booru, double panelWidth) {
     final onUpdate = PublishSubject<UpdateArg>();
     final onRefresh = PublishSubject();
+    final onPage = PublishSubject<bool>();
+    final onReset = PublishSubject();
 
+    Observable<PostState> state;
     UpdateArg last;
 
-    onRefresh.listen((x) => print("on refresh"));
     // Call on refresh
     var refresh =
         onRefresh.switchMap<PostState>((x) => _fetchState(last, booru));
@@ -27,22 +32,38 @@ class BooruBloc {
     var onUpdateChange =
         onUpdate.distinct().throttleTime(const Duration(seconds: 1));
 
+    // Laoding stete
     var loadingState = onUpdateChange
         .switchMap<PostState>((x) => Stream<PostState>.value(PostLoading()));
 
+    // Cache last update
     onUpdate.distinct().listen((x) {
       last = x;
       print("update state updated");
     });
 
-    Observable<PostState> state;
+    // Fetch posts
     var fetchingState = onUpdateChange
         .switchMap<PostState>((UpdateArg x) => _fetchState(x, booru))
         .startWith(PostLoading());
 
+    // Merge events
     state = loadingState.mergeWith([fetchingState, refresh]);
 
-    return BooruBloc._(onUpdate, onRefresh, state);
+    // Next page or preview
+    var onPageChange = onPage.throttleTime(Duration(milliseconds: 500));
+
+    onPageChange.listen((x) {
+      x ? page++ : page--;
+    });
+
+    // Reset page
+    var reset = onReset.throttleTime(Duration(seconds: 1));
+
+    // May should register to the refresh call
+    reset.listen((x) => page = 1);
+
+    return BooruBloc._(onUpdate, onRefresh, onPage, onReset, state);
   }
 
   static Stream<PostState> _fetchState(UpdateArg arg, BooruAPI booru) async* {
@@ -85,5 +106,6 @@ class BooruBloc {
     onRefresh.close();
   }
 
-  BooruBloc._(this.onUpdate, this.onRefresh, this.state);
+  BooruBloc._(
+      this.onUpdate, this.onRefresh, this.onPage, this.onReset, this.state);
 }

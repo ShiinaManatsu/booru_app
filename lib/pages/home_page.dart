@@ -19,6 +19,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin {
+  /// Private properties
+  //static const double _leftPanelWidth = 86;
+  static const Key _searchPage = Key("searchPage");
+
   @override
   void initState() {
     super.initState();
@@ -28,11 +32,6 @@ class _HomePageState extends State<HomePage>
           .add(UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
     });
   }
-
-  double leftPanelWidth = 86;
-  Key _searchPage = Key("searchPage");
-
-  bool fetchCommonPosts = true;
 
   var type = ClientType.Yande;
   @override
@@ -101,7 +100,10 @@ class _HomePageState extends State<HomePage>
               SliverPostWaterfall(
                 controller: _controller,
                 panelWidth: panelWidth,
-              )
+              ),
+              _type == FetchType.Posts || _type == FetchType.Search
+                  ? _buildPageNavigator()
+                  : Container(),
             ],
           ),
         ));
@@ -228,6 +230,25 @@ class _HomePageState extends State<HomePage>
         onPressed: func,
         child: Container(alignment: Alignment.centerLeft, child: Text(text)),
       ),
+    );
+  }
+
+  Widget _buildPageNavigator() {
+    return SliverList(
+      delegate: SliverChildListDelegate([
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            MaterialButton(
+              onPressed: (){},
+              height: 30,
+              minWidth: 30,
+              child: Icon(Icons.chevron_left),
+            )
+          ],
+        ),
+      ]),
     );
   }
 

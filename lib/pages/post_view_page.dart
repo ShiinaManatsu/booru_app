@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
@@ -49,6 +50,10 @@ class _PostViewPageState extends State<PostViewPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawerEdgeDragWidth: 100,
+      drawer: Drawer(
+        child: _buildSlidingPanelContent(),
+      ),
       extendBody: true,
       body: Stack(children: <Widget>[
         SlidingUpPanel(
@@ -65,6 +70,7 @@ class _PostViewPageState extends State<PostViewPage> {
               style: TextStyle(fontSize: 25),
             )),
             panel: _buildSlidingPanelContent(),
+            //body: kIsWeb?_buildWebGallery():_buildmobileGallery()
             body: _buildmobileGallery()),
         _buildBar(context),
       ]),
@@ -82,7 +88,6 @@ class _PostViewPageState extends State<PostViewPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
-          textDirection: TextDirection.rtl,
           children: <Widget>[
             _buildTitleSpliter(Text(
               "Size",
@@ -105,7 +110,6 @@ class _PostViewPageState extends State<PostViewPage> {
             )),
             Text(
               "${widget.post.tags}",
-              textDirection: TextDirection.rtl,
             ),
             _buildTitleSpliter(Text(
               "Rating",
@@ -116,13 +120,6 @@ class _PostViewPageState extends State<PostViewPage> {
               "Source",
               style: TextStyle(fontSize: 20),
             )),
-            // RawMaterialButton(
-            //   onPressed: () => _launchURL(widget.post.sourceUrl),
-            //   //onPressed: ()=>l(widget.post.sourceUrl),
-            //   child: Text(widget.post.sourceUrl == ""
-            //       ? "No source"
-            //       : widget.post.sourceUrl),
-            // ),
             RichText(
               text: new TextSpan(
                 semanticsLabel: "Open Source Link",
@@ -131,7 +128,15 @@ class _PostViewPageState extends State<PostViewPage> {
                     : widget.post.sourceUrl,
                 style: new TextStyle(color: Colors.blue),
                 recognizer: new TapGestureRecognizer()
-                  ..onTap = () => _launchURL(widget.post.sourceUrl),
+                  ..onTap = () {
+                    // if(kIsWeb){
+                    //   _webLaunchURL(widget.post.sourceUrl);
+                    // }
+                    // else{
+                    //   _launchURL(widget.post.sourceUrl);
+                    // }
+                    _launchURL(widget.post.sourceUrl);
+                  },
               ),
             ),
             _buildTitleSpliter(Text(
@@ -154,9 +159,8 @@ class _PostViewPageState extends State<PostViewPage> {
   }
 
   // Use for web
-  // l(String url) {
+  // _webLaunchURL(String url) {
   //   html.window.open(url, "link");
-
   // }
 
   _launchURL(String url) async {
@@ -181,6 +185,17 @@ class _PostViewPageState extends State<PostViewPage> {
     );
   }
 
+  Widget _buildWebGallery() {
+    return Container(
+      margin: EdgeInsets.only(bottom: 60),
+      child: Hero(
+        tag: widget.post,
+        child: Image(
+          image: Image.network(widget.post.sampleUrl).image,
+        ),
+      ),
+    );
+  }
 
   // Top floating bar
   AnimatedPositioned _buildBar(BuildContext context) {
