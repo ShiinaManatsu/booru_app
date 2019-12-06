@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:yande_web/models/booru_posts.dart';
+import 'package:yande_web/models/rx/booru_api.dart';
+import 'package:yande_web/models/rx/update_args.dart';
 import 'package:yande_web/models/yande/post.dart';
-import 'package:yande_web/extensions/list_extension.dart';
 import 'package:yande_web/pages/home_page.dart';
 import 'package:yande_web/settings/app_settings.dart';
 import 'post_preview.dart';
@@ -25,114 +25,55 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
   List<Post> posts = List<Post>();
   List<List<Post>> fixedPosts = List<List<Post>>();
   FetchType currentFetchType = FetchType.Posts;
-  BooruPosts _booruPosts;
   DateTime _dateTime = DateTime.now();
   int page = 1;
 
   _SliverPostWaterfallState() {
-    updadePost = _updateCall;
-    _booruPosts = new BooruPosts();
+    //updadePost = _updateCall;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = widget.controller;
+    _controller.addListener(_scrollListener);
   }
 
   _setDateTime(DateTime dateTime) {
     _dateTime = dateTime;
-    _fetchByType(currentFetchType);
-  }
-
-  _updateCall(FetchType fetchType, {String term}) {
-    if (fetchType == currentFetchType && currentFetchType != FetchType.Search) {
-      return;
-    } else {
-      setState(() {
-        _dateTime = DateTime.now();
-        fixedPosts.clear();
-        currentFetchType = fetchType;
-        page = 1;
-        if (fetchType != FetchType.Search) {
-          _fetchByType(fetchType);
-        } else {
-          _fetchByType(fetchType, term: term);
-        }
-      });
-    }
-  }
-
-  _fetchByType(FetchType t, {String term}) {
-    isFinishedFetch = false;
-    switch (t) {
-      case FetchType.Posts:
-        _booruPosts.fetchPosts().then((value) {
-          setState(() {
-            posts.addAll(value.where((o) => !posts.contains(o)));
-            fixedPosts.addAllPost(posts, widget.panelWidth - 10);
-            isFinishedFetch = true;
-          });
-        });
-        break;
-      case FetchType.PopularRecent:
-        _booruPosts.fetchPopularRecent().then((value) {
-          setState(() {
-            posts.addAll(value.where((o) => !posts.contains(o)));
-            fixedPosts.addAllPost(posts, widget.panelWidth - 10);
-            isFinishedFetch = true;
-          });
-        });
-        break;
-      case FetchType.PopularByWeek:
-        _booruPosts
-            .fetchPopularByWeek(
-                day: _dateTime.day,
-                month: _dateTime.month,
-                year: _dateTime.year)
-            .then((value) {
-          setState(() {
-            fixedPosts.clear();
-            posts.addAll(value.where((o) => !posts.contains(o)));
-            fixedPosts.addAllPost(posts, widget.panelWidth - 10);
-            isFinishedFetch = true;
-          });
-        });
-        break;
-      case FetchType.PopularByMonth:
-        _booruPosts
-            .fetchPopularByMonth(month: _dateTime.month, year: _dateTime.year)
-            .then((value) {
-          setState(() {
-            fixedPosts.clear();
-            posts.addAll(value.where((o) => !posts.contains(o)));
-            fixedPosts.addAllPost(posts, widget.panelWidth - 10);
-            isFinishedFetch = true;
-          });
-        });
-        break;
-      case FetchType.Search:
-        _booruPosts.fetchTagsSearch(tags: term, page: page).then((value) {
-          setState(() {
-            fixedPosts.clear();
-            posts.addAll(value.where((o) => !posts.contains(o)));
-            fixedPosts.addAllPost(posts, widget.panelWidth - 10);
-            isFinishedFetch = true;
-          });
-        });
-        break;
-      default:
-        break;
-    }
+    // TODO: Update by time
   }
 
   @override
   Widget build(BuildContext context) {
     return SliverList(
-      delegate: SliverChildListDelegate([_buildSliver()]),
+      delegate: SliverChildListDelegate([
+        StreamBuilder<List<Post>>(
+          stream: booruBloc.posts,
+          initialData: new List<Post>(),
+          builder: (context, snapshot) {
+            if (snapshot.data.length == 0) {
+              return Center(child: Text("Loading"));
+            } else {
+              return Container(
+                child: SingleChildScrollView(
+                  child: Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
+                      child: Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: <Widget>[]
+                          ..addAll(snapshot.data.map((x) => PostPreview(
+                                post: x,
+                              ))),
+                      )),
+                ),
+              );
+            }
+          },
+        )
+      ]),
     );
-  }
-
-  Widget _buildSliver() {
-    if (fixedPosts.length == 0) {
-      return Center(child: Text("Loading"));
-    } else {
-      return _buildWidght();
-    }
   }
 
   Widget _datePicker() {
@@ -176,22 +117,6 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
     }
   }
 
-  // Page content
-  Container _buildWidght() {
-    var s = Container(
-      child: SingleChildScrollView(
-        child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
-            child: Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: <Widget>[]..addAll(_buildPostPreview()),
-            )),
-      ),
-    );
-    return s;
-  }
-
   _scrollListener() {
     // Reach the bottom
     if (_controller.offset >= _controller.position.maxScrollExtent - 800 &&
@@ -199,15 +124,7 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
       print('Reach the bottom');
 
       if (isFinishedFetch && currentFetchType == FetchType.Posts) {
-        isFinishedFetch = false;
-        page++;
-        _booruPosts.fetchPosts(page: page).then((value) {
-          setState(() {
-            posts.addAll(value.where((o) => !posts.contains(o)));
-            fixedPosts.addAllPost(posts, widget.panelWidth - 10);
-            isFinishedFetch = true;
-          });
-        });
+        // TODO: Fetch when scrool
       }
     }
     // //  Reach the top
@@ -216,30 +133,13 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
     // }
   }
 
-  _buildPostPreview() {
+  _buildPostPreview(List<Post> posts) {
     var list = new List<PostPreview>();
-    fixedPosts.forEach((x) {
-      x.forEach((f) {
-        list.add(PostPreview(
-          post: f,
-        ));
-      });
+    posts.forEach((f) {
+      list.add(PostPreview(
+        post: f,
+      ));
     });
     return list;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = widget.controller;
-    _controller.addListener(_scrollListener);
-    isFinishedFetch = false;
-    _booruPosts.fetchPosts().then((value) {
-      setState(() {
-        posts.addAll(value);
-        fixedPosts.addAllPost(posts, widget.panelWidth - 15);
-        isFinishedFetch = true;
-      });
-    });
   }
 }

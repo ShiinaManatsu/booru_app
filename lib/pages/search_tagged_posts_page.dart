@@ -1,7 +1,8 @@
 import 'package:floating_search_bar/floating_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:yande_web/models/booru_posts.dart';
+import 'package:yande_web/models/rx/booru_api.dart';
+import 'package:yande_web/models/rx/update_args.dart';
 import 'package:yande_web/models/yande/tags.dart';
 import 'home_page.dart';
 
@@ -13,7 +14,6 @@ class SearchTaggedPostsPage extends StatefulWidget {
 }
 
 class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
-
   List<String> _tags = List<String>();
   String _searchPattern = "";
 
@@ -53,7 +53,10 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
         return ListTile(
           leading: Text(_tags[index]),
           onTap: () {
-            updadePost(FetchType.Search, term: _tags[index]);
+            searchTerm = _tags[index];
+            booruBloc.onUpdate.add(UpdateArg(
+                fetchType: FetchType.Search,
+                arg: TaggedArgs(tags: searchTerm, page: 1)));
             Navigator.pop(context);
           },
         );
@@ -62,7 +65,10 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
         icon: Icon(Icons.search),
         onPressed: () {
           if (_searchPattern != "") {
-            updadePost(FetchType.Search, term: _searchPattern);
+            searchTerm = _searchPattern;
+            booruBloc.onUpdate.add(UpdateArg(
+                fetchType: FetchType.Search,
+                arg: TaggedArgs(tags: searchTerm, page: 1)));
             Navigator.pop(context);
           } else {
             return;
@@ -78,7 +84,9 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
       },
       onSubmitted: (x) {
         if (_searchPattern != "") {
-          updadePost(FetchType.Search, term: _searchPattern);
+          booruBloc.onUpdate.add(UpdateArg(
+              fetchType: FetchType.Search,
+              arg: TaggedArgs(tags: searchTerm, page: 1)));
           Navigator.pop(context);
         } else {
           return;

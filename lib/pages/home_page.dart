@@ -1,11 +1,15 @@
 import 'package:floating_search_bar/ui/sliver_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:yande_web/main.dart';
+import 'package:yande_web/models/rx/booru_api.dart';
+import 'package:yande_web/models/rx/booru_bloc.dart';
+import 'package:yande_web/models/rx/update_args.dart';
 import 'package:yande_web/pages/widgets/sliver_post_waterfall_widget.dart';
 import 'package:yande_web/settings/app_settings.dart';
-import 'package:yande_web/models/booru_posts.dart';
 
-Function(FetchType, {String term}) updadePost;
+BooruBloc booruBloc;
+String searchTerm="";
+double panelWidth = 1000;
 
 class HomePage extends StatefulWidget {
   @override
@@ -14,10 +18,16 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin {
-  double panelWidth = 1000;
+
+  @override
+  void initState() {
+    super.initState();
+    booruBloc = BooruBloc(BooruAPI(), panelWidth);
+    booruBloc.onUpdate
+        .add(UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
+  }
+
   double leftPanelWidth = 86;
-  Key _homeWaterfall = Key("_homeWaterfall");
-  Key _homePageBar = Key("homePageBar");
   Key _searchPage = Key("searchPage");
 
   bool fetchCommonPosts = true;
@@ -26,7 +36,7 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    panelWidth = MediaQuery.of(context).size.width;
+    panelWidth = MediaQuery.of(context).size.width-10;
     var _controller = new ScrollController();
     return Scaffold(
         drawer: _appDrawer(),
@@ -100,12 +110,14 @@ class _HomePageState extends State<HomePage>
     switch (opt) {
       case ClientType.Yande:
         AppSettings.currentClient = ClientType.Yande;
+        booruBloc.onRefresh.add("");
         setState(() {
           type = ClientType.Yande;
         });
         break;
       case ClientType.Konachan:
         AppSettings.currentClient = ClientType.Konachan;
+        booruBloc.onRefresh.add("");
         setState(() {
           type = ClientType.Konachan;
         });
@@ -149,7 +161,7 @@ class _HomePageState extends State<HomePage>
                 children: <Widget>[
                   _buildDrawerButton(() {
                     Navigator.pop(context);
-                    updadePost(FetchType.Posts);
+                    booruBloc.onUpdate.add(UpdateArg(fetchType: FetchType.Posts,arg: PostsArgs(page: 1)));
                   }, "Posts", FetchType.Posts),
                   _buildDrawerButton(
                       () => Navigator.pushNamed(context, searchTaggedPostsPage,
@@ -160,15 +172,15 @@ class _HomePageState extends State<HomePage>
                   _spliter("Popular Posts"),
                   _buildDrawerButton(() {
                     Navigator.pop(context);
-                    updadePost(FetchType.PopularRecent);
+                    booruBloc.onUpdate.add(UpdateArg(fetchType: FetchType.PopularRecent,arg: PopularRecentArgs()));
                   }, "Popular posts by recent", FetchType.PopularRecent),
                   _buildDrawerButton(() {
                     Navigator.pop(context);
-                    updadePost(FetchType.PopularByWeek);
+                    booruBloc.onUpdate.add(UpdateArg(fetchType: FetchType.PopularByWeek,arg: PopularByWeekArgs(time: DateTime.now())));
                   }, "Popular posts by week", FetchType.PopularByWeek),
                   _buildDrawerButton(() {
                     Navigator.pop(context);
-                    updadePost(FetchType.PopularByMonth);
+                    booruBloc.onUpdate.add(UpdateArg(fetchType: FetchType.PopularByMonth,arg: PopularByMonthArgs(time: DateTime.now())));
                   }, "Popular posts by month", FetchType.PopularByMonth),
                 ],
               ),
@@ -230,10 +242,6 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   bool get wantKeepAlive => true;

@@ -5,7 +5,7 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:yande_web/models/booru_posts.dart';
+import 'package:yande_web/models/rx/booru_api.dart';
 import 'package:yande_web/models/yande/comment.dart';
 import 'package:yande_web/models/yande/post.dart';
 //import 'dart:html' as html;
@@ -31,13 +31,13 @@ class _PostViewPageState extends State<PostViewPage> {
   @override
   void initState() {
     super.initState();
-    BooruPosts.fetchPostsComments(postID: widget.post.id).then((x) {
+    BooruAPI.fetchPostsComments(postID: widget.post.id).then((x) {
       setState(() {
         _comments = x;
       });
     });
   }
-  
+
   _PostViewPageState() {
     Observable.timer(() {}, Duration(milliseconds: 10)).listen((x) {
       setState(() {

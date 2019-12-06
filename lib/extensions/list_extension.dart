@@ -1,18 +1,23 @@
+import 'dart:core';
 import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/settings/app_settings.dart';
+import 'package:yande_web/pages/home_page.dart';
 // We are moving all the fetched post to the optimized list
 
-extension ListExtension on List<List<Post>> {
-  void addAllPost(List<Post> posts,double panelWidth,) 
+extension ListExtension on List<Post> {
+  List<Post> arrange() 
   {
+    List<Post> posts=List<Post>.from(this);
+    this.clear();
+    List<List<Post>> fixedPosts = List<List<Post>>();
     var panelRatio = panelWidth / AppSettings.fixedPostHeight;
     double ratioFactor = 0.7;
-    if(this.length==0){
-      this.add(new List<Post>());
+    if(fixedPosts.length==0){
+      fixedPosts.add(new List<Post>());
     }
     List<Post> row;
     while (posts.length != 0) {
-      row = this.last;
+      row = fixedPosts.last;
       double rowSumRatio = 0;
       row.forEach((item) {
         rowSumRatio += item.ratio;
@@ -33,11 +38,20 @@ extension ListExtension on List<List<Post>> {
         row.forEach((item) {
           item.widthInPanel = item.preferredWidth + widthFactor;
         });
-        this.add(new List<Post>());
-        row = this.last;
+        fixedPosts.add(new List<Post>());
+        row = fixedPosts.last;
         row.add(posts.first);
         posts.removeAt(0);
-      }
+      }      
     }
+    print("Arrange width:$panelWidth");
+    row.clear();
+    var list = new List<Post>();
+    fixedPosts.forEach((x) {
+      x.forEach((f) {
+        list.add(f);
+      });
+    });
+    return list;
   }
 }
