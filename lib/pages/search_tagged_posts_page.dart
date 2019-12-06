@@ -6,6 +6,8 @@ import 'package:yande_web/models/rx/update_args.dart';
 import 'package:yande_web/models/yande/tags.dart';
 import 'home_page.dart';
 
+String _searchPattern = "";
+
 class SearchTaggedPostsPage extends StatefulWidget {
   SearchTaggedPostsPage({Key key}) : super(key: key);
 
@@ -15,7 +17,6 @@ class SearchTaggedPostsPage extends StatefulWidget {
 
 class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
   List<String> _tags = List<String>();
-  String _searchPattern = "";
 
   Stream<List<String>> search;
   final _onTextChanged = PublishSubject<String>();

@@ -39,7 +39,7 @@ class BooruAPI {
     }
 
     var url =
-        '${AppSettings.currentBaseUrl}/post.json?limit=$limit&page=$args.page&tags=$args.tags';
+        '${AppSettings.currentBaseUrl}/post.json?limit=$limit&page=${args.page}&tags=${args.tags}';
     return await _httpGet(url);
   }
 

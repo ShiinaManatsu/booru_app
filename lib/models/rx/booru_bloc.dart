@@ -8,7 +8,6 @@ import 'package:yande_web/extensions/list_extension.dart';
 class BooruBloc {
   final PublishSubject<UpdateArg> onUpdate;
   final PublishSubject onRefresh;
-  final Stream<List<Post>> posts;
   final Stream<PostState> state;
 
   //BooruPosts booru=new  BooruPosts();
@@ -16,24 +15,17 @@ class BooruBloc {
   factory BooruBloc(BooruAPI booru, double panelWidth) {
     final onUpdate = PublishSubject<UpdateArg>();
     final onRefresh = PublishSubject();
-    Observable<List<Post>> posts;
 
     UpdateArg last;
 
     onRefresh.listen((x) => print("on refresh"));
     // Call on refresh
-    var refresh = onRefresh.switchMap<List<Post>>((x) => _fetch(last, booru));
+    var refresh =
+        onRefresh.switchMap<PostState>((x) => _fetchState(last, booru));
 
     // Call on update
-    var update = onUpdate
-        .distinct()
-        .debounceTime(const Duration(seconds: 1))
-        .switchMap<List<Post>>((UpdateArg x) => _fetch(x, booru))
-        .startWith(List<Post>());
-
-    var onUpdateChange =onUpdate
-        .distinct()
-        .debounceTime(const Duration(seconds: 1));
+    var onUpdateChange =
+        onUpdate.distinct().throttleTime(const Duration(seconds: 1));
 
     var loadingState = onUpdateChange
         .switchMap<PostState>((x) => Stream<PostState>.value(PostLoading()));
@@ -48,44 +40,13 @@ class BooruBloc {
         .switchMap<PostState>((UpdateArg x) => _fetchState(x, booru))
         .startWith(PostLoading());
 
-    state=loadingState.mergeWith([fetchingState]);
+    state = loadingState.mergeWith([fetchingState, refresh]);
 
-    /// Update the posts when event coming
-    /// Try doonlisten to arrang the post after listen
-    posts = update.mergeWith([refresh]);
-    // fixingPosts.listen((x) {
-    //   x.arrange(panelWidth);
-    //   print("posts length: ${x.length}");
-    // });
-
-    // posts
-    //   .distinct()
-    //   .listen((x)=>print("posts length: ${x.length}"));
-
-    return BooruBloc._(onUpdate, onRefresh, posts, state);
-  }
-
-  static Stream<List<Post>> _fetch(UpdateArg arg, BooruAPI booru) async* {
-    print("Fetching...");
-    switch (arg.fetchType) {
-      case FetchType.Posts:
-        yield (await booru.fetchPosts(args: arg.arg)).arrange();
-        break;
-      case FetchType.PopularRecent:
-        yield (await booru.fetchPopularRecent(args: arg.arg)).arrange();
-        break;
-      case FetchType.PopularByWeek:
-        yield (await booru.fetchPopularByWeek(args: arg.arg)).arrange();
-        break;
-      case FetchType.PopularByMonth:
-        yield (await booru.fetchPopularByMonth(args: arg.arg)).arrange();
-        break;
-      default:
-    }
+    return BooruBloc._(onUpdate, onRefresh, state);
   }
 
   static Stream<PostState> _fetchState(UpdateArg arg, BooruAPI booru) async* {
-    print("Fetching...");
+    print("Fetching...${arg.fetchType.toString()}");
     switch (arg.fetchType) {
       case FetchType.Posts:
         yield await _emptyCheck(booru.fetchPosts(args: arg.arg));
@@ -98,6 +59,9 @@ class BooruBloc {
         break;
       case FetchType.PopularByMonth:
         yield await _emptyCheck((booru.fetchPopularByMonth(args: arg.arg)));
+        break;
+      case FetchType.Search:
+        yield await _emptyCheck((booru.fetchTagged(args: arg.arg)));
         break;
       default:
     }
@@ -121,5 +85,5 @@ class BooruBloc {
     onRefresh.close();
   }
 
-  BooruBloc._(this.onUpdate, this.onRefresh, this.posts, this.state);
+  BooruBloc._(this.onUpdate, this.onRefresh, this.state);
 }

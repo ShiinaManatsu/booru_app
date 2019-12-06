@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yande_web/models/rx/booru_api.dart';
+import 'package:yande_web/models/rx/post_state.dart';
 import 'package:yande_web/models/rx/update_args.dart';
 import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/pages/home_page.dart';
@@ -48,27 +49,48 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
   Widget build(BuildContext context) {
     return SliverList(
       delegate: SliverChildListDelegate([
-        StreamBuilder<List<Post>>(
-          stream: booruBloc.posts,
-          initialData: new List<Post>(),
+        StreamBuilder<PostState>(
+          stream: booruBloc.state,
+          initialData: PostEmpty(),
           builder: (context, snapshot) {
-            if (snapshot.data.length == 0) {
-              return Center(child: Text("Loading"));
-            } else {
-              return Container(
-                child: SingleChildScrollView(
-                  child: Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
-                      child: Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
-                        children: <Widget>[]
-                          ..addAll(snapshot.data.map((x) => PostPreview(
-                                post: x,
-                              ))),
-                      )),
-                ),
-              );
+            switch (snapshot.data.runtimeType) {
+              case PostEmpty:
+                return Center(
+                  child: Text("Loading.."),
+                );
+                break;
+              case PostLoading:
+                return Center(
+                  child: Text("Loading.."),
+                );
+                break;
+              case PostError:
+                return Center(
+                  child: Text("Something gose wrong.."),
+                );
+                break;
+              case PostSuccess:
+                var state = snapshot.data as PostSuccess;
+                return Container(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                        padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
+                        child: Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: <Widget>[]
+                            ..addAll(state.result.map((x) => PostPreview(
+                                  post: x,
+                                ))),
+                        )),
+                  ),
+                );
+                break;
+              default:
+                return Center(
+                  child: Text("Loading.."),
+                );
+                break;
             }
           },
         )
