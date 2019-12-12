@@ -5,6 +5,7 @@ import 'package:yande_web/models/rx/update_args.dart';
 import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/pages/home_page.dart';
 import 'package:yande_web/settings/app_settings.dart';
+import 'package:yande_web/extensions/list_extension.dart';
 import 'post_preview.dart';
 
 class SliverPostWaterfall extends StatefulWidget {
@@ -26,23 +27,13 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
   List<Post> posts = List<Post>();
   List<List<Post>> fixedPosts = List<List<Post>>();
   FetchType currentFetchType = FetchType.Posts;
-  DateTime _dateTime = DateTime.now();
   int page = 1;
-
-  _SliverPostWaterfallState() {
-    //updadePost = _updateCall;
-  }
 
   @override
   void initState() {
     super.initState();
     _controller = widget.controller;
     _controller.addListener(_scrollListener);
-  }
-
-  _setDateTime(DateTime dateTime) {
-    _dateTime = dateTime;
-    // TODO: Update by time
   }
 
   @override
@@ -53,44 +44,30 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
           stream: booruBloc.state,
           initialData: PostEmpty(),
           builder: (context, snapshot) {
-            switch (snapshot.data.runtimeType) {
-              case PostEmpty:
-                return Center(
-                  child: Text("Loading.."),
-                );
-                break;
-              case PostLoading:
-                return Center(
-                  child: Text("Loading.."),
-                );
-                break;
-              case PostError:
-                return Center(
-                  child: Text("Something gose wrong.."),
-                );
-                break;
-              case PostSuccess:
-                var state = snapshot.data as PostSuccess;
-                return Container(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
-                        child: Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: <Widget>[]
-                            ..addAll(state.result.map((x) => PostPreview(
-                                  post: x,
-                                ))),
-                        )),
-                  ),
-                );
-                break;
-              default:
-                return Center(
-                  child: Text("Loading.."),
-                );
-                break;
+            if (snapshot.data is PostSuccess) {
+              var state = snapshot.data as PostSuccess;
+              return Container(
+                child: SingleChildScrollView(
+                  child: Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
+                      child: Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: <Widget>[]
+                          ..addAll(state.result.map((x) => PostPreview(
+                                post: x,
+                              ))),
+                      )),
+                ),
+              );
+            }
+            else if(snapshot.data is PostError){
+              var date = snapshot.data as PostError;
+              print(date.error);
+              return _buildText(date.error.toString());
+            }
+            else{
+              return _buildText("Loading..");
             }
           },
         )
@@ -98,45 +75,12 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
     );
   }
 
-  Widget _datePicker() {
-    if (currentFetchType == FetchType.PopularByWeek ||
-        currentFetchType == FetchType.PopularByMonth) {
-      return Container(
-        height: 60,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: <Widget>[
-            FlatButton(
-              child: Icon(Icons.arrow_back),
-              onPressed: () {},
-            ),
-            FlatButton(
-              child:
-                  Text("${_dateTime.month} ${_dateTime.day} ${_dateTime.year}"),
-              onPressed: () {
-                showDatePicker(
-                        firstDate: AppSettings.currentClient == ClientType.Yande
-                            ? AppSettings.yandeFirstday
-                            : AppSettings.konachanFirstday,
-                        lastDate: DateTime(DateTime.now().year,
-                            DateTime.now().month, DateTime.now().day + 1),
-                        context: context,
-                        initialDate: DateTime.now())
-                    .then((x) {
-                  if (x != null) _setDateTime(x);
-                });
-              },
-            ),
-            FlatButton(
-              child: Icon(Icons.arrow_forward),
-              onPressed: () {},
-            ),
-          ],
-        ),
-      );
-    } else {
-      return Container();
-    }
+  Widget _buildText(String text) {
+    return Container(
+      height: 200,
+      alignment: Alignment.bottomCenter,
+      child: Text(text),
+    );
   }
 
   _scrollListener() {
@@ -153,15 +97,5 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
     // if (_controller.offset <= _controller.position.minScrollExtent &&
     //     !_controller.position.outOfRange) {
     // }
-  }
-
-  _buildPostPreview(List<Post> posts) {
-    var list = new List<PostPreview>();
-    posts.forEach((f) {
-      list.add(PostPreview(
-        post: f,
-      ));
-    });
-    return list;
   }
 }

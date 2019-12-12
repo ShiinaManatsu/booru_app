@@ -57,22 +57,23 @@ class _PostViewPageState extends State<PostViewPage> {
       extendBody: true,
       body: Stack(children: <Widget>[
         SlidingUpPanel(
-            backdropColor: Colors.black,
-            backdropOpacity: 0.5,
-            minHeight: 60,
-            maxHeight: 800,
-            parallaxEnabled: true,
-            backdropEnabled: true,
-            // When coollapsed
-            collapsed: Center(
-                child: Text(
-              widget.post.id.toString(),
-              style: TextStyle(fontSize: 25),
-            )),
-            panel: _buildSlidingPanelContent(),
-            //body: kIsWeb?_buildWebGallery():_buildmobileGallery()
-            body: _buildmobileGallery()),
-        _buildBar(context),
+          backdropColor: Colors.black,
+          backdropOpacity: 0.5,
+          minHeight: 60,
+          maxHeight: 800,
+          parallaxEnabled: true,
+          backdropEnabled: true,
+          // When coollapsed
+          collapsed: Center(
+              child: Text(
+            widget.post.id.toString(),
+            style: TextStyle(fontSize: 25),
+          )),
+          panel: _buildSlidingPanelContent(),
+          //body: kIsWeb?_buildWebGallery():_buildmobileGallery()
+          body: _buildmobileGallery()
+        ),
+        _buildBar(context)
       ]),
     );
   }

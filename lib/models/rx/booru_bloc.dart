@@ -8,21 +8,20 @@ import 'package:yande_web/extensions/list_extension.dart';
 class BooruBloc {
   final PublishSubject<UpdateArg> onUpdate;
   final PublishSubject onRefresh;
-  final PublishSubject<bool> onPage;
   final PublishSubject onReset;
+  final PublishSubject<PageNavigationType> onPage;
   final Stream<PostState> state;
+  final Stream<int> pageState;
   static int page = 1;
-
-  //BooruPosts booru=new  BooruPosts();
 
   factory BooruBloc(BooruAPI booru, double panelWidth) {
     final onUpdate = PublishSubject<UpdateArg>();
     final onRefresh = PublishSubject();
-    final onPage = PublishSubject<bool>();
     final onReset = PublishSubject();
+    final onPage = PublishSubject<PageNavigationType>();
 
-    Observable<PostState> state;
-    UpdateArg last;
+    UpdateArg last =
+        UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1));
 
     // Call on refresh
     var refresh =
@@ -31,6 +30,8 @@ class BooruBloc {
     // Call on update
     var onUpdateChange =
         onUpdate.distinct().throttleTime(const Duration(seconds: 1));
+
+    //pageChange=onPage.throttleTime(Duration(milliseconds: 500)).;
 
     // Laoding stete
     var loadingState = onUpdateChange
@@ -48,22 +49,50 @@ class BooruBloc {
         .startWith(PostLoading());
 
     // Merge events
-    state = loadingState.mergeWith([fetchingState, refresh]);
-
-    // Next page or preview
-    var onPageChange = onPage.throttleTime(Duration(milliseconds: 500));
-
-    onPageChange.listen((x) {
-      x ? page++ : page--;
+    var state = loadingState.mergeWith([fetchingState, refresh]).doOnListen(() {
+      print("Init start");
+      onUpdate
+          .add(UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
     });
 
-    // Reset page
-    var reset = onReset.throttleTime(Duration(seconds: 1));
+    var pagePrevious = onPage
+        .where((x) => BooruBloc.page >= 1)
+        .where((x) => x == PageNavigationType.Previous)
+        .map<int>((x) => -1);
 
-    // May should register to the refresh call
-    reset.listen((x) => page = 1);
+    var pageNext = onPage
+        .where((x) => BooruBloc.page >= 1)
+        .where((x) => x == PageNavigationType.Next)
+        .map<int>((x) => 1);
 
-    return BooruBloc._(onUpdate, onRefresh, onPage, onReset, state);
+    // Hold the page value
+    var pageStateChanged = pagePrevious.mergeWith([pageNext]);
+
+    var pageChanged = pageStateChanged.switchMap<int>((x) async* {
+      page += x;
+      print("Page Changed: $page");
+      if (last.fetchType == FetchType.Posts) {
+        onUpdate.add(
+            UpdateArg(fetchType: last.fetchType, arg: PostsArgs(page: page)));
+      } else if (last.fetchType == FetchType.Search) {
+        onUpdate.add(UpdateArg(
+            fetchType: last.fetchType,
+            arg: TaggedArgs(tags: (last.arg as TaggedArgs).tags, page: page)));
+      }
+      yield page;
+    }).startWith(1);
+
+    var pageReset=onReset
+        .switchMap<int>((x) async* {
+          page=1; 
+          yield page;
+          }
+        );
+
+    var pageIndicator=pageChanged.mergeWith([pageReset]);
+
+    return BooruBloc._(
+        onUpdate, onRefresh, onReset, onPage, state, pageIndicator);
   }
 
   static Stream<PostState> _fetchState(UpdateArg arg, BooruAPI booru) async* {
@@ -104,8 +133,12 @@ class BooruBloc {
   void dispose() {
     onUpdate.close();
     onRefresh.close();
+    onReset.close();
+    onPage.close();
   }
 
-  BooruBloc._(
-      this.onUpdate, this.onRefresh, this.onPage, this.onReset, this.state);
+  BooruBloc._(this.onUpdate, this.onRefresh, this.onReset, this.onPage,
+      this.state, this.pageState);
 }
+
+enum PageNavigationType { Previous, Next }

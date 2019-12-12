@@ -55,6 +55,8 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
           leading: Text(_tags[index]),
           onTap: () {
             searchTerm = _tags[index];
+            homePageFetchTypeChanged.add(FetchType.Search);
+            booruBloc.onReset.add(null);
             booruBloc.onUpdate.add(UpdateArg(
                 fetchType: FetchType.Search,
                 arg: TaggedArgs(tags: searchTerm, page: 1)));
@@ -67,6 +69,8 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
         onPressed: () {
           if (_searchPattern != "") {
             searchTerm = _searchPattern;
+            homePageFetchTypeChanged.add(FetchType.Search);
+            booruBloc.onReset.add(null);
             booruBloc.onUpdate.add(UpdateArg(
                 fetchType: FetchType.Search,
                 arg: TaggedArgs(tags: searchTerm, page: 1)));

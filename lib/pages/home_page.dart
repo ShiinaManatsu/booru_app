@@ -11,6 +11,8 @@ import 'package:yande_web/settings/app_settings.dart';
 BooruBloc booruBloc;
 String searchTerm = "";
 double panelWidth = 1000;
+PublishSubject<FetchType> homePageFetchTypeChanged =
+    PublishSubject<FetchType>();
 
 class HomePage extends StatefulWidget {
   @override
@@ -21,19 +23,34 @@ class _HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin {
   /// Private properties
   //static const double _leftPanelWidth = 86;
+  FetchType _type = FetchType.Posts; // Current browser type
   static const Key _searchPage = Key("searchPage");
+  var _onPageChange = PublishSubject<PageNavigationType>();
 
   @override
   void initState() {
     super.initState();
     booruBloc = BooruBloc(BooruAPI(), panelWidth);
-    Observable.timer(() {}, Duration(seconds: 1)).listen((x) {
-      booruBloc.onUpdate
-          .add(UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
+    // Observable.timer(() {}, Duration(seconds: 1)).listen((x) {
+    //   print("Timer up");
+    //   booruBloc.onUpdate
+    //       .add(UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
+    // });
+
+    _onPageChange.listen((x) {
+      booruBloc.onPage.add(x);
+    });
+    homePageFetchTypeChanged.listen((x) {
+      setState(() {
+        if (_type != x) {
+          _type = x;
+        }
+      });
     });
   }
 
   var type = ClientType.Yande;
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -101,9 +118,7 @@ class _HomePageState extends State<HomePage>
                 controller: _controller,
                 panelWidth: panelWidth,
               ),
-              _type == FetchType.Posts || _type == FetchType.Search
-                  ? _buildPageNavigator()
-                  : Container(),
+              _buildPageNavigator()
             ],
           ),
         ));
@@ -114,14 +129,14 @@ class _HomePageState extends State<HomePage>
     switch (opt) {
       case ClientType.Yande:
         AppSettings.currentClient = ClientType.Yande;
-        booruBloc.onRefresh.add("");
+        booruBloc.onRefresh.add(null);
         setState(() {
           type = ClientType.Yande;
         });
         break;
       case ClientType.Konachan:
         AppSettings.currentClient = ClientType.Konachan;
-        booruBloc.onRefresh.add("");
+        booruBloc.onRefresh.add(null);
         setState(() {
           type = ClientType.Konachan;
         });
@@ -133,7 +148,6 @@ class _HomePageState extends State<HomePage>
     //updadePost(FetchType.PopularRecent);
   }
 
-  FetchType _type = FetchType.Posts;
   double _drawerButtonHeight = 60;
   Key _drawer = Key("drawer");
 
@@ -165,6 +179,7 @@ class _HomePageState extends State<HomePage>
                 children: <Widget>[
                   _buildDrawerButton(() {
                     Navigator.pop(context);
+                    booruBloc.onReset.add(null);
                     booruBloc.onUpdate.add(UpdateArg(
                         fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
                   }, "Posts", FetchType.Posts),
@@ -234,21 +249,51 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _buildPageNavigator() {
-    return SliverList(
-      delegate: SliverChildListDelegate([
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            MaterialButton(
-              onPressed: (){},
-              height: 30,
-              minWidth: 30,
-              child: Icon(Icons.chevron_left),
-            )
-          ],
-        ),
-      ]),
+    return StreamBuilder<int>(
+        stream: booruBloc.pageState,
+        initialData: 1,
+        builder: (context, snapshot) {
+          if (_type == FetchType.Posts || _type == FetchType.Search) {
+            return SliverList(
+              delegate: SliverChildListDelegate([
+                Container(
+                  height: 50,
+                  margin: EdgeInsets.only(top: 10),
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      _quadButton(
+                          function: () =>
+                              {_onPageChange.add(PageNavigationType.Previous)},
+                          child: Icon(Icons.chevron_left)),
+                      Container(
+                          margin: EdgeInsets.fromLTRB(15, 0, 10, 0),
+                          child: Text(snapshot.data.toString())),
+                      _quadButton(
+                          function: () =>
+                              {_onPageChange.add(PageNavigationType.Next)},
+                          child: Icon(Icons.chevron_right)),
+                    ],
+                  ),
+                ),
+              ]),
+            );
+          } else {
+            return SliverList(delegate: SliverChildListDelegate([]));
+          }
+        });
+  }
+
+  AspectRatio _quadButton(
+      {@required Function() function, @required Widget child}) {
+    return AspectRatio(
+      aspectRatio: 1,
+      child: FlatButton(
+        onPressed: function,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        child: child,
+      ),
     );
   }
 
