@@ -60,13 +60,11 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
                       )),
                 ),
               );
-            }
-            else if(snapshot.data is PostError){
+            } else if (snapshot.data is PostError) {
               var date = snapshot.data as PostError;
               print(date.error);
               return _buildText(date.error.toString());
-            }
-            else{
+            } else {
               return _buildText("Loading..");
             }
           },

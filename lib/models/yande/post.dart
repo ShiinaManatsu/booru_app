@@ -15,6 +15,8 @@ class Post {
   int score;
   String author;
 
+  int flex;
+
   /// Source url
   String sourceUrl;
 

@@ -31,12 +31,11 @@ class _HomePageState extends State<HomePage>
   void initState() {
     super.initState();
     booruBloc = BooruBloc(BooruAPI(), panelWidth);
-    // Observable.timer(() {}, Duration(seconds: 1)).listen((x) {
-    //   print("Timer up");
-    //   booruBloc.onUpdate
-    //       .add(UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
-    // });
-
+    Observable.timer(() {}, Duration(milliseconds: 50)).listen((x) {
+      print("Timer up");
+      booruBloc.onUpdate
+          .add(UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
+    });
     _onPageChange.listen((x) {
       booruBloc.onPage.add(x);
     });
@@ -49,12 +48,12 @@ class _HomePageState extends State<HomePage>
     });
   }
 
-  var type = ClientType.Yande;
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
     panelWidth = MediaQuery.of(context).size.width - 10;
+    booruBloc.onPanelWidth.add(MediaQuery.of(context).size.width - 10);
+    print("panelWidth build");
     var _controller = new ScrollController();
     return Scaffold(
         drawer: _appDrawer(),
@@ -106,7 +105,7 @@ class _HomePageState extends State<HomePage>
                             ],
                             onChanged: onDropdownChanged,
                             icon: Icon(Icons.settings),
-                            value: type,
+                            value: AppSettings.currentClient,
                           ),
                         )
                       ],
@@ -128,17 +127,15 @@ class _HomePageState extends State<HomePage>
     var opt = item as ClientType;
     switch (opt) {
       case ClientType.Yande:
-        AppSettings.currentClient = ClientType.Yande;
         booruBloc.onRefresh.add(null);
         setState(() {
-          type = ClientType.Yande;
+          AppSettings.currentClient = ClientType.Yande;
         });
         break;
       case ClientType.Konachan:
-        AppSettings.currentClient = ClientType.Konachan;
         booruBloc.onRefresh.add(null);
         setState(() {
-          type = ClientType.Konachan;
+          AppSettings.currentClient = ClientType.Konachan;
         });
         break;
       default:
@@ -323,5 +320,5 @@ class _HomePageState extends State<HomePage>
   }
 
   @override
-  bool get wantKeepAlive => true;
+  bool get wantKeepAlive => false;
 }

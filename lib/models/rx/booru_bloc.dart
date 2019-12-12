@@ -10,6 +10,7 @@ class BooruBloc {
   final PublishSubject onRefresh;
   final PublishSubject onReset;
   final PublishSubject<PageNavigationType> onPage;
+  final PublishSubject<double> onPanelWidth;
   final Stream<PostState> state;
   final Stream<int> pageState;
   static int page = 1;
@@ -19,6 +20,7 @@ class BooruBloc {
     final onRefresh = PublishSubject();
     final onReset = PublishSubject();
     final onPage = PublishSubject<PageNavigationType>();
+    final onPanelWidth = PublishSubject<double>();
 
     UpdateArg last =
         UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1));
@@ -40,6 +42,7 @@ class BooruBloc {
     // Cache last update
     onUpdate.distinct().listen((x) {
       last = x;
+      print("${x.fetchType} ${(x.arg as PostsArgs).page}");
       print("update state updated");
     });
 
@@ -49,12 +52,8 @@ class BooruBloc {
         .startWith(PostLoading());
 
     // Merge events
-    var state = loadingState.mergeWith([fetchingState, refresh]).doOnListen(() {
-      print("Init start");
-      onUpdate
-          .add(UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
-    });
-
+    var state = loadingState.mergeWith([fetchingState, refresh]);
+    
     var pagePrevious = onPage
         .where((x) => BooruBloc.page >= 1)
         .where((x) => x == PageNavigationType.Previous)
@@ -82,17 +81,23 @@ class BooruBloc {
       yield page;
     }).startWith(1);
 
-    var pageReset=onReset
-        .switchMap<int>((x) async* {
-          page=1; 
-          yield page;
-          }
-        );
+    var pageReset = onReset.switchMap<int>((x) async* {
+      page = 1;
+      yield page;
+    });
 
-    var pageIndicator=pageChanged.mergeWith([pageReset]);
+    var pageIndicator = pageChanged.mergeWith([pageReset]);
+
+    var panelWidthChanged=onPanelWidth.distinct();
+
+    panelWidthChanged.listen((x){
+      panelWidth=x;
+      print("panelChanged");
+      onRefresh.add(null);
+    });
 
     return BooruBloc._(
-        onUpdate, onRefresh, onReset, onPage, state, pageIndicator);
+        onUpdate, onRefresh, onReset, onPage, onPanelWidth,state, pageIndicator);
   }
 
   static Stream<PostState> _fetchState(UpdateArg arg, BooruAPI booru) async* {
@@ -135,9 +140,10 @@ class BooruBloc {
     onRefresh.close();
     onReset.close();
     onPage.close();
+    onPanelWidth.close();
   }
 
-  BooruBloc._(this.onUpdate, this.onRefresh, this.onReset, this.onPage,
+  BooruBloc._(this.onUpdate, this.onRefresh, this.onReset, this.onPage,this.onPanelWidth,
       this.state, this.pageState);
 }
 
