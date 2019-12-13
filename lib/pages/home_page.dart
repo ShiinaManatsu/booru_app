@@ -141,8 +141,6 @@ class _HomePageState extends State<HomePage>
       default:
         break;
     }
-    // TODO: This need a indicator
-    //updadePost(FetchType.PopularRecent);
   }
 
   double _drawerButtonHeight = 60;

@@ -186,18 +186,6 @@ class _PostViewPageState extends State<PostViewPage> {
     );
   }
 
-  Widget _buildWebGallery() {
-    return Container(
-      margin: EdgeInsets.only(bottom: 60),
-      child: Hero(
-        tag: widget.post,
-        child: Image(
-          image: Image.network(widget.post.sampleUrl).image,
-        ),
-      ),
-    );
-  }
-
   // Top floating bar
   AnimatedPositioned _buildBar(BuildContext context) {
     print("build bar called");

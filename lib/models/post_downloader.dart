@@ -8,8 +8,8 @@ class PostDownloader {
   Directory path;
 
   // TODO: Implements the mothod
-  Future<Directory> getExternalStorageDirectory(){
-    
+  Future<Directory> getExternalStorageDirectory()async{
+    return Directory("path");
   }
 
   List<DownloadStatus> states = List<DownloadStatus>();

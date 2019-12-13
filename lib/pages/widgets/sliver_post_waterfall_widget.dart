@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:yande_web/models/rx/booru_api.dart';
 import 'package:yande_web/models/rx/post_state.dart';
-import 'package:yande_web/models/rx/update_args.dart';
 import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/pages/home_page.dart';
-import 'package:yande_web/settings/app_settings.dart';
-import 'package:yande_web/extensions/list_extension.dart';
 import 'post_preview.dart';
 
 class SliverPostWaterfall extends StatefulWidget {
@@ -83,14 +80,13 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
 
   _scrollListener() {
     // Reach the bottom
-    if (_controller.offset >= _controller.position.maxScrollExtent - 800 &&
-        !_controller.position.outOfRange) {
-      print('Reach the bottom');
+    // if (_controller.offset >= _controller.position.maxScrollExtent - 800 &&
+    //     !_controller.position.outOfRange) {
+    //   print('Reach the bottom');
 
-      if (isFinishedFetch && currentFetchType == FetchType.Posts) {
-        // TODO: Fetch when scrool
-      }
-    }
+    //   if (isFinishedFetch && currentFetchType == FetchType.Posts) {
+    //   }
+    // }
     // //  Reach the top
     // if (_controller.offset <= _controller.position.minScrollExtent &&
     //     !_controller.position.outOfRange) {
