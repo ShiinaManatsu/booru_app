@@ -9,7 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:yande_web/models/rx/booru_api.dart';
 import 'package:yande_web/models/yande/comment.dart';
 import 'package:yande_web/models/yande/post.dart';
-//import 'dart:html' as html;
 
 class PostViewPage extends StatefulWidget {
   @required
@@ -49,6 +48,7 @@ class _PostViewPageState extends State<PostViewPage> {
 
   @override
   Widget build(BuildContext context) {
+    PanelController controller=PanelController();
     return Scaffold(
       drawerEdgeDragWidth: 100,
       drawer: Drawer(
@@ -57,22 +57,22 @@ class _PostViewPageState extends State<PostViewPage> {
       extendBody: true,
       body: Stack(children: <Widget>[
         SlidingUpPanel(
-          backdropColor: Colors.black,
-          backdropOpacity: 0.5,
-          minHeight: 60,
-          maxHeight: 800,
-          parallaxEnabled: true,
-          backdropEnabled: true,
-          // When coollapsed
-          collapsed: Center(
-              child: Text(
-            widget.post.id.toString(),
-            style: TextStyle(fontSize: 25),
-          )),
-          panel: _buildSlidingPanelContent(),
-          //body: kIsWeb?_buildWebGallery():_buildmobileGallery()
-          body: _buildmobileGallery()
-        ),
+          controller: controller,
+            backdropColor: Colors.black,
+            backdropOpacity: 0.5,
+            minHeight: 60,
+            maxHeight: 800,
+            parallaxEnabled: true,
+            backdropEnabled: true,
+            // When coollapsed
+            collapsed: Center(
+                child: Text(
+              widget.post.id.toString(),
+              style: TextStyle(fontSize: 25),
+            )),
+            panel: _buildSlidingPanelContent(),
+            //body: kIsWeb?_buildWebGallery():_buildmobileGallery()
+            body: _buildmobileGallery()),
         _buildBar(context)
       ]),
     );
@@ -123,19 +123,12 @@ class _PostViewPageState extends State<PostViewPage> {
             )),
             RichText(
               text: new TextSpan(
-                semanticsLabel: "Open Source Link",
                 text: widget.post.sourceUrl == ""
                     ? "No source"
                     : widget.post.sourceUrl,
                 style: new TextStyle(color: Colors.blue),
                 recognizer: new TapGestureRecognizer()
                   ..onTap = () {
-                    // if(kIsWeb){
-                    //   _webLaunchURL(widget.post.sourceUrl);
-                    // }
-                    // else{
-                    //   _launchURL(widget.post.sourceUrl);
-                    // }
                     _launchURL(widget.post.sourceUrl);
                   },
               ),
@@ -159,11 +152,6 @@ class _PostViewPageState extends State<PostViewPage> {
         child: title);
   }
 
-  // Use for web
-  // _webLaunchURL(String url) {
-  //   html.window.open(url, "link");
-  // }
-
   _launchURL(String url) async {
     if (await canLaunch(url)) {
       await launch(url);
@@ -172,6 +160,8 @@ class _PostViewPageState extends State<PostViewPage> {
     }
   }
 
+  
+
   Widget _buildmobileGallery() {
     return Container(
       margin: EdgeInsets.only(bottom: 60),
@@ -179,8 +169,10 @@ class _PostViewPageState extends State<PostViewPage> {
         backgroundDecoration: BoxDecoration(color: Colors.white),
         pageOptions: [
           PhotoViewGalleryPageOptions(
-              imageProvider: NetworkImage(widget.post.sampleUrl),
-              heroAttributes: PhotoViewHeroAttributes(tag: widget.post))
+            maxScale: 1.0,
+            imageProvider: NetworkImage(widget.post.sampleUrl),
+            heroAttributes: PhotoViewHeroAttributes(tag: widget.post)
+          )
         ],
       ),
     );
