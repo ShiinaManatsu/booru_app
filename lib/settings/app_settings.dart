@@ -1,5 +1,5 @@
 /// Settings fot the whole application.
-/// 
+///
 /// This may gonna implement to database.
 class AppSettings {
   /// The current client
@@ -10,9 +10,12 @@ class AppSettings {
 
   /// The first day that yande has datas
   static DateTime yandeFirstday = DateTime(2006, 9);
-  
+
   /// The first day that konanchan has datas
   static DateTime konachanFirstday = DateTime(2008, 2);
+
+  /// Post limit for post and search
+  // static int postLimit = 50;
 
   /// Return the current client `url`
   static String get currentBaseUrl {

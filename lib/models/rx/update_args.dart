@@ -35,14 +35,24 @@ class PopularRecentArgs extends FetchArg {
   PopularRecentArgs({this.period = Period.None});
 }
 
+class ArgWithTime {
+  DateTime time;
+}
+
+/// Argument for popular post by day
+class PopularByDayArgs extends FetchArg with ArgWithTime {
+  final DateTime time;
+  PopularByDayArgs({@required this.time});
+}
+
 /// Argument for popular post by week
-class PopularByWeekArgs extends FetchArg {
+class PopularByWeekArgs extends FetchArg with ArgWithTime {
   final DateTime time;
   PopularByWeekArgs({@required this.time});
 }
 
 /// Argument for popular post by month
-class PopularByMonthArgs extends FetchArg {
+class PopularByMonthArgs extends FetchArg with ArgWithTime {
   final DateTime time;
   PopularByMonthArgs({@required this.time});
 }

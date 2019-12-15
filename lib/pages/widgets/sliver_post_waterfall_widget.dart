@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:yande_web/models/rx/booru_api.dart';
 import 'package:yande_web/models/rx/post_state.dart';
-import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/pages/home_page.dart';
 import 'post_preview.dart';
 
@@ -20,11 +18,6 @@ class SliverPostWaterfall extends StatefulWidget {
 
 class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
   ScrollController _controller;
-  bool isFinishedFetch = true;
-  List<Post> posts = List<Post>();
-  List<List<Post>> fixedPosts = List<List<Post>>();
-  FetchType currentFetchType = FetchType.Posts;
-  int page = 1;
 
   @override
   void initState() {
@@ -46,7 +39,7 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
               return Container(
                 child: SingleChildScrollView(
                   child: Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
+                      padding: const EdgeInsets.fromLTRB(10, 10, 0, 0),
                       child: Wrap(
                         spacing: 10,
                         runSpacing: 10,
