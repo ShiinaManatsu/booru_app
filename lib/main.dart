@@ -1,11 +1,30 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:yande_web/pages/post_view_page.dart';
 import 'pages/home_page.dart';
 import 'pages/search_tagged_posts_page.dart';
 import 'themes/theme_light.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart'
+    show debugDefaultTargetPlatformOverride, kIsWeb;
 
-void main() => runApp(MyApp());
+void _desktopInitHack() {
+  if (kIsWeb) return;
+
+  if (Platform.isMacOS) {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+  } else if (Platform.isLinux || Platform.isWindows) {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+  } else if (Platform.isFuchsia) {
+    debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
+  }
+}
+
+void main() {
+  _desktopInitHack();
+  runApp(MyApp());
+}
 
 // Routes
 const String homePage = '/';
