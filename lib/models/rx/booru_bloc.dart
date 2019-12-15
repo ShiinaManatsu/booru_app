@@ -6,13 +6,37 @@ import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/extensions/list_extension.dart';
 
 class BooruBloc {
+  // Subjects
+  /// Call to update posts
   final PublishSubject<UpdateArg> onUpdate;
+
+  /// Call to refresh current posts
   final PublishSubject onRefresh;
+
+  /// Call to reset page
   final PublishSubject onReset;
+
+  /// Call to update page
   final PublishSubject<PageNavigationType> onPage;
+
+  /// Call when panel width changed
   final PublishSubject<double> onPanelWidth;
+
+  /// Call to change post datetime
+  final PublishSubject<DateTime Function(DateTime)> onDateTime;
+
+  // Streams
+  /// Stream of posts state
   final Stream<PostState> state;
+
+  /// Stream of the post page state
   final Stream<int> pageState;
+
+  /// Stream of the date picker
+  final Stream<DateTime> postDate;
+
+  // Static members
+  static DateTime postDateTime = DateTime.now();
   static int page = 1;
 
   factory BooruBloc(BooruAPI booru, double panelWidth) {
@@ -21,6 +45,8 @@ class BooruBloc {
     final onReset = PublishSubject();
     final onPage = PublishSubject<PageNavigationType>();
     final onPanelWidth = PublishSubject<double>();
+    final PublishSubject<DateTime Function(DateTime)> onDateTime =
+        PublishSubject<DateTime Function(DateTime)>();
 
     UpdateArg last =
         UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1));
@@ -42,7 +68,6 @@ class BooruBloc {
     // Cache last update
     onUpdate.distinct().listen((x) {
       last = x;
-      print("${x.fetchType} ${(x.arg as PostsArgs).page}");
       print("update state updated");
     });
 
@@ -53,7 +78,7 @@ class BooruBloc {
 
     // Merge events
     var state = loadingState.mergeWith([fetchingState, refresh]);
-    
+
     var pagePrevious = onPage
         .where((x) => BooruBloc.page >= 1)
         .where((x) => x == PageNavigationType.Previous)
@@ -69,7 +94,6 @@ class BooruBloc {
 
     var pageChanged = pageStateChanged.switchMap<int>((x) async* {
       page += x;
-      print("Page Changed: $page");
       if (last.fetchType == FetchType.Posts) {
         onUpdate.add(
             UpdateArg(fetchType: last.fetchType, arg: PostsArgs(page: page)));
@@ -88,16 +112,49 @@ class BooruBloc {
 
     var pageIndicator = pageChanged.mergeWith([pageReset]);
 
-    var panelWidthChanged=onPanelWidth.distinct();
+    var panelWidthChanged = onPanelWidth.distinct();
 
-    panelWidthChanged.listen((x){
-      panelWidth=x;
+    panelWidthChanged.listen((x) {
+      panelWidth = x;
       print("panelChanged");
       onRefresh.add(null);
     });
 
-    return BooruBloc._(
-        onUpdate, onRefresh, onReset, onPage, onPanelWidth,state, pageIndicator);
+    // Date time changed
+    var postDateChanged = onDateTime.switchMap<DateTime>((x) async* {
+      var date = x(postDateTime);
+      postDateTime = date;
+      
+      print(postDateTime.toUtc());
+      if (last.fetchType == FetchType.PopularByDay) {
+        onUpdate.add(UpdateArg(
+            fetchType: last.fetchType,
+            arg: PopularByDayArgs(time: postDateTime)));
+      }
+      if (last.fetchType == FetchType.PopularByWeek) {
+        onUpdate.add(UpdateArg(
+            fetchType: last.fetchType,
+            arg: PopularByWeekArgs(time: postDateTime)));
+      }
+      if (last.fetchType == FetchType.PopularByMonth) {
+        onUpdate.add(UpdateArg(
+            fetchType: last.fetchType,
+            arg: PopularByMonthArgs(time: postDateTime)));
+      }
+
+      yield date;
+    }).startWith(DateTime.now());
+
+    // Date reset
+    var postDateReset = onReset.switchMap<DateTime>((x) async* {
+      postDateTime = DateTime.now();
+      yield postDateTime;
+    });
+
+    var postDate = postDateChanged.mergeWith([postDateReset]);
+
+    return BooruBloc._(onUpdate, onRefresh, onReset, onPage, onPanelWidth,
+        onDateTime, state, pageIndicator, postDate);
   }
 
   static Stream<PostState> _fetchState(UpdateArg arg, BooruAPI booru) async* {
@@ -108,6 +165,9 @@ class BooruBloc {
         break;
       case FetchType.PopularRecent:
         yield await _emptyCheck((booru.fetchPopularRecent(args: arg.arg)));
+        break;
+      case FetchType.PopularByDay:
+        yield await _emptyCheck((booru.fetchPopularByDay(args: arg.arg)));
         break;
       case FetchType.PopularByWeek:
         yield await _emptyCheck((booru.fetchPopularByWeek(args: arg.arg)));
@@ -143,8 +203,16 @@ class BooruBloc {
     onPanelWidth.close();
   }
 
-  BooruBloc._(this.onUpdate, this.onRefresh, this.onReset, this.onPage,this.onPanelWidth,
-      this.state, this.pageState);
+  BooruBloc._(
+      this.onUpdate,
+      this.onRefresh,
+      this.onReset,
+      this.onPage,
+      this.onPanelWidth,
+      this.onDateTime,
+      this.state,
+      this.pageState,
+      this.postDate);
 }
 
 enum PageNavigationType { Previous, Next }

@@ -6,8 +6,6 @@ import 'package:yande_web/models/rx/update_args.dart';
 import 'package:yande_web/models/yande/tags.dart';
 import 'home_page.dart';
 
-String _searchPattern = "";
-
 class SearchTaggedPostsPage extends StatefulWidget {
   SearchTaggedPostsPage({Key key}) : super(key: key);
 
@@ -16,6 +14,7 @@ class SearchTaggedPostsPage extends StatefulWidget {
 }
 
 class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
+  String _searchPattern = "";
   List<String> _tags = List<String>();
 
   Stream<List<String>> search;
@@ -64,6 +63,10 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
           },
         );
       },
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back),
+        onPressed: () => Navigator.pop(context),
+      ),
       trailing: IconButton(
         icon: Icon(Icons.search),
         onPressed: () {
@@ -80,18 +83,17 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
           }
         },
       ),
-      // drawer: Drawer(
-      //   child: Container(),
-      // ),
       onChanged: (x) {
         _onTextChanged.add(x);
         _searchPattern = x;
       },
       onSubmitted: (x) {
-        if (_searchPattern != "") {
+        if (x != "") {
+          searchTerm=x;
+          homePageFetchTypeChanged.add(FetchType.Search);
           booruBloc.onUpdate.add(UpdateArg(
               fetchType: FetchType.Search,
-              arg: TaggedArgs(tags: searchTerm, page: 1)));
+              arg: TaggedArgs(tags: x, page: 1)));
           Navigator.pop(context);
         } else {
           return;
