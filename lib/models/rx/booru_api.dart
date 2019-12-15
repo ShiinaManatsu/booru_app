@@ -8,7 +8,6 @@ import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/settings/app_settings.dart';
 
 /*  Provide base link
-    List posts
     Create post
     Update post
     Destroy post
@@ -44,28 +43,40 @@ class BooruAPI {
   }
 
   /// Fetch posts
-  Future<List<Post>> fetchPosts({@required PostsArgs args,int limit = 50}) async {
+  Future<List<Post>> fetchPosts(
+      {@required PostsArgs args, int limit = 50}) async {
     var url =
         '${AppSettings.currentBaseUrl}/post.json?limit=$limit&page=${args.page}';
     return await _httpGet(url);
   }
 
   /// Fetch popular posts by recent
-  Future<List<Post>> fetchPopularRecent({@required PopularRecentArgs args}) async {
+  Future<List<Post>> fetchPopularRecent(
+      {@required PopularRecentArgs args}) async {
     var url =
         "${AppSettings.currentBaseUrl}/post/popular_recent.json?period=${periodMap[args.period]}";
     return await _httpGet(url);
   }
 
+  /// Fetch popular posts by recent
+  Future<List<Post>> fetchPopularByDay(
+      {@required PopularByDayArgs args}) async {
+    var url =
+        "${AppSettings.currentBaseUrl}/post/popular_by_day.json?day=${args.time.day}&month=${args.time.month}&year=${args.time.year}";
+    return await _httpGet(url);
+  }
+
   /// Fetch popular posts by week
-  Future<List<Post>> fetchPopularByWeek({@required PopularByWeekArgs args}) async {
+  Future<List<Post>> fetchPopularByWeek(
+      {@required PopularByWeekArgs args}) async {
     var url =
         "${AppSettings.currentBaseUrl}/post/popular_by_week.json?day=${args.time.day}&month=${args.time.month}&year=${args.time.year}";
     return await _httpGet(url);
   }
 
   /// Fetch popular posts by month
-  Future<List<Post>> fetchPopularByMonth({@required PopularByMonthArgs args}) async {
+  Future<List<Post>> fetchPopularByMonth(
+      {@required PopularByMonthArgs args}) async {
     var url =
         "${AppSettings.currentBaseUrl}/post/popular_by_month.json?&month=${args.time.month}&year=${args.time.year}";
     return await _httpGet(url);
@@ -115,18 +126,23 @@ Map<Period, String> periodMap = {
 };
 
 // Enum of the type we want fetch
-enum FetchType { Posts, PopularRecent, PopularByWeek, PopularByMonth, Search }
+enum FetchType {
+  Posts,
+  PopularRecent,
+  PopularByDay,
+  PopularByWeek,
+  PopularByMonth,
+  Search
+}
 
 enum TagType { None, Artist, NotUsed, Copyright, Character, Circle, Faults }
 
-Map<TagType,Color> tagToColorMap={
-  TagType.None:Color.fromARGB(255, 118, 118, 118),
-  TagType.Artist:Color.fromARGB(255, 202, 80, 16),
-  TagType.Character:Color.fromARGB(255, 16, 137, 62),
-  TagType.Copyright:Color.fromARGB(255, 194, 57, 179),
-  TagType.Circle:Color.fromARGB(255, 45, 125, 154),
-  TagType.Faults:Color.fromARGB(255, 232, 17, 35),
-  TagType.NotUsed:Color.fromARGB(255, 118, 118, 118),
-
-
+Map<TagType, Color> tagToColorMap = {
+  TagType.None: Color.fromARGB(255, 118, 118, 118),
+  TagType.Artist: Color.fromARGB(255, 202, 80, 16),
+  TagType.Character: Color.fromARGB(255, 16, 137, 62),
+  TagType.Copyright: Color.fromARGB(255, 194, 57, 179),
+  TagType.Circle: Color.fromARGB(255, 45, 125, 154),
+  TagType.Faults: Color.fromARGB(255, 232, 17, 35),
+  TagType.NotUsed: Color.fromARGB(255, 118, 118, 118),
 };
