@@ -50,6 +50,8 @@ class _HomePageState extends State<HomePage>
           _searchNabor = _buildPeroidChip();
         } else if (_type == FetchType.Search) {
           _searchNabor = Text(searchTerm);
+        } else if (_type == FetchType.PopularByWeek) {
+          _searchNabor = Text("PopularByWeek");
         } else {
           _searchNabor = Container();
         }
@@ -128,7 +130,7 @@ class _HomePageState extends State<HomePage>
                       AnimatedSize(
                         duration: Duration(milliseconds: 500),
                         vsync: this,
-                        curve: Curves.easeIn,
+                        curve: Curves.ease,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           mainAxisSize: MainAxisSize.min,
@@ -141,9 +143,18 @@ class _HomePageState extends State<HomePage>
                               },
                               icon: Icon(Icons.search),
                             ),
-                            AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 500),
-                              child: _searchNabor,
+                            AnimatedSize(
+                              duration: Duration(milliseconds: 500),
+                              vsync: this,
+                              curve: Curves.ease,
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 500),
+                                child: AnimatedSize(
+                                    duration: Duration(milliseconds: 500),
+                                    vsync: this,
+                                    curve: Curves.ease,
+                                    child: _searchNabor),
+                              ),
                             ),
                           ],
                         ),
