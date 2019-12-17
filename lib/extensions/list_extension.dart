@@ -5,10 +5,9 @@ import 'package:yande_web/pages/home_page.dart';
 // We are moving all the fetched post to the optimized list
 
 extension ListExtension on List<Post> {
-  List<Post> arrange() 
-  {
+  Future<List<Post>> arrange() 
+  async {
     List<Post> posts=List<Post>.from(this);
-    this.clear();
     List<List<Post>> fixedPosts = List<List<Post>>();
     var panelRatio = panelWidth / AppSettings.fixedPostHeight;
     double ratioFactor = 0.7;
@@ -52,6 +51,6 @@ extension ListExtension on List<Post> {
         list.add(f);
       });
     });
-    return list;
+    return await Future.value(list);
   }
 }

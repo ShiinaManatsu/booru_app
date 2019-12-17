@@ -96,7 +96,7 @@ class BooruAPI {
   }
 
   // 125*125
-  static String get avatorUrl {
+  static String get avatarUrl {
     switch (AppSettings.currentClient) {
       case ClientType.Yande:
         return "${AppSettings.currentBaseUrl}/data/avatars/{UserID}.jpg";

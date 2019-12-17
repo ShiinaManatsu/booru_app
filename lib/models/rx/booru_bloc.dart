@@ -1,9 +1,11 @@
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:yande_web/models/rx/booru_api.dart';
 import 'package:yande_web/models/rx/post_state.dart';
 import 'package:yande_web/models/rx/update_args.dart';
 import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/extensions/list_extension.dart';
+import 'package:yande_web/pages/home_page.dart';
 
 class BooruBloc {
   // Subjects
@@ -38,6 +40,7 @@ class BooruBloc {
   // Static members
   static DateTime postDateTime = DateTime.now();
   static int page = 1;
+  static List<Post> cache = List<Post>();
 
   factory BooruBloc(BooruAPI booru, double panelWidth) {
     final onUpdate = PublishSubject<UpdateArg>();
@@ -52,8 +55,9 @@ class BooruBloc {
         UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1));
 
     // Call on refresh
-    var refresh =
-        onRefresh.switchMap<PostState>((x) => _fetchState(last, booru));
+    var refresh = onRefresh.switchMap<PostState>((x) {
+      return _fetchState(last, booru);
+    });
 
     // Call on update
     var onUpdateChange =
@@ -77,7 +81,23 @@ class BooruBloc {
         .startWith(PostLoading());
 
     // Merge events
-    var state = loadingState.mergeWith([fetchingState, refresh]);
+    var _state =
+        loadingState.mergeWith([fetchingState, refresh]).asBroadcastStream();
+
+    _state.listen((x) {
+      if (x is PostSuccess) {
+        cache = List.from((x).result);
+      }
+    });
+
+    var panelWidthChanged =
+        onPanelWidth.distinct().switchMap<PostState>((x) async* {
+      panelWidth = x;
+      print("cache size:${cache.length}");
+      yield PostSuccess(await cache.arrange());
+    });
+
+    var state = _state.mergeWith([panelWidthChanged]);
 
     var pagePrevious = onPage
         .where((x) => BooruBloc.page >= 1)
@@ -105,6 +125,7 @@ class BooruBloc {
       yield page;
     }).startWith(1);
 
+    // Reset page
     var pageReset = onReset.switchMap<int>((x) async* {
       page = 1;
       yield page;
@@ -112,19 +133,11 @@ class BooruBloc {
 
     var pageIndicator = pageChanged.mergeWith([pageReset]);
 
-    var panelWidthChanged = onPanelWidth.distinct();
-
-    panelWidthChanged.listen((x) {
-      panelWidth = x;
-      print("panelChanged");
-      onRefresh.add(null);
-    });
-
     // Date time changed
     var postDateChanged = onDateTime.switchMap<DateTime>((x) async* {
       var date = x(postDateTime);
       postDateTime = date;
-      
+
       print(postDateTime.toUtc());
       if (last.fetchType == FetchType.PopularByDay) {
         onUpdate.add(UpdateArg(
@@ -158,7 +171,7 @@ class BooruBloc {
   }
 
   static Stream<PostState> _fetchState(UpdateArg arg, BooruAPI booru) async* {
-    print("Fetching...${arg.fetchType.toString()}");
+    refreshController.headerMode.value = RefreshStatus.refreshing;
     switch (arg.fetchType) {
       case FetchType.Posts:
         yield await _emptyCheck(booru.fetchPosts(args: arg.arg));
@@ -186,11 +199,14 @@ class BooruBloc {
     try {
       var res = await future;
       if (res.isEmpty) {
+        refreshController.refreshCompleted();
         return PostEmpty();
       } else {
-        return PostSuccess(res.arrange());
+        refreshController.refreshCompleted();
+        return PostSuccess(await res.arrange());
       }
     } catch (e) {
+      refreshController.refreshCompleted();
       return PostError(error: e);
     }
   }
@@ -201,6 +217,7 @@ class BooruBloc {
     onReset.close();
     onPage.close();
     onPanelWidth.close();
+    onDateTime.close();
   }
 
   BooruBloc._(

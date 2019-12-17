@@ -1,5 +1,6 @@
 import 'package:floating_search_bar/ui/sliver_search_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:yande_web/main.dart';
 import 'package:yande_web/models/rx/booru_api.dart';
@@ -13,6 +14,7 @@ String searchTerm = "";
 double panelWidth = 1000;
 PublishSubject<FetchType> homePageFetchTypeChanged =
     PublishSubject<FetchType>();
+RefreshController refreshController = RefreshController(initialRefresh: false);
 
 class HomePage extends StatefulWidget {
   @override
@@ -72,104 +74,111 @@ class _HomePageState extends State<HomePage>
     return Scaffold(
         drawer: _appDrawer(),
         body: Builder(
-          builder: (context) => CustomScrollView(
-            primary: false,
-            controller: _controller,
-            physics: BouncingScrollPhysics(),
-            slivers: <Widget>[
-              SliverPadding(
-                padding: EdgeInsets.only(top: 10),
-              ),
-              SliverFloatingBar(
-                automaticallyImplyLeading: false,
-                //snap: false,
-                //pinned: true,
-                backgroundColor: Color.fromARGB(240, 255, 255, 255),
-                floating: true,
-                title: Container(
-                  margin: EdgeInsets.only(bottom: 5), // Fix the displacement
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: <Widget>[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          IconButton(
-                            onPressed: () => Scaffold.of(context).openDrawer(),
-                            icon: Icon(Icons.menu),
-                          ),
-                          Row(
+          builder: (context) => SmartRefresher(
+            header: WaterDropMaterialHeader(backgroundColor: Colors.accents[1],),
+            onRefresh: () => booruBloc.onRefresh.add(null),
+            enablePullDown: true,
+            controller: refreshController,
+            child: CustomScrollView(
+              primary: false,
+              controller: _controller,
+              physics: BouncingScrollPhysics(),
+              slivers: <Widget>[
+                SliverPadding(
+                  padding: EdgeInsets.only(top: 10),
+                ),
+                SliverFloatingBar(
+                  automaticallyImplyLeading: false,
+                  //snap: false,
+                  //pinned: true,
+                  backgroundColor: Color.fromARGB(240, 255, 255, 255),
+                  floating: true,
+                  title: Container(
+                    margin: EdgeInsets.only(bottom: 5), // Fix the displacement
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: <Widget>[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            IconButton(
+                              onPressed: () =>
+                                  Scaffold.of(context).openDrawer(),
+                              icon: Icon(Icons.menu),
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                IconButton(
+                                  onPressed: () {},
+                                  icon: Icon(Icons.person),
+                                ),
+                                Center(
+                                  child: DropdownButton(
+                                    underline: Container(),
+                                    items: [
+                                      DropdownMenuItem(
+                                        child: Text("Yande.re"),
+                                        value: ClientType.Yande,
+                                      ),
+                                      DropdownMenuItem(
+                                        child: Text("Konachan"),
+                                        value: ClientType.Konachan,
+                                      )
+                                    ],
+                                    iconSize: 0,
+                                    onChanged: onDropdownChanged,
+                                    value: AppSettings.currentClient,
+                                  ),
+                                )
+                              ],
+                            )
+                          ],
+                        ),
+                        AnimatedSize(
+                          duration: Duration(milliseconds: 500),
+                          vsync: this,
+                          curve: Curves.ease,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
                               IconButton(
-                                onPressed: () {},
-                                icon: Icon(Icons.person),
+                                onPressed: () => {
+                                  Navigator.pushNamed(
+                                      context, searchTaggedPostsPage,
+                                      arguments: {"key": _searchPage})
+                                },
+                                icon: Icon(Icons.search),
                               ),
-                              Center(
-                                child: DropdownButton(
-                                  underline: Container(),
-                                  items: [
-                                    DropdownMenuItem(
-                                      child: Text("Yande.re"),
-                                      value: ClientType.Yande,
-                                    ),
-                                    DropdownMenuItem(
-                                      child: Text("Konachan"),
-                                      value: ClientType.Konachan,
-                                    )
-                                  ],
-                                  iconSize: 0,
-                                  onChanged: onDropdownChanged,
-                                  value: AppSettings.currentClient,
+                              AnimatedSize(
+                                duration: Duration(milliseconds: 500),
+                                vsync: this,
+                                curve: Curves.ease,
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 500),
+                                  child: AnimatedSize(
+                                      duration: Duration(milliseconds: 500),
+                                      vsync: this,
+                                      curve: Curves.ease,
+                                      child: _searchNabor),
                                 ),
-                              )
-                            ],
-                          )
-                        ],
-                      ),
-                      AnimatedSize(
-                        duration: Duration(milliseconds: 500),
-                        vsync: this,
-                        curve: Curves.ease,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            IconButton(
-                              onPressed: () => {
-                                Navigator.pushNamed(
-                                    context, searchTaggedPostsPage,
-                                    arguments: {"key": _searchPage})
-                              },
-                              icon: Icon(Icons.search),
-                            ),
-                            AnimatedSize(
-                              duration: Duration(milliseconds: 500),
-                              vsync: this,
-                              curve: Curves.ease,
-                              child: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 500),
-                                child: AnimatedSize(
-                                    duration: Duration(milliseconds: 500),
-                                    vsync: this,
-                                    curve: Curves.ease,
-                                    child: _searchNabor),
                               ),
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              SliverPostWaterfall(
-                controller: _controller,
-                panelWidth: panelWidth,
-              ),
-              _buildPageNavigator(),
-              _buildDatePicker()
-            ],
+                SliverPostWaterfall(
+                  controller: _controller,
+                  panelWidth: panelWidth,
+                ),
+                _buildPageNavigator(),
+                _buildDatePicker()
+              ],
+            ),
           ),
         ));
   }

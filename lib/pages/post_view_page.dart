@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:rxdart/rxdart.dart';
@@ -10,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:yande_web/models/rx/booru_api.dart';
 import 'package:yande_web/models/yande/comment.dart';
 import 'package:yande_web/models/yande/post.dart';
+import 'package:yande_web/settings/app_settings.dart';
 
 class PostViewPage extends StatefulWidget {
   @required
@@ -21,7 +24,8 @@ class PostViewPage extends StatefulWidget {
   _PostViewPageState createState() => _PostViewPageState();
 }
 
-class _PostViewPageState extends State<PostViewPage> {
+class _PostViewPageState extends State<PostViewPage>
+    with TickerProviderStateMixin {
   PublishSubject _onPanelExit = PublishSubject();
   PublishSubject<int> _postID = PublishSubject<int>();
   Stream<List<Comment>> _comments;
@@ -32,8 +36,6 @@ class _PostViewPageState extends State<PostViewPage> {
   PhotoViewController _galleryController = PhotoViewController();
 
   // Top-Right panel usage
-  /// Open panel when is `ture`, otherwise, close it
-  PublishSubject<PanelArg> _onTopRightPanel = PublishSubject<PanelArg>();
 
   double _panelStartOffset;
   double _panelOffset;
@@ -64,7 +66,7 @@ class _PostViewPageState extends State<PostViewPage> {
         drawer: Drawer(
           child: MouseRegion(
               onExit: (x) => _onPanelExit.add(null),
-              child: _buildSlidingPanelContent()),
+              child: _buildContentPanel()),
         ),
         extendBody: true,
         body: Builder(builder: (context) {
@@ -93,7 +95,7 @@ class _PostViewPageState extends State<PostViewPage> {
                         )),
                       ],
                     ),
-                    panel: _buildSlidingPanelContent(),
+                    panel: _buildContentPanel(),
                     body: _buildGallery()),
               ],
             );
@@ -110,9 +112,9 @@ class _PostViewPageState extends State<PostViewPage> {
   Widget _buildTopRightPanel(double height) {
     bool isLeaving = false;
     return AnimatedPositioned(
-      duration: Duration(milliseconds: 500),
+      duration: Duration(milliseconds: 300),
       curve: Curves.ease,
-      right: _offset - 1,
+      right: _offset,
       child: Container(
         alignment: Alignment.centerLeft,
         height: height,
@@ -173,8 +175,14 @@ class _PostViewPageState extends State<PostViewPage> {
                                           ? widget.post.jpegUrl
                                           : widget.post.fileUrl),
                                       Icon(Icons.file_download)),
-                                  _buildQuadIconButton(
-                                      () {}, Icon(Icons.favorite_border)),
+                                  _buildQuadIconButton(() {
+                                    setState(() {
+                                      _galleryController.rotation =
+                                          (_galleryController.rotation +
+                                                  pi / 2) %
+                                              (pi * 2);
+                                    });
+                                  }, Icon(Icons.favorite_border)),
                                 ]),
                           ),
                         ),
@@ -219,7 +227,7 @@ class _PostViewPageState extends State<PostViewPage> {
                   width: commentsPanelWidth,
                   alignment: Alignment.topCenter,
                   child: SingleChildScrollView(
-                    child: _buildSlidingPanelContent(),
+                    child: _buildContentPanel(),
                     physics: BouncingScrollPhysics(),
                   ),
                 ),
@@ -239,108 +247,122 @@ class _PostViewPageState extends State<PostViewPage> {
     );
   }
 
-  Widget _buildHoverDrawer(ScaffoldState scaffold) {
-    return Container(
-        alignment: Alignment.centerLeft,
-        width: 50,
-        child: Flex(
-          direction: Axis.vertical,
-          children: <Widget>[
-            Expanded(
-              child: MouseRegion(
-                onEnter: (x) => scaffold.openDrawer(),
+  Widget _buildContentPanel() {
+    return Column(
+      mainAxisSize: MainAxisSize.max,
+      children: <Widget>[
+        // Sub buttons
+        Container(
+          alignment: Alignment.centerLeft,
+          height: barHeight,
+          child: Container(
+            child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+              _buildQuadIconButton(
+                  () => Clipboard.setData(ClipboardData(
+                      text: "https://yande.re/post/show/${widget.post.id}")),
+                  Icon(Icons.keyboard_arrow_right)),
+              Text(
+                "${widget.post.id}",
+                style: TextStyle(fontSize: 20),
               ),
-            ),
-          ],
-        ));
-  }
-
-  Widget _buildSlidingPanelContent() {
-    return SingleChildScrollView(
-      physics: BouncingScrollPhysics(),
-      child: Container(
-        margin: EdgeInsets.fromLTRB(30, 50, 30, 30),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            //------------------
-            _buildTitleSpliter(Text(
-              "Size",
-              style: TextStyle(fontSize: 20),
-            )),
-            Text("${widget.post.width}x${widget.post.height}"),
-            _buildTitleSpliter(Text(
-              "Author",
-              style: TextStyle(fontSize: 20),
-            )),
-            Text("${widget.post.author}"),
-            _buildTitleSpliter(Text(
-              "Score",
-              style: TextStyle(fontSize: 20),
-            )),
-            Text("${widget.post.score}"),
-            _buildTitleSpliter(Text(
-              "Tags",
-              style: TextStyle(fontSize: 20),
-            )),
-            Text(
-              "${widget.post.tags}",
-            ),
-            _buildTitleSpliter(Text(
-              "Rating",
-              style: TextStyle(fontSize: 20),
-            )),
-            Text("${widget.post.rating.toString()}"),
-            // Source link
-            _buildTitleSpliter(Text(
-              "Source",
-              style: TextStyle(fontSize: 20),
-            )),
-            RichText(
-              text: new TextSpan(
-                text: widget.post.sourceUrl == ""
-                    ? "No source"
-                    : widget.post.sourceUrl,
-                style: new TextStyle(color: Colors.blue),
-                recognizer: new TapGestureRecognizer()
-                  ..onTap = () {
-                    _launchURL(widget.post.sourceUrl);
-                  },
-              ),
-            ),
-
-            _buildTitleSpliter(Text(
-              "Comments",
-              style: TextStyle(fontSize: 20),
-            )),
-            StreamBuilder<List<Comment>>(
-              stream: _comments,
-              initialData: List<Comment>()..add(Comment(isEmpty: true)),
-              builder: (context, snapshot) {
-                return Column(
-                  children: List.generate(snapshot.data.length, (index) {
-                    if (snapshot.data[index].isEmpty) {
-                      return Container();
-                    } else {
-                      return Row(
-                        children: <Widget>[
-                          Text(
-                            "${snapshot.data[index].creator}: ",
-                          ),
-                          Text(
-                            snapshot.data[index].body,
-                          ),
-                        ],
-                      );
-                    }
-                  }),
-                );
-              },
-            )
-          ],
+            ]),
+          ),
         ),
-      ),
+        SingleChildScrollView(
+          physics: BouncingScrollPhysics(),
+          child: Container(
+            margin: EdgeInsets.all(30),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                //------------------
+                _buildTitleSpliter(Text(
+                  "Size",
+                  style: TextStyle(fontSize: 20),
+                )),
+                Text("${widget.post.width}x${widget.post.height}"),
+                _buildTitleSpliter(Text(
+                  "Author",
+                  style: TextStyle(fontSize: 20),
+                )),
+                Row(
+                  children: <Widget>[
+                    CircleAvatar(
+                      backgroundImage: NetworkImage(
+                          "${AppSettings.currentBaseUrl}/data/avatars/${widget.post.creatorId}.jpg"),
+                    ),
+                    Container(margin: EdgeInsets.only(left: 10),child: Text("${widget.post.author}")),
+                  ],
+                ),
+                _buildTitleSpliter(Text(
+                  "Score",
+                  style: TextStyle(fontSize: 20),
+                )),
+                Text("${widget.post.score}"),
+                _buildTitleSpliter(Text(
+                  "Tags",
+                  style: TextStyle(fontSize: 20),
+                )),
+                Text(
+                  "${widget.post.tags}",
+                ),
+                _buildTitleSpliter(Text(
+                  "Rating",
+                  style: TextStyle(fontSize: 20),
+                )),
+                Text("${widget.post.rating.toString()}"),
+                // Source link
+                _buildTitleSpliter(Text(
+                  "Source",
+                  style: TextStyle(fontSize: 20),
+                )),
+                RichText(
+                  text: new TextSpan(
+                    text: widget.post.sourceUrl == ""
+                        ? "No source"
+                        : widget.post.sourceUrl,
+                    style: new TextStyle(color: Colors.blue),
+                    recognizer: new TapGestureRecognizer()
+                      ..onTap = () {
+                        _launchURL(widget.post.sourceUrl);
+                      },
+                  ),
+                ),
+
+                _buildTitleSpliter(Text(
+                  "Comments",
+                  style: TextStyle(fontSize: 20),
+                )),
+                StreamBuilder<List<Comment>>(
+                  stream: _comments,
+                  initialData: List<Comment>()..add(Comment(isEmpty: true)),
+                  builder: (context, snapshot) {
+                    return Column(
+                      children: List.generate(snapshot.data.length, (index) {
+                        if (snapshot.data[index].isEmpty) {
+                          return Container();
+                        } else {
+                          return Row(
+                            children: <Widget>[
+                              Text(
+                                "${snapshot.data[index].creator}: ",
+                              ),
+                              Text(
+                                snapshot.data[index].body,
+                              ),
+                            ],
+                          );
+                        }
+                      }),
+                    );
+                  },
+                )
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -361,7 +383,7 @@ class _PostViewPageState extends State<PostViewPage> {
 
   Widget _buildGallery() {
     return Container(
-      margin: EdgeInsets.only(bottom: 60),
+      //margin: EdgeInsets.only(bottom: 60),  // Phone use
       child: PhotoViewGallery(
         enableRotation: true,
         backgroundDecoration: BoxDecoration(color: Colors.white),
