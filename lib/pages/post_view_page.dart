@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -26,12 +27,30 @@ class _PostViewPageState extends State<PostViewPage> {
   Stream<List<Comment>> _comments;
   int buttonCount = 3;
   double barHeight = 64;
+  double panelHandlerWidth = 100;
+  double commentsPanelWidth = 300;
+  PhotoViewController _galleryController = PhotoViewController();
 
-  //List<Comment> _comments = new List<Comment>();
+  // Top-Right panel usage
+  /// Open panel when is `ture`, otherwise, close it
+  PublishSubject<PanelArg> _onTopRightPanel = PublishSubject<PanelArg>();
+
+  double _panelStartOffset;
+  double _panelOffset;
+  double _panelContentOffset;
+  double _offset;
+  bool _isPanelOpen = false;
+  bool _isContentPanelOpen = false;
+
+  // Top-Right panel usage
 
   @override
   void initState() {
     super.initState();
+    _panelStartOffset = -(barHeight * 3 + commentsPanelWidth);
+    _panelOffset = _panelStartOffset + barHeight * 3;
+    _panelContentOffset = _panelOffset + commentsPanelWidth;
+    _offset = _panelStartOffset;
     _comments = _postID.distinct().switchMap<List<Comment>>((x) async* {
       yield await BooruAPI.fetchPostsComments(postID: widget.post.id);
     });
@@ -53,29 +72,174 @@ class _PostViewPageState extends State<PostViewPage> {
               .throttleTime(Duration(milliseconds: 500))
               .takeWhile((x) => Scaffold.of(context).isDrawerOpen)
               .listen((x) => Navigator.pop(context));
-          return Stack(children: <Widget>[
-            buildHoverDrawer(Scaffold.of(context)),
-            SlidingUpPanel(
-                controller: controller,
-                backdropColor: Colors.black,
-                backdropOpacity: 0.5,
-                minHeight: 60,
-                maxHeight: 800,
-                parallaxEnabled: true,
-                backdropEnabled: true,
-                // When coollapsed
-                collapsed: Center(
-                    child: Text(
-                  widget.post.id.toString(),
-                  style: TextStyle(fontSize: 25),
-                )),
-                panel: _buildSlidingPanelContent(),
-                body: _buildmobileGallery()),
-          ]);
+          if (Platform.isAndroid || Platform.isIOS) {
+            return Stack(
+              children: <Widget>[
+                SlidingUpPanel(
+                    controller: controller,
+                    backdropColor: Colors.black,
+                    backdropOpacity: 0.5,
+                    minHeight: 60,
+                    maxHeight: 800,
+                    parallaxEnabled: true,
+                    backdropEnabled: true,
+                    // When coollapsed
+                    collapsed: Column(
+                      children: <Widget>[
+                        Center(
+                            child: Text(
+                          widget.post.id.toString(),
+                          style: TextStyle(fontSize: 25),
+                        )),
+                      ],
+                    ),
+                    panel: _buildSlidingPanelContent(),
+                    body: _buildGallery()),
+              ],
+            );
+          } else {
+            return Stack(children: <Widget>[
+              _buildGallery(),
+              //_buildHoverDrawer(Scaffold.of(context)), // Left hover
+              _buildTopRightPanel(MediaQuery.of(context).size.height),
+            ]);
+          }
         }));
   }
 
-  Widget buildHoverDrawer(ScaffoldState scaffold) {
+  Widget _buildTopRightPanel(double height) {
+    bool isLeaving = false;
+    return AnimatedPositioned(
+      duration: Duration(milliseconds: 500),
+      curve: Curves.ease,
+      right: _offset - 1,
+      child: Container(
+        alignment: Alignment.centerLeft,
+        height: height,
+        child: Row(
+          children: <Widget>[
+            // Left
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                Container(
+                  child: MouseRegion(
+                    onEnter: (x) {
+                      if (!_isPanelOpen && !_isContentPanelOpen) {
+                        setState(() {
+                          _offset = _panelOffset;
+                        });
+                        _isPanelOpen = true;
+                        isLeaving = false;
+                      }
+                    },
+                    onExit: (x) {
+                      if (_isPanelOpen && !_isContentPanelOpen) {
+                        setState(() {
+                          _offset = _panelStartOffset;
+                        });
+                        _isPanelOpen = false;
+                      }
+                    },
+                    child: Row(
+                      children: <Widget>[
+                        // Handle hover
+                        Container(
+                          height: barHeight,
+                          width: panelHandlerWidth,
+                        ),
+                        //Basic function button group
+                        Container(
+                          clipBehavior: Clip.antiAlias,
+                          width: buttonCount * barHeight,
+                          alignment: Alignment.center,
+                          height: barHeight,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.only(
+                                  bottomLeft: Radius.circular(32.0)),
+                              color: Colors.white70),
+                          child: Container(
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.only(
+                                    bottomLeft: Radius.circular(32.0))),
+                            child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  _buildQuadIconButton(
+                                      () => Navigator.pop(context),
+                                      Icon(Icons.arrow_back)),
+                                  _buildQuadIconButton(
+                                      () => _launchURL(widget.post.fileUrl == ""
+                                          ? widget.post.jpegUrl
+                                          : widget.post.fileUrl),
+                                      Icon(Icons.file_download)),
+                                  _buildQuadIconButton(
+                                      () {}, Icon(Icons.favorite_border)),
+                                ]),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Content handler
+                Container(
+                  height: MediaQuery.of(context).size.height - barHeight - 10,
+                  child: MouseRegion(
+                    onEnter: (x) {
+                      if (!_isContentPanelOpen && !isLeaving) {
+                        setState(() {
+                          _offset = _panelContentOffset;
+                        });
+                        _isContentPanelOpen = true;
+                      }
+                    },
+                    child: Container(
+                      width: 100,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            // Content
+            Container(
+              height: MediaQuery.of(context).size.height,
+              decoration: BoxDecoration(color: Colors.white70),
+              child: MouseRegion(
+                onExit: (x) {
+                  if (_isContentPanelOpen) {
+                    setState(() {
+                      _offset = _panelStartOffset;
+                    });
+                    isLeaving = true;
+                    _isContentPanelOpen = false;
+                  }
+                },
+                child: Container(
+                  width: commentsPanelWidth,
+                  alignment: Alignment.topCenter,
+                  child: SingleChildScrollView(
+                    child: _buildSlidingPanelContent(),
+                    physics: BouncingScrollPhysics(),
+                  ),
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+    ;
+  }
+
+  AspectRatio _buildQuadIconButton(Function onPressed, Widget child) {
+    return AspectRatio(
+      aspectRatio: 1,
+      child: FlatButton(onPressed: onPressed, child: child),
+    );
+  }
+
+  Widget _buildHoverDrawer(ScaffoldState scaffold) {
     return Container(
         alignment: Alignment.centerLeft,
         width: 50,
@@ -100,49 +264,6 @@ class _PostViewPageState extends State<PostViewPage> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            LayoutBuilder(
-              builder: (context, constraints) => Container(
-                margin: EdgeInsets.symmetric(horizontal: 10),
-                width: buttonCount * barHeight,
-                alignment: Alignment.center,
-                height: barHeight,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(3),
-                    border: Border(
-                        bottom: BorderSide(color: Colors.black26, width: 1),
-                        left: BorderSide(color: Colors.black26, width: 1),
-                        right: BorderSide(color: Colors.black26, width: 1),
-                        top: BorderSide(color: Colors.black26, width: 1))),
-                child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: FlatButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.pop(context);
-                      },
-                      child: Icon(Icons.arrow_back),
-                    ),
-                  ),
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: FlatButton(
-                      onPressed: () => _launchURL(widget.post.fileUrl == ""
-                          ? widget.post.jpegUrl
-                          : widget.post.fileUrl),
-                      child: Icon(Icons.file_download),
-                    ),
-                  ),
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: FlatButton(
-                      onPressed: () {},
-                      child: Icon(Icons.favorite_border),
-                    ),
-                  ),
-                ]),
-              ),
-            ),
             //------------------
             _buildTitleSpliter(Text(
               "Size",
@@ -238,13 +359,15 @@ class _PostViewPageState extends State<PostViewPage> {
     }
   }
 
-  Widget _buildmobileGallery() {
+  Widget _buildGallery() {
     return Container(
       margin: EdgeInsets.only(bottom: 60),
       child: PhotoViewGallery(
+        enableRotation: true,
         backgroundDecoration: BoxDecoration(color: Colors.white),
         pageOptions: [
           PhotoViewGalleryPageOptions(
+              controller: _galleryController,
               maxScale: 1.0,
               imageProvider: NetworkImage(widget.post.sampleUrl),
               heroAttributes: PhotoViewHeroAttributes(tag: widget.post))
@@ -253,3 +376,19 @@ class _PostViewPageState extends State<PostViewPage> {
     );
   }
 }
+
+class PanelArg {
+  PanelState panelState;
+}
+
+class OpenPanelArg extends PanelArg {
+  final panelState;
+  OpenPanelArg({@required this.panelState});
+}
+
+class OpenCommentPanelArg extends PanelArg {
+  final panelState;
+  OpenCommentPanelArg({@required this.panelState});
+}
+
+enum PanelState { Open, Close }

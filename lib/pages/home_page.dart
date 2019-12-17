@@ -118,8 +118,8 @@ class _HomePageState extends State<HomePage>
                                       value: ClientType.Konachan,
                                     )
                                   ],
+                                  iconSize: 0,
                                   onChanged: onDropdownChanged,
-                                  icon: Icon(Icons.settings),
                                   value: AppSettings.currentClient,
                                 ),
                               )
