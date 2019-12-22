@@ -109,6 +109,9 @@ class BooruAPI {
         break;
     }
   }
+
+  static String avatarUrlFromID(int id) =>
+      "${AppSettings.currentBaseUrl}/data/avatars/${id.toString()}.jpg";
 }
 
 enum Period {
@@ -134,15 +137,3 @@ enum FetchType {
   PopularByMonth,
   Search
 }
-
-enum TagType { None, Artist, NotUsed, Copyright, Character, Circle, Faults }
-
-Map<TagType, Color> tagToColorMap = {
-  TagType.None: Color.fromARGB(255, 118, 118, 118),
-  TagType.Artist: Color.fromARGB(255, 202, 80, 16),
-  TagType.Character: Color.fromARGB(255, 16, 137, 62),
-  TagType.Copyright: Color.fromARGB(255, 194, 57, 179),
-  TagType.Circle: Color.fromARGB(255, 45, 125, 154),
-  TagType.Faults: Color.fromARGB(255, 232, 17, 35),
-  TagType.NotUsed: Color.fromARGB(255, 118, 118, 118),
-};

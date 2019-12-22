@@ -1,3 +1,5 @@
+import 'package:rxdart/rxdart.dart';
+import 'package:yande_web/models/yande/tags.dart';
 import 'package:yande_web/settings/app_settings.dart';
 
 class Post {
@@ -22,10 +24,10 @@ class Post {
 
   Post.fromJson(Map<String, dynamic> json)
       : id = json['id'],
-      creatorId=json['creator_id'],
-      sourceUrl=json['source'],
-      score=json['score'],
-      author=json['author'],
+        creatorId = json['creator_id'],
+        sourceUrl = json['source'],
+        score = json['score'],
+        author = json['author'],
         tags = json['tags'],
         hasChildren = json['has_children'],
         _rating = json['rating'],
@@ -35,7 +37,7 @@ class Post {
         fileUrl = json['file_url'],
         width = json['width'],
         height = json['height'];
-        
+
   double _widthInPanel = 0;
 
   Rating get rating {

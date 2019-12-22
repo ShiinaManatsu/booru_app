@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,10 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:yande_web/models/rx/booru_api.dart';
 import 'package:yande_web/models/yande/comment.dart';
 import 'package:yande_web/models/yande/post.dart';
+import 'package:yande_web/models/yande/tags.dart';
 import 'package:yande_web/settings/app_settings.dart';
+import 'package:expandable/expandable.dart';
+
 
 class PostViewPage extends StatefulWidget {
   @required
@@ -27,8 +31,7 @@ class PostViewPage extends StatefulWidget {
 class _PostViewPageState extends State<PostViewPage>
     with TickerProviderStateMixin {
   PublishSubject _onPanelExit = PublishSubject();
-  PublishSubject<int> _postID = PublishSubject<int>();
-  Stream<List<Comment>> _comments;
+  List<Comment> _comments = List<Comment>();
   int buttonCount = 3;
   double barHeight = 64;
   double panelHandlerWidth = 100;
@@ -46,6 +49,9 @@ class _PostViewPageState extends State<PostViewPage>
 
   // Top-Right panel usage
 
+  // Post Tags
+  List<Tag> tags = List<Tag>();
+
   @override
   void initState() {
     super.initState();
@@ -53,8 +59,20 @@ class _PostViewPageState extends State<PostViewPage>
     _panelOffset = _panelStartOffset + barHeight * 3;
     _panelContentOffset = _panelOffset + commentsPanelWidth;
     _offset = _panelStartOffset;
-    _comments = _postID.distinct().switchMap<List<Comment>>((x) async* {
-      yield await BooruAPI.fetchPostsComments(postID: widget.post.id);
+    widget.post.tags.split(" ").forEach((x) async {
+      var res = await TagDataBase.searchTags(x);
+      if (mounted) {
+        setState(() {
+          tags.add(res.firstWhere((f) => f.content == x));
+        });
+      }
+    });
+    BooruAPI.fetchPostsComments(postID: widget.post.id).then((x) {
+      if (mounted) {
+        setState(() {
+          _comments = x;
+        });
+      }
     });
   }
 
@@ -292,7 +310,9 @@ class _PostViewPageState extends State<PostViewPage>
                       backgroundImage: NetworkImage(
                           "${AppSettings.currentBaseUrl}/data/avatars/${widget.post.creatorId}.jpg"),
                     ),
-                    Container(margin: EdgeInsets.only(left: 10),child: Text("${widget.post.author}")),
+                    Container(
+                        margin: EdgeInsets.only(left: 10),
+                        child: Text("${widget.post.author}")),
                   ],
                 ),
                 _buildTitleSpliter(Text(
@@ -304,8 +324,16 @@ class _PostViewPageState extends State<PostViewPage>
                   "Tags",
                   style: TextStyle(fontSize: 20),
                 )),
-                Text(
-                  "${widget.post.tags}",
+                Wrap(
+                  spacing: 3,
+                  children: List.generate(
+                    tags.length,
+                    (index) => Chip(
+                      label: Text(tags[index].content),
+                      backgroundColor: TagToColorMap[tags[index].tagType],
+                      deleteIcon: Icon(Icons.close),
+                    ),
+                  ),
                 ),
                 _buildTitleSpliter(Text(
                   "Rating",
@@ -334,36 +362,20 @@ class _PostViewPageState extends State<PostViewPage>
                   "Comments",
                   style: TextStyle(fontSize: 20),
                 )),
-                StreamBuilder<List<Comment>>(
-                  stream: _comments,
-                  initialData: List<Comment>()..add(Comment(isEmpty: true)),
-                  builder: (context, snapshot) {
-                    return Column(
-                      children: List.generate(snapshot.data.length, (index) {
-                        if (snapshot.data[index].isEmpty) {
-                          return Container();
-                        } else {
-                          return Row(
-                            children: <Widget>[
-                              Text(
-                                "${snapshot.data[index].creator}: ",
-                              ),
-                              Text(
-                                snapshot.data[index].body,
-                              ),
-                            ],
-                          );
-                        }
-                      }),
-                    );
-                  },
-                )
+                // Comments
+                _buildExpandablePanel()
               ],
             ),
           ),
         ),
       ],
     );
+  }
+
+  Widget _buildExpandablePanel() {
+    if(_comments.isEmpty){
+      return Container();
+    }
   }
 
   Widget _buildTitleSpliter(Widget title) {

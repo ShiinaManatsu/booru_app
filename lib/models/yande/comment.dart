@@ -10,7 +10,7 @@ class Comment {
 
   /// Create time
   String createdAt;
-  String body;
+  String content;
 
   Comment.fromJson(Map<String, dynamic> json)
       : id = json['id'],
@@ -18,6 +18,6 @@ class Comment {
         creator = json['creator'],
         creatorId = json['creator_id'],
         createdAt = json['created_at'],
-        body = json['body'],
+        content = json['body'],
         isEmpty=false;
 }

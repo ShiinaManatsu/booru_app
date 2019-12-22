@@ -1,3 +1,6 @@
+import 'dart:collection';
+
+import 'package:enum_to_string/enum_to_string.dart';
 import 'package:floating_search_bar/floating_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
@@ -6,6 +9,8 @@ import 'package:yande_web/models/rx/update_args.dart';
 import 'package:yande_web/models/yande/tags.dart';
 import 'home_page.dart';
 
+HashSet<Tag> _chips = HashSet<Tag>();
+
 class SearchTaggedPostsPage extends StatefulWidget {
   SearchTaggedPostsPage({Key key}) : super(key: key);
 
@@ -13,35 +18,31 @@ class SearchTaggedPostsPage extends StatefulWidget {
   _SearchTaggedPostsPageState createState() => _SearchTaggedPostsPageState();
 }
 
-class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
-  String _searchPattern = "";
-  List<String> _tags = List<String>();
+class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage>
+    with TickerProviderStateMixin {
+  List<Tag> _tags = List<Tag>();
 
-  Stream<List<String>> search;
+  Stream<List<Tag>> searchedTags;
   final _onTextChanged = PublishSubject<String>();
 
   @override
   void initState() {
     super.initState();
-    search = _onTextChanged
+    searchedTags = _onTextChanged
+        .throttleTime(Duration(milliseconds: 200))
         .distinct()
-        .throttleTime(Duration(milliseconds: 500))
         .where((x) => x != "")
-        .switchMap<List<String>>((mapper) => _search(mapper));
+        .switchMap<List<Tag>>((mapper) => _search(mapper));
 
-    search.listen((x) {
+    searchedTags.listen((x) {
       setState(() {
         _tags = x;
       });
     });
   }
 
-  static Stream<List<String>> _search(String term) async* {
-    List<String> result = new List<String>();
-    await TagDataBase.searchTags(term).then((x) {
-      result = x;
-    });
-    yield result;
+  static Stream<List<Tag>> _search(String term) async* {
+    yield await TagDataBase.searchTags(term);
   }
 
   @override
@@ -51,15 +52,35 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
       itemCount: _tags.length,
       itemBuilder: (BuildContext context, int index) {
         return ListTile(
-          leading: Text(_tags[index]),
+          leading: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Icon(
+                Icons.bookmark,
+                color: TagToColorMap[_tags[index].tagType],
+              ),
+              Container(
+                  width: 70,
+                  margin: EdgeInsets.only(left: 5),
+                  child: Text(
+                      "${EnumToString.parseCamelCase(_tags[index].tagType)}:")),
+            ],
+          ),
+          title: Text(_tags[index].content),
           onTap: () {
-            searchTerm = _tags[index];
-            homePageFetchTypeChanged.add(FetchType.Search);
-            booruBloc.onReset.add(null);
-            booruBloc.onUpdate.add(UpdateArg(
-                fetchType: FetchType.Search,
-                arg: TaggedArgs(tags: searchTerm, page: 1)));
-            Navigator.pop(context);
+            setState(() {
+              if (_chips.length < 3) {
+                _chips.add(_tags[index]);
+              }
+            });
+            // searchTerm = _tags[index].content;
+            // homePageFetchTypeChanged.add(FetchType.Search);
+            // booruBloc.onReset.add(null);
+            // booruBloc.onUpdate.add(UpdateArg(
+            //     fetchType: FetchType.Search,
+            //     arg: TaggedArgs(tags: searchTerm, page: 1)));
+            // Navigator.pop(context);
           },
         );
       },
@@ -67,40 +88,55 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage> {
         icon: Icon(Icons.arrow_back),
         onPressed: () => Navigator.pop(context),
       ),
-      trailing: IconButton(
-        icon: Icon(Icons.search),
-        onPressed: () {
-          if (_searchPattern != "") {
-            searchTerm = _searchPattern;
-            homePageFetchTypeChanged.add(FetchType.Search);
-            booruBloc.onReset.add(null);
-            booruBloc.onUpdate.add(UpdateArg(
-                fetchType: FetchType.Search,
-                arg: TaggedArgs(tags: searchTerm, page: 1)));
-            Navigator.pop(context);
-          } else {
-            return;
-          }
-        },
-      ),
+      trailing: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            AnimatedSize(
+              duration: Duration(milliseconds: 300),
+              vsync: this,
+              curve: Curves.ease,
+              child: Row(
+                  children: <Widget>[]..addAll(_chips.map((f) => Container(
+                        margin: EdgeInsets.only(right: 3),
+                        child: Chip(
+                          label: Text(f.content),
+                          backgroundColor: TagToColorMap[f.tagType],
+                          deleteIcon: Icon(Icons.close),
+                          onDeleted: () {
+                            setState(() {
+                              _chips.remove(f);
+                            });
+                          },
+                        ),
+                      )))),
+            ),
+          ]..add(
+              Container(
+                margin: EdgeInsets.only(left: 10),
+                child: IconButton(
+                  icon: Icon(Icons.search),
+                  onPressed: () {
+                    if (_chips.length != 0) {
+                      searchTerm = _chips.map((x) => x.content).join(" ");
+                      homePageFetchTypeChanged.add(FetchType.Search);
+                      booruBloc.onReset.add(null);
+                      booruBloc.onUpdate.add(UpdateArg(
+                          fetchType: FetchType.Search,
+                          arg: TaggedArgs(tags: searchTerm, page: 1)));
+                      Navigator.pop(context);
+                    } else {
+                      return;
+                    }
+                  },
+                ),
+              ),
+            )),
       onChanged: (x) {
         _onTextChanged.add(x);
-        _searchPattern = x;
-      },
-      onSubmitted: (x) {
-        if (x != "") {
-          searchTerm=x;
-          homePageFetchTypeChanged.add(FetchType.Search);
-          booruBloc.onUpdate.add(UpdateArg(
-              fetchType: FetchType.Search,
-              arg: TaggedArgs(tags: x, page: 1)));
-          Navigator.pop(context);
-        } else {
-          return;
-        }
       },
       decoration: InputDecoration.collapsed(
-        hintText: "Search...",
+        hintText: "Search tags...",
       ),
     ));
   }
