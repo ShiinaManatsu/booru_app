@@ -17,7 +17,6 @@ import 'package:yande_web/models/yande/tags.dart';
 import 'package:yande_web/settings/app_settings.dart';
 import 'package:expandable/expandable.dart';
 
-
 class PostViewPage extends StatefulWidget {
   @required
   final Post post;
@@ -68,10 +67,12 @@ class _PostViewPageState extends State<PostViewPage>
       }
     });
     BooruAPI.fetchPostsComments(postID: widget.post.id).then((x) {
-      if (mounted) {
-        setState(() {
-          _comments = x;
-        });
+      if (x != null) {
+        if (mounted) {
+          setState(() {
+            _comments = x;
+          });
+        }
       }
     });
   }
@@ -193,13 +194,12 @@ class _PostViewPageState extends State<PostViewPage>
                                           ? widget.post.jpegUrl
                                           : widget.post.fileUrl),
                                       Icon(Icons.file_download)),
-                                  _buildQuadIconButton(() {
-                                    setState(() {
-                                      _galleryController.rotation =
-                                          (_galleryController.rotation +
-                                                  pi / 2) %
-                                              (pi * 2);
-                                    });
+                                  _buildQuadIconButton(() async {
+                                    Clipboard.setData(
+                                        ClipboardData(text: widget.post.fileUrl));
+                                    print(
+                                        (await Clipboard.getData("text/plain"))
+                                            .text);
                                   }, Icon(Icons.favorite_border)),
                                 ]),
                           ),
@@ -373,8 +373,48 @@ class _PostViewPageState extends State<PostViewPage>
   }
 
   Widget _buildExpandablePanel() {
-    if(_comments.isEmpty){
+    if (_comments.length == 0) {
       return Container();
+    } else {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: List.generate(
+            _comments.length,
+            (index) => Container(
+                  margin: EdgeInsets.symmetric(vertical: 5),
+                  decoration: BoxDecoration(color: Colors.accents[index]),
+                  child: ExpandableNotifier(
+                    child: Column(
+                      children: [
+                        ExpandablePanel(
+                          header: Column(
+                            children: <Widget>[
+                              Text(_comments[index].creator,
+                                  softWrap: true,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis),
+                              Text(_comments[index].content),
+                              ExpandableButton(
+                                child: Text("Expand"),
+                              ),
+                            ],
+                          ),
+                          expanded: Column(children: [
+                            ExpandableButton(
+                              child: Text("Back"),
+                            ),
+                          ]),
+                          hasIcon: false,
+                          tapBodyToCollapse: true,
+                          tapHeaderToExpand: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                )),
+      );
     }
   }
 

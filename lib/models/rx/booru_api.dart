@@ -87,11 +87,6 @@ class BooruAPI {
     var url = "${AppSettings.currentBaseUrl}/comment.json?post_id=$postID";
     http.Response response = await http.get(url);
     List responseJson = json.decode(response.body);
-    if (responseJson.length == 0) {
-      List<Comment> l = new List<Comment>();
-      l.add(new Comment(isEmpty: true));
-      return l;
-    }
     return responseJson.map((m) => Comment.fromJson(m)).toList();
   }
 

@@ -1,8 +1,4 @@
 class Comment {
-  bool isEmpty=false;
-
-  Comment({this.isEmpty});
-
   int id;
   int postId;
   int creatorId;
@@ -18,6 +14,5 @@ class Comment {
         creator = json['creator'],
         creatorId = json['creator_id'],
         createdAt = json['created_at'],
-        content = json['body'],
-        isEmpty=false;
+        content = json['body'];
 }
