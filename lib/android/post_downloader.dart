@@ -1,16 +1,13 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:yande_web/main.dart';
 
 class PostDownloader {
   PostDownloader() {
     getExternalStorageDirectory().then((x) => path = x);
   }
   Directory path;
-
-  // TODO: Implements the mothod
-  Future<Directory> getExternalStorageDirectory()async{
-    return Directory("path");
-  }
 
   List<DownloadStatus> states = List<DownloadStatus>();
 
@@ -51,18 +48,18 @@ class PostDownloader {
         if (state.callback != null) {
           state.callback(state);
         }
-        // _showNotification(state);  //TODO
+        _showNotification(state);  //TODO
       });
     } else {
-      // _showNotification(state);  //TODO
+      _showNotification(state);  //TODO
     }
   }
 
-  // TODO: Implements the show notifications method later
-  // void _showNotification(DownloadStatus status) {
-  //   notifier.sendNotificationWithBitmap(status.id, 'Finished download',
-  //       'Post ${status.id} downloaded', status.filePath);
-  // }
+  //TODO: Implements the show notifications method later
+  void _showNotification(DownloadStatus status) {
+    notifier.sendNotificationWithBitmap(status.id, 'Finished download',
+        'Post ${status.id} downloaded', status.filePath);
+  }
 }
 
 class DownloadStatus {

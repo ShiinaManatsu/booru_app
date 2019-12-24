@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:math';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +14,8 @@ import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/models/yande/tags.dart';
 import 'package:yande_web/settings/app_settings.dart';
 import 'package:expandable/expandable.dart';
+import 'package:yande_web/main.dart';
+import 'package:yande_web/android/post_downloader.dart';
 
 class PostViewPage extends StatefulWidget {
   @required
@@ -51,6 +51,19 @@ class _PostViewPageState extends State<PostViewPage>
   // Post Tags
   List<Tag> tags = List<Tag>();
 
+  // Download usage
+  DownloadStatus state;
+
+  double get _progressValue => state.current / state.total;
+
+  callback(DownloadStatus s) {
+    if (mounted) {
+      setState(() {
+        state = s;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -75,25 +88,29 @@ class _PostViewPageState extends State<PostViewPage>
         }
       }
     });
+
+    // Download usage
+    try {
+      state = postDownloader.states
+          .where((x) => x.id == widget.post.id && x.isDownload)
+          .first;
+      state.callback = callback;
+    } catch (e) {
+      state = DownloadStatus('', widget.post.id, callback: callback);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     PanelController controller = PanelController();
     return Scaffold(
-        drawerEdgeDragWidth: 100,
-        drawer: Drawer(
-          child: MouseRegion(
-              onExit: (x) => _onPanelExit.add(null),
-              child: _buildContentPanel()),
-        ),
         extendBody: true,
         body: Builder(builder: (context) {
           _onPanelExit
               .throttleTime(Duration(milliseconds: 500))
               .takeWhile((x) => Scaffold.of(context).isDrawerOpen)
               .listen((x) => Navigator.pop(context));
-          if (Platform.isAndroid || Platform.isIOS) {
+          if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
             return Stack(
               children: <Widget>[
                 SlidingUpPanel(
@@ -105,15 +122,6 @@ class _PostViewPageState extends State<PostViewPage>
                     parallaxEnabled: true,
                     backdropEnabled: true,
                     // When coollapsed
-                    collapsed: Column(
-                      children: <Widget>[
-                        Center(
-                            child: Text(
-                          widget.post.id.toString(),
-                          style: TextStyle(fontSize: 25),
-                        )),
-                      ],
-                    ),
                     panel: _buildContentPanel(),
                     body: _buildGallery()),
               ],
@@ -189,17 +197,20 @@ class _PostViewPageState extends State<PostViewPage>
                                   _buildQuadIconButton(
                                       () => Navigator.pop(context),
                                       Icon(Icons.arrow_back)),
-                                  _buildQuadIconButton(
-                                      () => _launchURL(widget.post.fileUrl == ""
-                                          ? widget.post.jpegUrl
-                                          : widget.post.fileUrl),
-                                      Icon(Icons.file_download)),
-                                  _buildQuadIconButton(() async {
-                                    Clipboard.setData(
-                                        ClipboardData(text: widget.post.fileUrl));
-                                    print(
-                                        (await Clipboard.getData("text/plain"))
-                                            .text);
+                                  _buildQuadIconButton(() {
+                                    if (kIsWeb) {
+                                      _launchURL(widget.post.fileUrl);
+                                      return;
+                                    } else {
+                                      postDownloader.download(
+                                          widget.post.fileUrl,
+                                          widget.post.id,
+                                          state);
+                                    }
+                                  }, Icon(Icons.file_download)),
+                                  _buildQuadIconButton(() {
+                                    _launchURL(
+                                        "https://yande.re/post/show/${widget.post.id}");
                                   }, Icon(Icons.favorite_border)),
                                 ]),
                           ),
@@ -269,6 +280,11 @@ class _PostViewPageState extends State<PostViewPage>
     return Column(
       mainAxisSize: MainAxisSize.max,
       children: <Widget>[
+        LinearProgressIndicator(
+          value: state.isDownload ? state.current / state.total : 0,
+          valueColor: AlwaysStoppedAnimation<Color>(
+              state.isDownload ? Colors.blueAccent : Colors.pinkAccent),
+        ),
         // Sub buttons
         Container(
           alignment: Alignment.centerLeft,
@@ -278,7 +294,11 @@ class _PostViewPageState extends State<PostViewPage>
               _buildQuadIconButton(
                   () => Clipboard.setData(ClipboardData(
                       text: "https://yande.re/post/show/${widget.post.id}")),
-                  Icon(Icons.keyboard_arrow_right)),
+                  Icon(Icons.content_copy)),
+              _buildQuadIconButton(() {
+                postDownloader.download(
+                    widget.post.fileUrl, widget.post.id, state);
+              }, Icon(Icons.file_download)),
               Text(
                 "${widget.post.id}",
                 style: TextStyle(fontSize: 20),

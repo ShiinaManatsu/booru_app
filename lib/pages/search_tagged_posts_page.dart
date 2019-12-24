@@ -1,5 +1,4 @@
 import 'dart:collection';
-
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:floating_search_bar/floating_search_bar.dart';
 import 'package:flutter/material.dart';
