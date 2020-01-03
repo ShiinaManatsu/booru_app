@@ -67,15 +67,17 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    panelWidth = MediaQuery.of(context).size.width - 10;
-    booruBloc.onPanelWidth.add(MediaQuery.of(context).size.width - 10);
+    panelWidth = MediaQuery.of(context).size.width - 20;
+    booruBloc.onPanelWidth.add(panelWidth);
     print("panelWidth build");
     var _controller = new ScrollController();
     return Scaffold(
         drawer: _appDrawer(),
         body: Builder(
           builder: (context) => SmartRefresher(
-            header: WaterDropMaterialHeader(backgroundColor: Colors.accents[1],),
+            header: WaterDropMaterialHeader(
+              backgroundColor: Colors.accents[1],
+            ),
             onRefresh: () => booruBloc.onRefresh.add(null),
             enablePullDown: true,
             controller: refreshController,

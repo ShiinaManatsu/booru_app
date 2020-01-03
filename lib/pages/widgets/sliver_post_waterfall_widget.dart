@@ -39,10 +39,10 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
               return Container(
                 child: SingleChildScrollView(
                   child: Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 10, 0, 0),
+                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
                       child: Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
+                        spacing: 4,
+                        runSpacing: 4,
                         children: <Widget>[]
                           ..addAll(state.result.map((x) => PostPreview(
                                 post: x,

@@ -5,13 +5,13 @@ import 'package:yande_web/pages/home_page.dart';
 // We are moving all the fetched post to the optimized list
 
 extension ListExtension on List<Post> {
-  Future<List<Post>> arrange() 
-  async {
-    List<Post> posts=List<Post>.from(this);
+  Future<List<Post>> arrange() async {
+    List<Post> posts = List<Post>.from(this);
     List<List<Post>> fixedPosts = List<List<Post>>();
     var panelRatio = panelWidth / AppSettings.fixedPostHeight;
-    double ratioFactor = 0.7;
-    if(fixedPosts.length==0){
+    const double maxRatioFactor = 1.2;
+
+    if (fixedPosts.length == 0) {
       fixedPosts.add(new List<Post>());
     }
     List<Post> row;
@@ -21,27 +21,32 @@ extension ListExtension on List<Post> {
       row.forEach((item) {
         rowSumRatio += item.ratio;
       });
-      // Row can contain more
-      if (posts.first.ratio + rowSumRatio < panelRatio + ratioFactor) {
+      // If row can contain more
+      if ((posts.first.ratio + rowSumRatio) < (panelRatio + maxRatioFactor)) {
         row.add(posts.first);
         posts.removeAt(0);
       }
-      // Row overflow, add row to the new posts list and make new one
+      // If row overflow, add row to the new posts list and make new one
       else {
-        double rowWidth = 0;
+        print("index:${fixedPosts.length}, count:${row.length}");
+        var flex = []; // New rule
+        double left = 1;
+        var fixedPanelWidth = panelWidth - 4 * (row.length - 1);
         row.forEach((item) {
-          rowWidth += item.preferredWidth;
+          var f = item.preferredWidth / fixedPanelWidth;
+          flex.add(f); // New rule, 4 is the run space
+          left -= f;
         });
-        var remainWidth = panelWidth - rowWidth;
-        var widthFactor = remainWidth / row.length; // Add to each one
+        left /= row.length;
         row.forEach((item) {
-          item.widthInPanel = item.preferredWidth + widthFactor;
+          item.widthInPanel =
+              (fixedPanelWidth * (flex[row.indexOf(item)] + left)).floorToDouble();
         });
         fixedPosts.add(new List<Post>());
         row = fixedPosts.last;
         row.add(posts.first);
         posts.removeAt(0);
-      }      
+      }
     }
     print("Arrange width:$panelWidth");
     row.clear();

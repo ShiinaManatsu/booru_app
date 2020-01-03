@@ -54,8 +54,6 @@ class _PostViewPageState extends State<PostViewPage>
   // Download usage
   DownloadStatus state;
 
-  double get _progressValue => state.current / state.total;
-
   callback(DownloadStatus s) {
     if (mounted) {
       setState(() {
@@ -277,116 +275,126 @@ class _PostViewPageState extends State<PostViewPage>
   }
 
   Widget _buildContentPanel() {
-    return Column(
-      mainAxisSize: MainAxisSize.max,
+    return Stack(
+      alignment: Alignment.topCenter,
+      fit: StackFit.loose,
       children: <Widget>[
-        LinearProgressIndicator(
-          value: state.isDownload ? state.current / state.total : 0,
-          valueColor: AlwaysStoppedAnimation<Color>(
-              state.isDownload ? Colors.blueAccent : Colors.pinkAccent),
-        ),
-        // Sub buttons
         Container(
-          alignment: Alignment.centerLeft,
-          height: barHeight,
-          child: Container(
-            child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-              _buildQuadIconButton(
-                  () => Clipboard.setData(ClipboardData(
-                      text: "https://yande.re/post/show/${widget.post.id}")),
-                  Icon(Icons.content_copy)),
-              _buildQuadIconButton(() {
-                postDownloader.download(
-                    widget.post.fileUrl, widget.post.id, state);
-              }, Icon(Icons.file_download)),
-              Text(
-                "${widget.post.id}",
-                style: TextStyle(fontSize: 20),
-              ),
-            ]),
+          //height: 60,
+          child: LinearProgressIndicator(
+            value: state.isDownload ? state.current / state.total : 0,
+            valueColor: AlwaysStoppedAnimation<Color>(
+                state.isFinished ? Colors.pinkAccent : Colors.blueAccent),
           ),
         ),
-        SingleChildScrollView(
-          physics: BouncingScrollPhysics(),
-          child: Container(
-            margin: EdgeInsets.all(30),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                //------------------
-                _buildTitleSpliter(Text(
-                  "Size",
-                  style: TextStyle(fontSize: 20),
-                )),
-                Text("${widget.post.width}x${widget.post.height}"),
-                _buildTitleSpliter(Text(
-                  "Author",
-                  style: TextStyle(fontSize: 20),
-                )),
-                Row(
+        Column(
+          mainAxisSize: MainAxisSize.max,
+          children: <Widget>[
+            // Sub buttons
+            Container(
+              alignment: Alignment.centerLeft,
+              height: barHeight,
+              child: Container(
+                child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                  _buildQuadIconButton(
+                      () => Clipboard.setData(ClipboardData(
+                          text:
+                              "https://yande.re/post/show/${widget.post.id}")),
+                      Icon(Icons.content_copy)),
+                  _buildQuadIconButton(() {
+                    postDownloader.download(
+                        widget.post.fileUrl, widget.post.id, state);
+                  }, Icon(Icons.file_download)),
+                  Text(
+                    "${widget.post.id}",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                ]),
+              ),
+            ),
+            SingleChildScrollView(
+              physics: BouncingScrollPhysics(),
+              child: Container(
+                margin: EdgeInsets.all(30),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    CircleAvatar(
-                      backgroundImage: NetworkImage(
-                          "${AppSettings.currentBaseUrl}/data/avatars/${widget.post.creatorId}.jpg"),
+                    //------------------
+                    _buildTitleSpliter(Text(
+                      "Size",
+                      style: TextStyle(fontSize: 20),
+                    )),
+                    Text("${widget.post.width}x${widget.post.height}"),
+                    _buildTitleSpliter(Text(
+                      "Author",
+                      style: TextStyle(fontSize: 20),
+                    )),
+                    Row(
+                      children: <Widget>[
+                        CircleAvatar(
+                          backgroundImage: NetworkImage(
+                              "${AppSettings.currentBaseUrl}/data/avatars/${widget.post.creatorId}.jpg"),
+                        ),
+                        Container(
+                            margin: EdgeInsets.only(left: 10),
+                            child: Text("${widget.post.author}")),
+                      ],
                     ),
-                    Container(
-                        margin: EdgeInsets.only(left: 10),
-                        child: Text("${widget.post.author}")),
+                    _buildTitleSpliter(Text(
+                      "Score",
+                      style: TextStyle(fontSize: 20),
+                    )),
+                    Text("${widget.post.score}"),
+                    _buildTitleSpliter(Text(
+                      "Tags",
+                      style: TextStyle(fontSize: 20),
+                    )),
+                    Wrap(
+                      spacing: 3,
+                      children: List.generate(
+                        tags.length,
+                        (index) => Chip(
+                          label: Text(tags[index].content),
+                          backgroundColor: TagToColorMap[tags[index].tagType],
+                          deleteIcon: Icon(Icons.close),
+                        ),
+                      ),
+                    ),
+                    _buildTitleSpliter(Text(
+                      "Rating",
+                      style: TextStyle(fontSize: 20),
+                    )),
+                    Text("${widget.post.rating.toString()}"),
+                    // Source link
+                    _buildTitleSpliter(Text(
+                      "Source",
+                      style: TextStyle(fontSize: 20),
+                    )),
+                    RichText(
+                      text: new TextSpan(
+                        text: widget.post.sourceUrl == ""
+                            ? "No source"
+                            : widget.post.sourceUrl,
+                        style: new TextStyle(color: Colors.blue),
+                        recognizer: new TapGestureRecognizer()
+                          ..onTap = () {
+                            _launchURL(widget.post.sourceUrl);
+                          },
+                      ),
+                    ),
+
+                    _buildTitleSpliter(Text(
+                      "Comments",
+                      style: TextStyle(fontSize: 20),
+                    )),
+                    // Comments
+                    _buildExpandablePanel()
                   ],
                 ),
-                _buildTitleSpliter(Text(
-                  "Score",
-                  style: TextStyle(fontSize: 20),
-                )),
-                Text("${widget.post.score}"),
-                _buildTitleSpliter(Text(
-                  "Tags",
-                  style: TextStyle(fontSize: 20),
-                )),
-                Wrap(
-                  spacing: 3,
-                  children: List.generate(
-                    tags.length,
-                    (index) => Chip(
-                      label: Text(tags[index].content),
-                      backgroundColor: TagToColorMap[tags[index].tagType],
-                      deleteIcon: Icon(Icons.close),
-                    ),
-                  ),
-                ),
-                _buildTitleSpliter(Text(
-                  "Rating",
-                  style: TextStyle(fontSize: 20),
-                )),
-                Text("${widget.post.rating.toString()}"),
-                // Source link
-                _buildTitleSpliter(Text(
-                  "Source",
-                  style: TextStyle(fontSize: 20),
-                )),
-                RichText(
-                  text: new TextSpan(
-                    text: widget.post.sourceUrl == ""
-                        ? "No source"
-                        : widget.post.sourceUrl,
-                    style: new TextStyle(color: Colors.blue),
-                    recognizer: new TapGestureRecognizer()
-                      ..onTap = () {
-                        _launchURL(widget.post.sourceUrl);
-                      },
-                  ),
-                ),
-
-                _buildTitleSpliter(Text(
-                  "Comments",
-                  style: TextStyle(fontSize: 20),
-                )),
-                // Comments
-                _buildExpandablePanel()
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ],
     );
@@ -457,7 +465,6 @@ class _PostViewPageState extends State<PostViewPage>
     return Container(
       //margin: EdgeInsets.only(bottom: 60),  // Phone use
       child: PhotoViewGallery(
-        enableRotation: true,
         backgroundDecoration: BoxDecoration(color: Colors.white),
         pageOptions: [
           PhotoViewGalleryPageOptions(

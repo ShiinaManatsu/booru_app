@@ -13,7 +13,6 @@ class PostPreview extends StatefulWidget {
 
 class _PostPreviewState extends State<PostPreview>
     with AutomaticKeepAliveClientMixin {
-  final double fixedHeight = 256.0;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +28,7 @@ class _PostPreviewState extends State<PostPreview>
           child: Image.network(
             widget.post.previewUrl,
             height: AppSettings.fixedPostHeight,
-            width: widget.post.widthInPanel - 10,
+            width: widget.post.widthInPanel,
             fit: BoxFit.cover,
           ),
         ),

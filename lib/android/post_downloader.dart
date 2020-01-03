@@ -5,18 +5,18 @@ import 'package:yande_web/main.dart';
 
 class PostDownloader {
   PostDownloader() {
-    getExternalStorageDirectory().then((x) => path = x);
+    if (Platform.isAndroid) {
+      getExternalStorageDirectory().then((x) => path = x);
+    }
   }
   Directory path;
 
   List<DownloadStatus> states = List<DownloadStatus>();
 
   // If we already have a download in the state list, we notify it and return
-  download(String url, int id,DownloadStatus downloadState) async {
+  download(String url, int id, DownloadStatus downloadState) async {
     if (states.where((item) => item.url == url).length != 0) {
-      states
-          .where((item) => item.url == url)
-          .forEach((f) => {
+      states.where((item) => item.url == url).forEach((f) => {
             //_showNotification(f)  //TODO
           });
       return;
@@ -24,11 +24,11 @@ class PostDownloader {
 
     // Factory the name and the state add to state list
     var fileName = Uri.decodeFull(url).split('/').last;
-    var savePath = '${path.path}/$fileName';
-    var state=downloadState;
-    state.url=url;
-    state.id=id;
-    state.filePath=savePath;
+    var savePath = 'D:/$fileName'; //'${path.path}/$fileName';
+    var state = downloadState;
+    state.url = url;
+    state.id = id;
+    state.filePath = savePath;
     states.add(state);
 
     // Check if exist
@@ -48,17 +48,19 @@ class PostDownloader {
         if (state.callback != null) {
           state.callback(state);
         }
-        _showNotification(state);  //TODO
+        _showNotification(state); //TODO
       });
     } else {
-      _showNotification(state);  //TODO
+      _showNotification(state); //TODO
     }
   }
 
-  //TODO: Implements the show notifications method later
+  /// Show a notification when download finished
   void _showNotification(DownloadStatus status) {
-    notifier.sendNotificationWithBitmap(status.id, 'Finished download',
-        'Post ${status.id} downloaded', status.filePath);
+    if (Platform.isAndroid) {
+      notifier.sendNotificationWithBitmap(status.id, 'Finished download',
+          'Post ${status.id} downloaded', status.filePath);
+    }
   }
 }
 
@@ -71,5 +73,6 @@ class DownloadStatus {
   int current = 1;
   int total = 10;
   double progressOpacity = 0;
+  bool get isFinished => current == total;
   Function(DownloadStatus) callback;
 }

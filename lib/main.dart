@@ -30,8 +30,8 @@ void main() {
   runApp(MyApp());
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
     notifier = Notifier();
-    postDownloader = PostDownloader();
   }
+  postDownloader = PostDownloader();
 }
 
 // Routes
