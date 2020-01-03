@@ -275,6 +275,11 @@ class _HomePageState extends State<HomePage>
                         fetchType: FetchType.PopularByMonth,
                         arg: PopularByMonthArgs(time: DateTime.now())));
                   }, "Popular posts by month", FetchType.PopularByMonth),
+
+                  _spliter("Other"),
+                  _buildDrawerEmptyButton(
+                      () => Navigator.pushNamed(context, settingsPage),
+                      "Settings"),
                 ],
               ),
             ],
@@ -304,6 +309,26 @@ class _HomePageState extends State<HomePage>
         hoverColor: Colors.lightBlue[100],
         splashColor: Colors.lightBlue[200],
         onPressed: func,
+        child: Container(alignment: Alignment.centerLeft, child: Text(text)),
+      ),
+    );
+  }
+
+  /// The button used in drawer
+  Widget _buildDrawerEmptyButton(Function() onPressed, String text) {
+    return Container(
+      margin: EdgeInsets.fromLTRB(0, 0, 20, 0),
+      height: _drawerButtonHeight,
+      child: FlatButton(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+                bottomRight: Radius.circular(30),
+                topRight: Radius.circular(30))),
+        highlightColor: Colors.lightBlue[300],
+        color: Colors.transparent,
+        hoverColor: Colors.lightBlue[100],
+        splashColor: Colors.lightBlue[200],
+        onPressed: onPressed,
         child: Container(alignment: Alignment.centerLeft, child: Text(text)),
       ),
     );

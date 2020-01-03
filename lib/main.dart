@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:yande_web/pages/post_view_page.dart';
+import 'package:yande_web/pages/setting_page.dart';
 import 'android/notifier.dart';
 import 'android/post_downloader.dart';
 import 'pages/home_page.dart';
@@ -38,6 +39,7 @@ void main() {
 const String homePage = '/';
 const String searchTaggedPostsPage = '/searchTaggedPostsPage';
 const String postViewPage = '/postViewPage';
+const String settingsPage = '/settingsPage';
 
 class MyApp extends StatelessWidget {
   @override
@@ -62,6 +64,9 @@ class MyApp extends StatelessWidget {
           break;
         case postViewPage:
           screen = PostViewPage(post: arg["post"]);
+          break;
+        case settingsPage:
+          screen = SettingPage();
           break;
         default:
           return null;

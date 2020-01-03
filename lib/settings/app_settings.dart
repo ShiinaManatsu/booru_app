@@ -14,6 +14,9 @@ class AppSettings {
   /// The first day that konanchan has datas
   static DateTime konachanFirstday = DateTime(2008, 2);
 
+  /// Photo save location
+  static String savePath="D:/";
+
   /// Post limit for post and search
   // static int postLimit = 50;
 
