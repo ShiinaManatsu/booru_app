@@ -33,7 +33,7 @@ class _PostViewPageState extends State<PostViewPage>
   List<Comment> _comments = List<Comment>();
   int buttonCount = 3;
   double barHeight = 64;
-  double panelHandlerWidth = 100;
+  double panelHandlerWidth = 192; // Hover area
   double commentsPanelWidth = 300;
   PhotoViewController _galleryController = PhotoViewController();
 
@@ -170,7 +170,7 @@ class _PostViewPageState extends State<PostViewPage>
                     },
                     child: Row(
                       children: <Widget>[
-                        // Handle hover
+                        // Handle hover (hover area)
                         Container(
                           height: barHeight,
                           width: panelHandlerWidth,
