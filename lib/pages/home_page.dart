@@ -1,4 +1,3 @@
-import 'package:floating_search_bar/ui/sliver_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:rxdart/rxdart.dart';
@@ -6,6 +5,7 @@ import 'package:yande_web/main.dart';
 import 'package:yande_web/models/rx/booru_api.dart';
 import 'package:yande_web/models/rx/booru_bloc.dart';
 import 'package:yande_web/models/rx/update_args.dart';
+import 'package:yande_web/pages/widgets/sliver_floating_bar.dart';
 import 'package:yande_web/pages/widgets/sliver_post_waterfall_widget.dart';
 import 'package:yande_web/settings/app_settings.dart';
 
@@ -79,16 +79,18 @@ class _HomePageState extends State<HomePage>
               backgroundColor: Colors.accents[1],
             ),
             onRefresh: () => booruBloc.onRefresh.add(null),
+            //onLoading: () => _onPageChange.add(PageNavigationType.Next),
             enablePullDown: true,
+            //enablePullUp: true,
             controller: refreshController,
             child: CustomScrollView(
               primary: false,
               controller: _controller,
               physics: BouncingScrollPhysics(),
               slivers: <Widget>[
-                SliverPadding(
-                  padding: EdgeInsets.only(top: 10),
-                ),
+                // SliverPadding(
+                //   padding: EdgeInsets.only(top: 10),
+                // ),
                 SliverFloatingBar(
                   automaticallyImplyLeading: false,
                   //snap: false,
