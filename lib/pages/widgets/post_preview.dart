@@ -13,7 +13,6 @@ class PostPreview extends StatefulWidget {
 
 class _PostPreviewState extends State<PostPreview>
     with AutomaticKeepAliveClientMixin {
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -30,6 +29,8 @@ class _PostPreviewState extends State<PostPreview>
             height: AppSettings.fixedPostHeight,
             width: widget.post.widthInPanel,
             fit: BoxFit.cover,
+            loadingBuilder: (context, child, progress) =>
+                progress == null ? child : CircularProgressIndicator(),
           ),
         ),
       ),

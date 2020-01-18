@@ -1,5 +1,3 @@
-import 'package:rxdart/rxdart.dart';
-import 'package:yande_web/models/yande/tags.dart';
 import 'package:yande_web/settings/app_settings.dart';
 
 class Post {

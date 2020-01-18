@@ -19,7 +19,7 @@ dependencies:
   sliding_up_panel: ^0.3.6
   url_launcher: ^5.2.5
   url_launcher_web: ^0.1.0+2
-  pull_to_refresh: ^1.5.7
+  pull_to_refresh: ^1.5.8
   enum_to_string: ^1.0.8
   expandable: ^4.0.1
   cached_network_image: ^2.0.0-rc

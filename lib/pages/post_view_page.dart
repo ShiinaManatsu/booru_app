@@ -264,7 +264,6 @@ class _PostViewPageState extends State<PostViewPage>
         ),
       ),
     );
-    ;
   }
 
   AspectRatio _buildQuadIconButton(Function onPressed, Widget child) {
