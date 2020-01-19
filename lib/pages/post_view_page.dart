@@ -281,10 +281,11 @@ class _PostViewPageState extends State<PostViewPage>
         Container(
           //height: 60,
           child: LinearProgressIndicator(
-            value: state.isDownload ? state.current / state.total : 0,
-            valueColor: AlwaysStoppedAnimation<Color>(
-                state.isFinished ? Colors.pinkAccent : Colors.blueAccent),
-          ),
+              value: state.isDownload ? state.current / state.total : 0,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Color.lerp(Colors.pinkAccent, Colors.blueAccent,
+                    state.current / state.total),
+              )),
         ),
         Column(
           mainAxisSize: MainAxisSize.max,
