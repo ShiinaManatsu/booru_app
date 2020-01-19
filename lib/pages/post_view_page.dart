@@ -283,7 +283,7 @@ class _PostViewPageState extends State<PostViewPage>
           child: LinearProgressIndicator(
               value: state.isDownload ? state.current / state.total : 0,
               valueColor: AlwaysStoppedAnimation<Color>(
-                Color.lerp(Colors.pinkAccent, Colors.blueAccent,
+                Color.lerp(Colors.blueAccent, Colors.pinkAccent,
                     state.current / state.total),
               )),
         ),
