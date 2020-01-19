@@ -32,6 +32,7 @@ void main() {
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
     notifier = Notifier();
   }
+
   postDownloader = PostDownloader();
 }
 
@@ -48,7 +49,10 @@ class MyApp extends StatelessWidget {
         SystemUiOverlayStyle(statusBarColor: Colors.transparent));
 
     return MaterialApp(
-        onGenerateRoute: _routes(), title: 'Home', theme: lightTheme);
+        debugShowCheckedModeBanner: false,
+        onGenerateRoute: _routes(),
+        title: 'Home',
+        theme: lightTheme);
   }
 
   RouteFactory _routes() {
