@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:rxdart/rxdart.dart';
@@ -28,7 +30,6 @@ class _HomePageState extends State<HomePage>
   static const Key _searchPage = Key("searchPage");
   var _onPageChange = PublishSubject<PageNavigationType>();
   double _drawerButtonHeight = 48; // Drawer button height
-  Key _drawer = Key("drawer");
   Period _period = Period.None;
   Widget _searchNabor = Text(searchTerm);
 
@@ -208,83 +209,90 @@ class _HomePageState extends State<HomePage>
   }
 
   /// The app drawer
-  Drawer _appDrawer() {
-    return Drawer(
-      key: _drawer,
-      child: SafeArea(
-        child: SingleChildScrollView(
-          physics: BouncingScrollPhysics(),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              // Title
-              Container(
-                  margin: EdgeInsets.fromLTRB(15, 20, 0, 20),
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    AppSettings.currentClient == ClientType.Yande
-                        ? "Yande.re"
-                        : "Konachan",
-                    style: TextStyle(fontSize: 30),
-                  )),
-              // Spliter
-              _spliter("Posts"),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: <Widget>[
-                  _buildDrawerButton(() {
-                    Navigator.pop(context);
-                    booruBloc.onReset.add(null);
-                    booruBloc.onUpdate.add(UpdateArg(
-                        fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
-                  }, "Posts", FetchType.Posts),
+  /// TODO: Animate the blur parameters
+  Widget _appDrawer() {
+    return SafeArea(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+        child: Container(
+          color: Colors.white.withOpacity(0.8),
+          width: 300,
+          alignment: Alignment.topLeft,
+          child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                // Title
+                Container(
+                    margin: EdgeInsets.fromLTRB(15, 20, 0, 20),
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      AppSettings.currentClient == ClientType.Yande
+                          ? "Yande.re"
+                          : "Konachan",
+                      style: TextStyle(fontSize: 30),
+                    )),
+                // Spliter
+                _spliter("Posts"),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    _buildDrawerButton(() {
+                      Navigator.pop(context);
+                      booruBloc.onReset.add(null);
+                      booruBloc.onUpdate.add(UpdateArg(
+                          fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
+                    }, "Posts", FetchType.Posts),
 
-                  _buildDrawerButton(
-                      () => Navigator.pushNamed(context, searchTaggedPostsPage,
-                          arguments: {"key": _searchPage}),
-                      "Search",
-                      FetchType.Search),
+                    _buildDrawerButton(
+                        () => Navigator.pushNamed(
+                            context, searchTaggedPostsPage,
+                            arguments: {"key": _searchPage}),
+                        "Search",
+                        FetchType.Search),
 
-                  // Spliter popular
-                  _spliter("Popular Posts"),
+                    // Spliter popular
+                    _spliter("Popular Posts"),
 
-                  _buildDrawerButton(() {
-                    Navigator.pop(context);
-                    booruBloc.onUpdate.add(UpdateArg(
-                        fetchType: FetchType.PopularRecent,
-                        arg: PopularRecentArgs(period: _period)));
-                  }, "Popular posts by recent", FetchType.PopularRecent),
+                    _buildDrawerButton(() {
+                      Navigator.pop(context);
+                      booruBloc.onUpdate.add(UpdateArg(
+                          fetchType: FetchType.PopularRecent,
+                          arg: PopularRecentArgs(period: _period)));
+                    }, "Popular posts by recent", FetchType.PopularRecent),
 
-                  _buildDrawerButton(() {
-                    Navigator.pop(context);
-                    booruBloc.onUpdate.add(UpdateArg(
-                        fetchType: FetchType.PopularByDay,
-                        arg: PopularByDayArgs(time: DateTime.now())));
-                  }, "Popular posts by day", FetchType.PopularByDay),
+                    _buildDrawerButton(() {
+                      Navigator.pop(context);
+                      booruBloc.onUpdate.add(UpdateArg(
+                          fetchType: FetchType.PopularByDay,
+                          arg: PopularByDayArgs(time: DateTime.now())));
+                    }, "Popular posts by day", FetchType.PopularByDay),
 
-                  _buildDrawerButton(() {
-                    Navigator.pop(context);
-                    booruBloc.onUpdate.add(UpdateArg(
-                        fetchType: FetchType.PopularByWeek,
-                        arg: PopularByWeekArgs(time: DateTime.now())));
-                  }, "Popular posts by week", FetchType.PopularByWeek),
+                    _buildDrawerButton(() {
+                      Navigator.pop(context);
+                      booruBloc.onUpdate.add(UpdateArg(
+                          fetchType: FetchType.PopularByWeek,
+                          arg: PopularByWeekArgs(time: DateTime.now())));
+                    }, "Popular posts by week", FetchType.PopularByWeek),
 
-                  _buildDrawerButton(() {
-                    Navigator.pop(context);
-                    booruBloc.onUpdate.add(UpdateArg(
-                        fetchType: FetchType.PopularByMonth,
-                        arg: PopularByMonthArgs(time: DateTime.now())));
-                  }, "Popular posts by month", FetchType.PopularByMonth),
+                    _buildDrawerButton(() {
+                      Navigator.pop(context);
+                      booruBloc.onUpdate.add(UpdateArg(
+                          fetchType: FetchType.PopularByMonth,
+                          arg: PopularByMonthArgs(time: DateTime.now())));
+                    }, "Popular posts by month", FetchType.PopularByMonth),
 
-                  _spliter("Other"),
-                  _buildDrawerEmptyButton(
-                      () => Navigator.pushNamed(context, settingsPage),
-                      "Settings"),
-                ],
-              ),
-            ],
+                    _spliter("Other"),
+                    _buildDrawerEmptyButton(
+                        () => Navigator.pushNamed(context, settingsPage),
+                        "Settings"),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -462,6 +470,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+  // Page navigation in the bottom
   Widget _bottomNavigator(
       {String data,
       Function leftButtonFunction,
