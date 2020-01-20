@@ -97,7 +97,7 @@ class BooruBloc {
       yield PostSuccess(await cache.arrange());
     });
 
-    var state = _state.mergeWith([panelWidthChanged]);
+    var state = _state.mergeWith([panelWidthChanged]).asBroadcastStream();
 
     var pagePrevious = onPage
         .where((x) => BooruBloc.page >= 1)

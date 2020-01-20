@@ -9,6 +9,7 @@ import 'package:rxdart/rxdart.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yande_web/models/rx/booru_api.dart';
+import 'package:yande_web/models/rx/booru_bloc.dart';
 import 'package:yande_web/models/yande/comment.dart';
 import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/models/yande/tags.dart';
@@ -19,10 +20,9 @@ import 'package:yande_web/main.dart';
 import 'package:yande_web/android/post_downloader.dart';
 
 class PostViewPage extends StatefulWidget {
-  @required
   final Post post;
 
-  PostViewPage({this.post});
+  PostViewPage({@required this.post});
 
   @override
   _PostViewPageState createState() => _PostViewPageState();
@@ -37,6 +37,10 @@ class _PostViewPageState extends State<PostViewPage>
   double panelHandlerWidth = 192; // Hover area
   double commentsPanelWidth = 300;
   PhotoViewController _galleryController = PhotoViewController();
+
+  /// Gallery page index
+  int _index;
+  Post _post;
 
   // Top-Right panel usage
 
@@ -72,7 +76,10 @@ class _PostViewPageState extends State<PostViewPage>
     _panelContentOffset = _panelOffset + commentsPanelWidth;
     _offset = _panelStartOffset;
 
-    widget.post.tags.split(" ").forEach((x) async {
+    _post = widget.post;
+    _index = BooruBloc.cache.indexOf(_post);
+
+    _post.tags.split(" ").forEach((x) async {
       var res = await TagDataBase.searchTags(x);
       if (mounted) {
         setState(() {
@@ -81,7 +88,7 @@ class _PostViewPageState extends State<PostViewPage>
       }
     });
 
-    BooruAPI.fetchPostsComments(postID: widget.post.id).then((x) {
+    BooruAPI.fetchPostsComments(postID: _post.id).then((x) {
       if (x != null) {
         if (mounted) {
           setState(() {
@@ -94,11 +101,11 @@ class _PostViewPageState extends State<PostViewPage>
     // Download usage
     try {
       state = postDownloader.states
-          .where((x) => x.id == widget.post.id && x.isDownload)
+          .where((x) => x.id == _post.id && x.isDownload)
           .first;
       state.callback = callback;
     } catch (e) {
-      state = DownloadStatus('', widget.post.id, callback: callback);
+      state = DownloadStatus('', _post.id, callback: callback);
     }
   }
 
@@ -204,19 +211,17 @@ class _PostViewPageState extends State<PostViewPage>
                                       Icon(Icons.arrow_back)),
                                   _buildQuadIconButton(() {
                                     if (kIsWeb) {
-                                      _launchURL(widget.post.fileUrl);
+                                      _launchURL(_post.fileUrl);
                                       return;
                                     } else {
                                       postDownloader.download(
-                                          widget.post.fileUrl,
-                                          widget.post.id,
-                                          state);
-                                      taskBloc.addDownload.add(widget.post);
+                                          _post.fileUrl, _post.id, state);
+                                      taskBloc.addDownload.add(_post);
                                     }
                                   }, Icon(Icons.file_download)),
                                   _buildQuadIconButton(() {
                                     _launchURL(
-                                        "https://yande.re/post/show/${widget.post.id}");
+                                        "https://yande.re/post/show/${_post.id}");
                                   }, Icon(Icons.favorite_border)),
                                 ]),
                           ),
@@ -282,127 +287,117 @@ class _PostViewPageState extends State<PostViewPage>
   }
 
   Widget _buildContentPanel() {
-    return Stack(
-      alignment: Alignment.topCenter,
-      fit: StackFit.loose,
+    return Column(
+      mainAxisSize: MainAxisSize.max,
       children: <Widget>[
+        // Sub buttons
         Container(
-          //height: 60,
-          child: LinearProgressIndicator(
-              value: state.isDownload ? state.current / state.total : 0,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                Color.lerp(Colors.blueAccent, Colors.pinkAccent,
-                    state.current / state.total),
-              )),
-        ),
-        Column(
-          mainAxisSize: MainAxisSize.max,
-          children: <Widget>[
-            // Sub buttons
-            Container(
-              alignment: Alignment.centerLeft,
-              height: barHeight,
-              child: Container(
-                child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                  _buildQuadIconButton(
-                      () => Clipboard.setData(ClipboardData(
-                          text:
-                              "https://yande.re/post/show/${widget.post.id}")),
-                      Icon(Icons.content_copy)),
-                  _buildQuadIconButton(() {
-                    postDownloader.download(
-                        widget.post.fileUrl, widget.post.id, state);
-                  }, Icon(Icons.file_download)),
-                  Text(
-                    "${widget.post.id}",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                ]),
+          alignment: Alignment.centerLeft,
+          height: barHeight,
+          child: Container(
+            child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+              _buildQuadIconButton(
+                  () => Clipboard.setData(ClipboardData(
+                      text: "https://yande.re/post/show/${_post.id}")),
+                  Icon(Icons.content_copy)),
+              _buildQuadIconButton(() {
+                postDownloader.download(_post.fileUrl, _post.id, state);
+              }, Icon(Icons.file_download)),
+              Text(
+                "${_post.id}",
+                style: TextStyle(fontSize: 20),
               ),
-            ),
-            SingleChildScrollView(
-              physics: BouncingScrollPhysics(),
-              child: Container(
-                margin: EdgeInsets.all(30),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    //------------------
-                    _buildTitleSpliter(Text(
-                      "Size",
-                      style: TextStyle(fontSize: 20),
-                    )),
-                    Text("${widget.post.width}x${widget.post.height}"),
-                    _buildTitleSpliter(Text(
-                      "Author",
-                      style: TextStyle(fontSize: 20),
-                    )),
-                    Row(
-                      children: <Widget>[
-                        CircleAvatar(
-                          backgroundImage: NetworkImage(
-                              "${AppSettings.currentBaseUrl}/data/avatars/${widget.post.creatorId}.jpg"),
-                        ),
-                        Container(
-                            margin: EdgeInsets.only(left: 10),
-                            child: Text("${widget.post.author}")),
-                      ],
-                    ),
-                    _buildTitleSpliter(Text(
-                      "Score",
-                      style: TextStyle(fontSize: 20),
-                    )),
-                    Text("${widget.post.score}"),
-                    _buildTitleSpliter(Text(
-                      "Tags",
-                      style: TextStyle(fontSize: 20),
-                    )),
-                    Wrap(
-                      spacing: 3,
-                      children: List.generate(
-                        tags.length,
-                        (index) => Chip(
-                          label: Text(tags[index].content),
-                          backgroundColor: TagToColorMap[tags[index].tagType],
-                          deleteIcon: Icon(Icons.close),
-                        ),
-                      ),
-                    ),
-                    _buildTitleSpliter(Text(
-                      "Rating",
-                      style: TextStyle(fontSize: 20),
-                    )),
-                    Text("${widget.post.rating.toString()}"),
-                    // Source link
-                    _buildTitleSpliter(Text(
-                      "Source",
-                      style: TextStyle(fontSize: 20),
-                    )),
-                    RichText(
-                      text: new TextSpan(
-                        text: widget.post.sourceUrl == ""
-                            ? "No source"
-                            : widget.post.sourceUrl,
-                        style: new TextStyle(color: Colors.blue),
-                        recognizer: new TapGestureRecognizer()
-                          ..onTap = () {
-                            _launchURL(widget.post.sourceUrl);
-                          },
-                      ),
-                    ),
+            ]),
+          ),
+        ),
+        SingleChildScrollView(
+          physics: BouncingScrollPhysics(),
+          child: Container(
+            margin: EdgeInsets.all(30),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                //------------------
+                _buildTitleSpliter(Text(
+                  "Size",
+                  style: TextStyle(fontSize: 20),
+                )),
+                Text("${_post.width}x${_post.height}"),
+                _buildTitleSpliter(Text(
+                  "File Size",
+                  style: TextStyle(fontSize: 20),
+                )),
+                Text(_post.fileSize < 1024 * 1024
+                    ? (_post.fileSize / 1024).toStringAsFixed(3) + " KB"
+                    : (_post.fileSize / 1024 / 1024).toStringAsFixed(3) +
+                        " MB"),
 
-                    _buildTitleSpliter(Text(
-                      "Comments",
-                      style: TextStyle(fontSize: 20),
-                    )),
-                    // Comments
-                    _buildExpandablePanel()
+                _buildTitleSpliter(Text(
+                  "Author",
+                  style: TextStyle(fontSize: 20),
+                )),
+                Row(
+                  children: <Widget>[
+                    CircleAvatar(
+                      backgroundImage: NetworkImage(
+                          "${AppSettings.currentBaseUrl}/data/avatars/${_post.creatorId}.jpg"),
+                    ),
+                    Container(
+                        margin: EdgeInsets.only(left: 10),
+                        child: Text("${_post.author}")),
                   ],
                 ),
-              ),
+                _buildTitleSpliter(Text(
+                  "Score",
+                  style: TextStyle(fontSize: 20),
+                )),
+                Text("${_post.score}"),
+                _buildTitleSpliter(Text(
+                  "Tags",
+                  style: TextStyle(fontSize: 20),
+                )),
+                Wrap(
+                  spacing: 3,
+                  children: List.generate(
+                    tags.length,
+                    (index) => Chip(
+                      label: Text(tags[index].content),
+                      backgroundColor: TagToColorMap[tags[index].tagType],
+                      deleteIcon: Icon(Icons.close),
+                    ),
+                  ),
+                ),
+                _buildTitleSpliter(Text(
+                  "Rating",
+                  style: TextStyle(fontSize: 20),
+                )),
+                Text("${_post.rating.toString()}"),
+                // Source link
+                _buildTitleSpliter(Text(
+                  "Source",
+                  style: TextStyle(fontSize: 20),
+                )),
+                RichText(
+                  text: new TextSpan(
+                    text: _post.sourceUrl == "" ? "No source" : _post.sourceUrl,
+                    style: new TextStyle(color: Colors.blue),
+                    recognizer: new TapGestureRecognizer()
+                      ..onTap = () {
+                        _launchURL(_post.sourceUrl);
+                      },
+                  ),
+                ),
+
+                _buildTitleSpliter(Text(
+                  "Comments",
+                  style: TextStyle(fontSize: 20),
+                )),
+                // Comments
+                _buildExpandablePanel()
+              ],
             ),
-          ],
+          ),
         ),
       ],
     );
@@ -471,18 +466,24 @@ class _PostViewPageState extends State<PostViewPage>
 
   Widget _buildGallery() {
     return Container(
-      //margin: EdgeInsets.only(bottom: 60),  // Phone use
-      child: PhotoViewGallery(
-
-        backgroundDecoration: BoxDecoration(color: Colors.white),
-        pageOptions: [
-          PhotoViewGalleryPageOptions(
-              controller: _galleryController,
-              maxScale: 2.0,
-              
-              imageProvider: NetworkImage(widget.post.sampleUrl),
-              heroAttributes: PhotoViewHeroAttributes(tag: widget.post))
-        ],
+      child: PhotoViewGallery.builder(
+        backgroundDecoration: BoxDecoration(color: Colors.transparent),
+        scrollPhysics: const BouncingScrollPhysics(),
+        builder: (context, index) => PhotoViewGalleryPageOptions(
+            controller: _galleryController,
+            maxScale: 1.0,
+            initialScale: PhotoViewComputedScale.contained,
+            imageProvider: NetworkImage(BooruBloc.cache[index].sampleUrl),
+            
+            heroAttributes: PhotoViewHeroAttributes(tag: _post)),
+        pageController: PageController(initialPage: _index),
+        itemCount: BooruBloc.cache.length,
+        onPageChanged: (index) {
+          setState(() {
+            _index = index;
+            _post = BooruBloc.cache[_index];
+          });
+        },
       ),
     );
   }

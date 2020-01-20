@@ -11,7 +11,11 @@ class TaskBloc {
   /// Add new download task
   final PublishSubject<Post> addDownload;
 
+  /// Fire when download progress changed
   final PublishSubject progressUpdate;
+
+  /// Raise a event that going to remove a task
+  final PublishSubject<DownloadTask> removeTask;
 
   /// First time this start
   //final PublishSubject startUp;
@@ -24,6 +28,7 @@ class TaskBloc {
   factory TaskBloc() {
     final addDownload = PublishSubject<Post>();
     final progressUpdate = PublishSubject();
+    final removeTask = PublishSubject<DownloadTask>();
     // final startUp=Observable.empty();  // Currently this has nothing to do, TODO: need implements
 
     var downloadTask = addDownload.distinctUnique().map<DownloadTask>((x) {
@@ -34,11 +39,24 @@ class TaskBloc {
       yield tasksList;
     }).startWith(List<DownloadTask>());
 
-    var update = progressUpdate.switchMap<List<DownloadTask>>((x) async* {
+    var update = progressUpdate
+        .throttleTime(Duration(milliseconds: 500))
+        .switchMap<List<DownloadTask>>((x) async* {
+      print("Progress Updated");
       yield tasksList;
     }).startWith(List<DownloadTask>());
 
-    var tasks = downloadTask.mergeWith([update]).asBroadcastStream();
+    var remove = removeTask
+        .asBroadcastStream()
+        .interval(Duration(seconds: 3))
+        .switchMap<List<DownloadTask>>((x) async* {
+      print(tasksList);
+      tasksList.remove(x);
+      print(tasksList.contains(x));
+      yield tasksList;
+    }).startWith(List<DownloadTask>());
+
+    var tasks = downloadTask.mergeWith([update, remove]).asBroadcastStream();
 
     Observable.timer(() {}, Duration(seconds: 1)).listen((_) => showOverlay(
             (context, t) {
@@ -48,16 +66,18 @@ class TaskBloc {
             curve: Curves.ease,
             duration: Duration.zero));
 
-    return TaskBloc._(addDownload, progressUpdate, tasks);
+    return TaskBloc._(addDownload, progressUpdate, removeTask, tasks);
   }
 
   void dispose() {
     progressUpdate.close();
     addDownload.close();
+    removeTask.close();
     //startUp.close();
   }
 
-  TaskBloc._(this.addDownload, this.progressUpdate, this.tasks);
+  TaskBloc._(
+      this.addDownload, this.progressUpdate, this.removeTask, this.tasks);
 }
 
 class DownloadTask {
@@ -88,18 +108,20 @@ class DownloadTask {
   bool isDownloaded = false;
 
   /// Download this file.
-  _download(Downloadable task) async {
+  _download(Downloadable task) {
     // Factory the name and the state add to state list
     var fileName = Uri.decodeFull(task.url).split('/').last;
     filePath = 'D:/$fileName'; //'${path.path}/$fileName';
 
-    await Dio().download(task.url, filePath,
+    Dio().download(task.url, filePath,
         onReceiveProgress: (int download, int total) {
       downloadedLength = download;
       totalLength = total;
+      print((download / total * 100).toStringAsFixed(0) + "%");
       taskBloc.progressUpdate.add(null);
     }).then((_) {
       isDownloaded = true;
+      taskBloc.removeTask.add(this);
     });
   }
 

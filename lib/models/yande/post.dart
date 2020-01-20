@@ -1,7 +1,7 @@
 import 'package:yande_web/settings/app_settings.dart';
 import 'package:yande_web/windows/task_bloc.dart';
 
-class Post implements Downloadable{
+class Post implements Downloadable {
   int id;
   String previewUrl;
   String jpegUrl;
@@ -15,6 +15,7 @@ class Post implements Downloadable{
   bool hasChildren;
   int score;
   String author;
+  int fileSize;
 
   /// Source url
   String sourceUrl;
@@ -39,7 +40,8 @@ class Post implements Downloadable{
         jpegUrl = json['jpeg_url'],
         fileUrl = json['file_url'],
         width = json['width'],
-        height = json['height'];
+        height = json['height'],
+        fileSize = json['file_size'];
 
   double _widthInPanel = 0;
 

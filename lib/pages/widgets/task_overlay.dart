@@ -11,38 +11,6 @@ class TaskOverlay extends StatefulWidget {
 
 class _TaskOverlayState extends State<TaskOverlay>
     with TickerProviderStateMixin {
-  // @override
-  // Widget build(BuildContext context) {
-  //   return StreamBuilder<List<DownloadTask>>(
-  //     stream: taskBloc.tasks,
-  //     initialData: List<DownloadTask>(),
-  //     builder: (context, snapshot) => Stack(children: <Widget>[
-  //       Positioned(
-  //         right: 20,
-  //         bottom: 20,
-  //         width: 300,
-  //         height: 200,
-  //         child: ClipRRect(
-  //             clipBehavior: Clip.antiAlias,
-  //             child: Container(
-  //               padding: EdgeInsets.all(12),
-  //               alignment: Alignment.bottomRight,
-  //               decoration: BoxDecoration(color: Colors.white70, boxShadow: []),
-  //               child: AnimatedStreamList<DownloadTask>(
-  //                 streamList: taskBloc.tasks,
-  //                 itemBuilder: (DownloadTask task, int index,
-  //                         BuildContext context, Animation<double> animation) =>
-  //                     _createTile(task, animation),
-  //                 itemRemovedBuilder: (DownloadTask task, int index,
-  //                         BuildContext context, Animation<double> animation) =>
-  //                     _createRemovedTile(task, animation),
-  //               ),
-  //             )),
-  //       ),
-  //     ]),
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Stack(children: <Widget>[
@@ -63,9 +31,9 @@ class _TaskOverlayState extends State<TaskOverlay>
                     shrinkWrap: true,
                     streamList: taskBloc.tasks,
                     itemBuilder: (item, index, context, animation) =>
-                        _createTile(item, animation),
+                        _animateInCard(item, animation),
                     itemRemovedBuilder: (item, index, context, animation) =>
-                        _createRemovedTile(item, animation),
+                        _animateOutCard(item, animation),
                   ),
                 ],
               ),
@@ -76,18 +44,22 @@ class _TaskOverlayState extends State<TaskOverlay>
     ]);
   }
 
-  // create tile view as the user is going to see it, attach any onClick callbacks etc.
-  Widget _createTile(DownloadTask task, Animation<double> animation) {
-    return SizeTransition(
-      sizeFactor: animation,
+  /// Animate card in
+  Widget _animateInCard(DownloadTask task, Animation<double> animation) {
+    var curvedAnimation = animation.drive(CurveTween(curve: Curves.easeIn));
+    return SlideTransition(
+      position: curvedAnimation.drive(Tween<Offset>(
+        begin: Offset(1.0, 0.0),
+        end: Offset.zero,
+      )),
       child: _buildCard(task),
     );
   }
 
-// what is going to be shown as the tile is being removed, usually same as above but without any
-// onClick callbacks as, most likely, you don't want the user to interact with a removed view
-  Widget _createRemovedTile(DownloadTask task, Animation<double> animation) {
+  /// Animate card out
+  Widget _animateOutCard(DownloadTask task, Animation<double> animation) {
     return SizeTransition(
+      axis: Axis.vertical,
       sizeFactor: animation,
       child: _buildCard(task),
     );
