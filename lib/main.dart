@@ -36,6 +36,7 @@ void main() {
   }
 
   postDownloader = PostDownloader();
+
 }
 
 // Routes

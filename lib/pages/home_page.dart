@@ -10,8 +10,10 @@ import 'package:yande_web/models/rx/update_args.dart';
 import 'package:yande_web/pages/widgets/sliver_floating_bar.dart';
 import 'package:yande_web/pages/widgets/sliver_post_waterfall_widget.dart';
 import 'package:yande_web/settings/app_settings.dart';
+import 'package:yande_web/windows/task_bloc.dart';
 
 BooruBloc booruBloc;
+TaskBloc taskBloc;
 String searchTerm = "";
 double panelWidth = 1000;
 PublishSubject<FetchType> homePageFetchTypeChanged =
@@ -37,6 +39,8 @@ class _HomePageState extends State<HomePage>
   void initState() {
     super.initState();
     booruBloc = BooruBloc(BooruAPI(), panelWidth);
+    taskBloc = TaskBloc();
+    
     Observable.timer(() {}, Duration(milliseconds: 50)).listen((x) {
       booruBloc.onUpdate
           .add(UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));

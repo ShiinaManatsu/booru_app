@@ -24,14 +24,14 @@ import 'package:yande_web/settings/app_settings.dart';
 
 class BooruAPI {
   /// Base http call for fetch any url
-  Future<List<Post>> _httpGet(String url) async {
+  static Future<List<Post>> _httpGet(String url) async {
     http.Response response = await http.get(url);
     List responseJson = json.decode(response.body);
     return responseJson.map((m) => Post.fromJson(m)).toList();
   }
 
   /// Fetch tagged posts
-  Future<List<Post>> fetchTagged(
+  static Future<List<Post>> fetchTagged(
       {@required TaggedArgs args, int limit = 50}) async {
     if (args.tags.length < 1) {
       return null;
@@ -43,15 +43,23 @@ class BooruAPI {
   }
 
   /// Fetch posts
-  Future<List<Post>> fetchPosts(
+  static Future<List<Post>> fetchPosts(
       {@required PostsArgs args, int limit = 50}) async {
     var url =
         '${AppSettings.currentBaseUrl}/post.json?limit=$limit&page=${args.page}';
     return await _httpGet(url);
   }
 
+  /// Fetch specfic post
+  static Future<List<Post>> fetchSpecficPost(
+      {@required String id}) async {
+    var url =
+        '${AppSettings.currentBaseUrl}/post.json?tags=id:$id';
+    return await _httpGet(url);
+  }
+
   /// Fetch popular posts by recent
-  Future<List<Post>> fetchPopularRecent(
+  static Future<List<Post>> fetchPopularRecent(
       {@required PopularRecentArgs args}) async {
     var url =
         "${AppSettings.currentBaseUrl}/post/popular_recent.json?period=${periodMap[args.period]}";
@@ -59,7 +67,7 @@ class BooruAPI {
   }
 
   /// Fetch popular posts by recent
-  Future<List<Post>> fetchPopularByDay(
+  static Future<List<Post>> fetchPopularByDay(
       {@required PopularByDayArgs args}) async {
     var url =
         "${AppSettings.currentBaseUrl}/post/popular_by_day.json?day=${args.time.day}&month=${args.time.month}&year=${args.time.year}";
@@ -67,7 +75,7 @@ class BooruAPI {
   }
 
   /// Fetch popular posts by week
-  Future<List<Post>> fetchPopularByWeek(
+  static Future<List<Post>> fetchPopularByWeek(
       {@required PopularByWeekArgs args}) async {
     var url =
         "${AppSettings.currentBaseUrl}/post/popular_by_week.json?day=${args.time.day}&month=${args.time.month}&year=${args.time.year}";
@@ -75,7 +83,7 @@ class BooruAPI {
   }
 
   /// Fetch popular posts by month
-  Future<List<Post>> fetchPopularByMonth(
+  static Future<List<Post>> fetchPopularByMonth(
       {@required PopularByMonthArgs args}) async {
     var url =
         "${AppSettings.currentBaseUrl}/post/popular_by_month.json?&month=${args.time.month}&year=${args.time.year}";

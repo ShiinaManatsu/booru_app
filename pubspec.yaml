@@ -23,13 +23,14 @@ dependencies:
   expandable: ^4.0.1
   cached_network_image: ^2.0.0-rc
   path_provider: ^1.5.1
-  open_file: ^2.1.1
+  open_file: ^3.0.1
   # Notification usage
   flutter_local_notifications: ^0.9.1
   flushbar: ^1.9.1
   overlay_support: ^1.0.2
   # Transition
   flutter_page_transition: ^0.1.6
+  animated_stream_list: ^1.1.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

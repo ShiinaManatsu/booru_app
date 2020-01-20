@@ -174,22 +174,22 @@ class BooruBloc {
     refreshController.headerMode.value = RefreshStatus.refreshing;
     switch (arg.fetchType) {
       case FetchType.Posts:
-        yield await _emptyCheck(booru.fetchPosts(args: arg.arg));
+        yield await _emptyCheck(BooruAPI.fetchPosts(args: arg.arg));
         break;
       case FetchType.PopularRecent:
-        yield await _emptyCheck((booru.fetchPopularRecent(args: arg.arg)));
+        yield await _emptyCheck((BooruAPI.fetchPopularRecent(args: arg.arg)));
         break;
       case FetchType.PopularByDay:
-        yield await _emptyCheck((booru.fetchPopularByDay(args: arg.arg)));
+        yield await _emptyCheck((BooruAPI.fetchPopularByDay(args: arg.arg)));
         break;
       case FetchType.PopularByWeek:
-        yield await _emptyCheck((booru.fetchPopularByWeek(args: arg.arg)));
+        yield await _emptyCheck((BooruAPI.fetchPopularByWeek(args: arg.arg)));
         break;
       case FetchType.PopularByMonth:
-        yield await _emptyCheck((booru.fetchPopularByMonth(args: arg.arg)));
+        yield await _emptyCheck((BooruAPI.fetchPopularByMonth(args: arg.arg)));
         break;
       case FetchType.Search:
-        yield await _emptyCheck((booru.fetchTagged(args: arg.arg)));
+        yield await _emptyCheck((BooruAPI.fetchTagged(args: arg.arg)));
         break;
       default:
     }

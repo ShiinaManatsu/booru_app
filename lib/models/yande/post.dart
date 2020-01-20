@@ -1,6 +1,7 @@
 import 'package:yande_web/settings/app_settings.dart';
+import 'package:yande_web/windows/task_bloc.dart';
 
-class Post {
+class Post implements Downloadable{
   int id;
   String previewUrl;
   String jpegUrl;
@@ -17,6 +18,10 @@ class Post {
 
   /// Source url
   String sourceUrl;
+
+  @override
+  // Get download url
+  String get url => fileUrl;
 
   Post(this.id, this.previewUrl, this.height, this.width);
 

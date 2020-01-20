@@ -12,6 +12,7 @@ import 'package:yande_web/models/rx/booru_api.dart';
 import 'package:yande_web/models/yande/comment.dart';
 import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/models/yande/tags.dart';
+import 'package:yande_web/pages/home_page.dart';
 import 'package:yande_web/settings/app_settings.dart';
 import 'package:expandable/expandable.dart';
 import 'package:yande_web/main.dart';
@@ -65,10 +66,12 @@ class _PostViewPageState extends State<PostViewPage>
   @override
   void initState() {
     super.initState();
+    // Hover panel usage
     _panelStartOffset = -(barHeight * 3 + commentsPanelWidth);
     _panelOffset = _panelStartOffset + barHeight * 3;
     _panelContentOffset = _panelOffset + commentsPanelWidth;
     _offset = _panelStartOffset;
+
     widget.post.tags.split(" ").forEach((x) async {
       var res = await TagDataBase.searchTags(x);
       if (mounted) {
@@ -77,6 +80,7 @@ class _PostViewPageState extends State<PostViewPage>
         });
       }
     });
+
     BooruAPI.fetchPostsComments(postID: widget.post.id).then((x) {
       if (x != null) {
         if (mounted) {
@@ -108,6 +112,7 @@ class _PostViewPageState extends State<PostViewPage>
               .throttleTime(Duration(milliseconds: 500))
               .takeWhile((x) => Scaffold.of(context).isDrawerOpen)
               .listen((x) => Navigator.pop(context));
+          // Mobile devices
           if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
             return Stack(
               children: <Widget>[
@@ -124,7 +129,9 @@ class _PostViewPageState extends State<PostViewPage>
                     body: _buildGallery()),
               ],
             );
-          } else {
+          }
+          // Windows or Web
+          else {
             return Stack(children: <Widget>[
               _buildGallery(),
               //_buildHoverDrawer(Scaffold.of(context)), // Left hover
@@ -204,6 +211,7 @@ class _PostViewPageState extends State<PostViewPage>
                                           widget.post.fileUrl,
                                           widget.post.id,
                                           state);
+                                      taskBloc.addDownload.add(widget.post);
                                     }
                                   }, Icon(Icons.file_download)),
                                   _buildQuadIconButton(() {
@@ -465,11 +473,13 @@ class _PostViewPageState extends State<PostViewPage>
     return Container(
       //margin: EdgeInsets.only(bottom: 60),  // Phone use
       child: PhotoViewGallery(
+
         backgroundDecoration: BoxDecoration(color: Colors.white),
         pageOptions: [
           PhotoViewGalleryPageOptions(
               controller: _galleryController,
-              maxScale: 1.0,
+              maxScale: 2.0,
+              
               imageProvider: NetworkImage(widget.post.sampleUrl),
               heroAttributes: PhotoViewHeroAttributes(tag: widget.post))
         ],
