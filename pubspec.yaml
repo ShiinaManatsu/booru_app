@@ -10,11 +10,11 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^0.12.0+2
-  dio: ^3.0.1
+  dio: ^3.0.8
   rxdart: ^0.22.6
   # sqflite: ^1.1.7+1
   floating_search_bar: ^0.2.0
-  photo_view: ^0.5.0
+  photo_view: ^0.9.1
   sliding_up_panel: ^0.3.6
   url_launcher: ^5.2.5
   url_launcher_web: ^0.1.0+2
@@ -26,7 +26,6 @@ dependencies:
   open_file: ^3.0.1
   # Notification usage
   flutter_local_notifications: ^0.9.1
-  flushbar: ^1.9.1
   overlay_support: ^1.0.2
   # Transition
   flutter_page_transition: ^0.1.6
