@@ -470,12 +470,12 @@ class _PostViewPageState extends State<PostViewPage>
         backgroundDecoration: BoxDecoration(color: Colors.transparent),
         scrollPhysics: const BouncingScrollPhysics(),
         builder: (context, index) => PhotoViewGalleryPageOptions(
-            controller: _galleryController,
-            maxScale: 1.0,
-            initialScale: PhotoViewComputedScale.contained,
-            imageProvider: NetworkImage(BooruBloc.cache[index].sampleUrl),
-            
-            heroAttributes: PhotoViewHeroAttributes(tag: _post)),
+          controller: _galleryController,
+          maxScale: 1.0,
+          initialScale: PhotoViewComputedScale.contained,
+          imageProvider: NetworkImage(BooruBloc.cache[index].sampleUrl),
+          //heroAttributes: PhotoViewHeroAttributes(tag: _post)
+        ),
         pageController: PageController(initialPage: _index),
         itemCount: BooruBloc.cache.length,
         onPageChanged: (index) {
