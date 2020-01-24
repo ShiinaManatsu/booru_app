@@ -30,6 +30,7 @@ class _TaskOverlayState extends State<TaskOverlay>
                   AnimatedStreamList<DownloadTask>(
                     shrinkWrap: true,
                     streamList: taskBloc.tasks,
+                    duration: Duration(milliseconds: 300),
                     itemBuilder: (item, index, context, animation) =>
                         _animateInCard(item, animation),
                     itemRemovedBuilder: (item, index, context, animation) =>

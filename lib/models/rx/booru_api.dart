@@ -38,7 +38,7 @@ class BooruAPI {
     }
 
     var url =
-        '${AppSettings.currentBaseUrl}/post.json?limit=$limit&page=${args.page}&tags=${args.tags}';
+        '${AppSettings.currentBaseUrl}/post.json?limit=${limit == AppSettings.postLimit.toInt() ? limit : AppSettings.postLimit.toInt()}&page=${args.page}&tags=${args.tags}';
     return await _httpGet(url);
   }
 
@@ -46,15 +46,13 @@ class BooruAPI {
   static Future<List<Post>> fetchPosts(
       {@required PostsArgs args, int limit = 50}) async {
     var url =
-        '${AppSettings.currentBaseUrl}/post.json?limit=$limit&page=${args.page}';
+        '${AppSettings.currentBaseUrl}/post.json?limit=${limit == AppSettings.postLimit.toInt() ? limit : AppSettings.postLimit.toInt()}&page=${args.page}';
     return await _httpGet(url);
   }
 
   /// Fetch specfic post
-  static Future<List<Post>> fetchSpecficPost(
-      {@required String id}) async {
-    var url =
-        '${AppSettings.currentBaseUrl}/post.json?tags=id:$id';
+  static Future<List<Post>> fetchSpecficPost({@required String id}) async {
+    var url = '${AppSettings.currentBaseUrl}/post.json?tags=id:$id';
     return await _httpGet(url);
   }
 

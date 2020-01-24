@@ -14,6 +14,9 @@ class TaskBloc {
   /// Fire when download progress changed
   final PublishSubject progressUpdate;
 
+  /// Fire when download completed
+  final PublishSubject progressCompleteUpdate;
+
   /// Raise a event that going to remove a task
   final PublishSubject<DownloadTask> removeTask;
 
@@ -28,6 +31,7 @@ class TaskBloc {
   factory TaskBloc() {
     final addDownload = PublishSubject<Post>();
     final progressUpdate = PublishSubject();
+    final progressCompleteUpdate = PublishSubject();
     final removeTask = PublishSubject<DownloadTask>();
     // final startUp=Observable.empty();  // Currently this has nothing to do, TODO: need implements
 
@@ -39,9 +43,10 @@ class TaskBloc {
       yield tasksList;
     }).startWith(List<DownloadTask>());
 
-    var update = progressUpdate
-        .throttleTime(Duration(milliseconds: 500))
-        .switchMap<List<DownloadTask>>((x) async* {
+    var updateThrottled =
+        progressUpdate.throttleTime(Duration(milliseconds: 500));
+    var update = updateThrottled.mergeWith(
+        [progressCompleteUpdate]).switchMap<List<DownloadTask>>((x) async* {
       print("Progress Updated");
       yield tasksList;
     }).startWith(List<DownloadTask>());
@@ -66,7 +71,8 @@ class TaskBloc {
             curve: Curves.ease,
             duration: Duration.zero));
 
-    return TaskBloc._(addDownload, progressUpdate, removeTask, tasks);
+    return TaskBloc._(
+        addDownload, progressUpdate, progressCompleteUpdate, removeTask, tasks);
   }
 
   void dispose() {
@@ -76,8 +82,8 @@ class TaskBloc {
     //startUp.close();
   }
 
-  TaskBloc._(
-      this.addDownload, this.progressUpdate, this.removeTask, this.tasks);
+  TaskBloc._(this.addDownload, this.progressUpdate, this.progressCompleteUpdate,
+      this.removeTask, this.tasks);
 }
 
 class DownloadTask {
@@ -117,11 +123,11 @@ class DownloadTask {
         onReceiveProgress: (int download, int total) {
       downloadedLength = download;
       totalLength = total;
-      print((download / total * 100).toStringAsFixed(0) + "%");
       taskBloc.progressUpdate.add(null);
     }).then((_) {
       isDownloaded = true;
       taskBloc.removeTask.add(this);
+      taskBloc.progressCompleteUpdate.add(null);
     });
   }
 

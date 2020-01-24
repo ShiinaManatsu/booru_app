@@ -18,7 +18,7 @@ class AppSettings {
   static String savePath="D:/";
 
   /// Post limit for post and search
-  // static int postLimit = 50;
+  static double postLimit = 50;
 
   /// Return the current client `url`
   static String get currentBaseUrl {

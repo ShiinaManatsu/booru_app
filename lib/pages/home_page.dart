@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage>
     super.initState();
     booruBloc = BooruBloc(BooruAPI(), panelWidth);
     taskBloc = TaskBloc();
-    
+
     Observable.timer(() {}, Duration(milliseconds: 50)).listen((x) {
       booruBloc.onUpdate
           .add(UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
