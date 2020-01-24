@@ -473,6 +473,7 @@ class _PostViewPageState extends State<PostViewPage>
           controller: _galleryController,
           maxScale: 1.0,
           initialScale: PhotoViewComputedScale.contained,
+          filterQuality: FilterQuality.high,
           imageProvider: NetworkImage(BooruBloc.cache[index].sampleUrl),
           //heroAttributes: PhotoViewHeroAttributes(tag: _post)
         ),
