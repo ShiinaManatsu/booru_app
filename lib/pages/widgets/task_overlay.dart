@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
 import 'package:yande_web/pages/home_page.dart';
 import 'package:yande_web/windows/task_bloc.dart';
-import 'package:yande_web/main.dart';
-import 'package:rxdart/rxdart.dart';
 
 class TaskOverlay extends StatefulWidget {
   @override
@@ -67,7 +65,7 @@ class _TaskOverlayState extends State<TaskOverlay>
       child: _buildCard(task),
     );
   }
-  
+
   Widget _buildCard(DownloadTask task) {
     return Card(
       child: ListTile(
@@ -75,7 +73,7 @@ class _TaskOverlayState extends State<TaskOverlay>
           duration: Duration(milliseconds: 300),
           curve: Curves.ease,
           tween: Tween<double>(begin: 0, end: task.progress),
-          builder: (context,double value, child) => LinearProgressIndicator(
+          builder: (context, double value, child) => LinearProgressIndicator(
             value: value,
             valueColor: AlwaysStoppedAnimation<Color>(Color.lerp(
                 Colors.blueAccent,

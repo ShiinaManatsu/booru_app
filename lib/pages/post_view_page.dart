@@ -16,8 +16,6 @@ import 'package:yande_web/models/yande/tags.dart';
 import 'package:yande_web/pages/home_page.dart';
 import 'package:yande_web/settings/app_settings.dart';
 import 'package:expandable/expandable.dart';
-import 'package:yande_web/main.dart';
-import 'package:yande_web/android/post_downloader.dart';
 
 class PostViewPage extends StatefulWidget {
   final Post post;
@@ -56,17 +54,6 @@ class _PostViewPageState extends State<PostViewPage>
   // Post Tags
   List<Tag> tags = List<Tag>();
 
-  // Download usage
-  DownloadStatus state;
-
-  callback(DownloadStatus s) {
-    if (mounted) {
-      setState(() {
-        state = s;
-      });
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -97,16 +84,6 @@ class _PostViewPageState extends State<PostViewPage>
         }
       }
     });
-
-    // Download usage
-    try {
-      state = postDownloader.states
-          .where((x) => x.id == _post.id && x.isDownload)
-          .first;
-      state.callback = callback;
-    } catch (e) {
-      state = DownloadStatus('', _post.id, callback: callback);
-    }
   }
 
   @override
@@ -141,7 +118,6 @@ class _PostViewPageState extends State<PostViewPage>
           else {
             return Stack(children: <Widget>[
               _buildGallery(),
-              //_buildHoverDrawer(Scaffold.of(context)), // Left hover
               _buildTopRightPanel(MediaQuery.of(context).size.height),
             ]);
           }
@@ -214,8 +190,6 @@ class _PostViewPageState extends State<PostViewPage>
                                       _launchURL(_post.fileUrl);
                                       return;
                                     } else {
-                                      postDownloader.download(
-                                          _post.fileUrl, _post.id, state);
                                       taskBloc.addDownload.add(_post);
                                     }
                                   }, Icon(Icons.file_download)),
@@ -301,7 +275,7 @@ class _PostViewPageState extends State<PostViewPage>
                       text: "https://yande.re/post/show/${_post.id}")),
                   Icon(Icons.content_copy)),
               _buildQuadIconButton(() {
-                postDownloader.download(_post.fileUrl, _post.id, state);
+                taskBloc.addDownload.add(_post);
               }, Icon(Icons.file_download)),
               Text(
                 "${_post.id}",

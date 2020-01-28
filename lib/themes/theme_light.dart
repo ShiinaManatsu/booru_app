@@ -7,10 +7,10 @@ final Color blueTextColor = Colors.lightBlue; // Accent blue color
 
 final TextStyle baseTextStyle = TextStyle(color: baseBlackColor);
 final TextTheme baseTextTheme = TextTheme(
-  body1: baseTextStyle,
-  body2: baseTextStyle,
+  bodyText2: baseTextStyle,
+  bodyText1: baseTextStyle,
   button: TextStyle(color: blueTextColor),
-  title: baseTextStyle,
+  headline6: baseTextStyle,
 );
 
 // Theme
