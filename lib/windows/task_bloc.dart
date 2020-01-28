@@ -3,7 +3,9 @@ import 'package:path/path.dart' as p;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:overlay_support/overlay_support.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:yande_web/main.dart';
 import 'package:yande_web/models/rx/booru_api.dart';
 import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/pages/home_page.dart';
@@ -66,7 +68,7 @@ class TaskBloc {
 
     var tasks = downloadTask.mergeWith([update, remove]).asBroadcastStream();
 
-    Observable.timer(() {}, Duration(seconds: 1)).listen((_) => showOverlay(
+    Rx.timer(() {}, Duration(seconds: 1)).listen((_) => showOverlay(
             (context, t) {
           return AnimatedOverlay(value: t);
         },
@@ -121,11 +123,19 @@ class DownloadTask {
     // Factory the name and the state add to state list
     var fileName = Uri.decodeFull(task.url).split('/').last;
 
-    if (!await Directory(AppSettings.savePath).exists()) {
-      await Directory(AppSettings.savePath).create();
+    if (Platform.isWindows) {
+      if (!await Directory(AppSettings.savePath).exists()) {
+        await Directory(AppSettings.savePath).create();
+      }
+
+      filePath = p.join(AppSettings.savePath, fileName);
+    } else if (Platform.isAndroid) {
+      var dir =
+          (await getExternalStorageDirectories(type: StorageDirectory.pictures))
+              .first
+              .path;
+      filePath = p.join(dir, fileName);
     }
-    
-    filePath = p.join(AppSettings.savePath, fileName);
 
     Dio().download(task.url, filePath,
         onReceiveProgress: (int download, int total) {
@@ -134,9 +144,18 @@ class DownloadTask {
       taskBloc.progressUpdate.add(null);
     }).then((_) {
       isDownloaded = true;
+      _showNotification(post.id, post.id.toString(), filePath);
       taskBloc.removeTask.add(this);
       taskBloc.progressCompleteUpdate.add(null);
     }).catchError((x) => taskBloc.removeTask.add(this));
+  }
+
+  /// Show a notification when download finished
+  void _showNotification(int id, String text, String photoPath) {
+    if (Platform.isAndroid) {
+      notifier.sendNotificationWithBitmap(
+          id, 'Finished download', 'Post $text downloaded', photoPath);
+    }
   }
 
   factory DownloadTask.fromID(String id) {
