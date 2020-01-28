@@ -313,18 +313,15 @@ class _HomePageState extends State<HomePage>
       homePageFetchTypeChanged.add(fetchType);
     };
     return Container(
-      margin: EdgeInsets.fromLTRB(0, 0, 20, 0),
+      //margin: EdgeInsets.fromLTRB(0, 0, 0, 0),
       height: _drawerButtonHeight,
       child: FlatButton(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-                bottomRight: Radius.circular(30),
-                topRight: Radius.circular(30))),
-        highlightColor: Colors.lightBlue[300],
-        color: fetchType == _type ? Colors.lightBlue[50] : Colors.transparent,
-        hoverColor: Colors.lightBlue[100],
-        splashColor: Colors.lightBlue[200],
         onPressed: func,
+        color: fetchType == _type ? Colors.pink[300] : Colors.transparent,
+        highlightColor: Colors.amber,
+        hoverColor: Colors.pink[50],
+        colorBrightness:
+            fetchType != _type ? Brightness.light : Brightness.dark,
         child: Container(alignment: Alignment.centerLeft, child: Text(text)),
       ),
     );
@@ -333,18 +330,12 @@ class _HomePageState extends State<HomePage>
   /// The button used in drawer
   Widget _buildDrawerEmptyButton(Function() onPressed, String text) {
     return Container(
-      margin: EdgeInsets.fromLTRB(0, 0, 20, 0),
+      //margin: EdgeInsets.fromLTRB(0, 0, 20, 0),
       height: _drawerButtonHeight,
       child: FlatButton(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-                bottomRight: Radius.circular(30),
-                topRight: Radius.circular(30))),
-        highlightColor: Colors.lightBlue[300],
-        color: Colors.transparent,
-        hoverColor: Colors.lightBlue[100],
-        splashColor: Colors.lightBlue[200],
         onPressed: onPressed,
+        highlightColor: Colors.amber,
+        hoverColor: Colors.pink[50],
         child: Container(alignment: Alignment.centerLeft, child: Text(text)),
       ),
     );
