@@ -11,27 +11,29 @@ dependencies:
     sdk: flutter
   http: ^0.12.0+2
   dio: ^3.0.8
-  rxdart: ^0.22.6
+  rxdart: ^0.23.1
   # sqflite: ^1.1.7+1
   floating_search_bar: ^0.2.0
   photo_view: ^0.9.1
-  sliding_up_panel: ^0.3.6
-  url_launcher: ^5.2.5
+  sliding_up_panel: ^1.0.0
+  url_launcher: ^5.4.1
   url_launcher_web: ^0.1.0+2
   pull_to_refresh: ^1.5.8
   enum_to_string: ^1.0.8
-  expandable: ^4.0.1
-  cached_network_image: ^2.0.0-rc
+  expandable: ^4.1.2
+  cached_network_image: ^2.0.0
   path_provider: ^1.5.1
   open_file: ^3.0.1
   # Notification usage
-  flutter_local_notifications: ^0.9.1
+  flutter_local_notifications: ^1.1.3
   overlay_support: ^1.0.2
   # Transition
   flutter_page_transition: ^0.1.6
   animated_stream_list: ^1.1.0
   # File path combiner
   path: ^1.6.4
+  # Use the navigation bar as a switcher
+  flutter_snake_navigationbar: ^0.3.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
