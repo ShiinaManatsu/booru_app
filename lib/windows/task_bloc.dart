@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:path/path.dart' as p;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:overlay_support/overlay_support.dart';
@@ -6,6 +8,7 @@ import 'package:yande_web/models/rx/booru_api.dart';
 import 'package:yande_web/models/yande/post.dart';
 import 'package:yande_web/pages/home_page.dart';
 import 'package:yande_web/pages/widgets/task_overlay.dart';
+import 'package:yande_web/settings/app_settings.dart';
 
 class TaskBloc {
   /// Add new download task
@@ -114,10 +117,15 @@ class DownloadTask {
   bool isDownloaded = false;
 
   /// Download this file.
-  _download(Downloadable task) {
+  _download(Downloadable task) async {
     // Factory the name and the state add to state list
     var fileName = Uri.decodeFull(task.url).split('/').last;
-    filePath = 'D:/$fileName'; //'${path.path}/$fileName';
+
+    if (!await Directory(AppSettings.savePath).exists()) {
+      await Directory(AppSettings.savePath).create();
+    }
+    
+    filePath = p.join(AppSettings.savePath, fileName);
 
     Dio().download(task.url, filePath,
         onReceiveProgress: (int download, int total) {
@@ -128,7 +136,7 @@ class DownloadTask {
       isDownloaded = true;
       taskBloc.removeTask.add(this);
       taskBloc.progressCompleteUpdate.add(null);
-    });
+    }).catchError((x) => taskBloc.removeTask.add(this));
   }
 
   factory DownloadTask.fromID(String id) {

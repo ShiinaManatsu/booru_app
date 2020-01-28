@@ -48,7 +48,7 @@ class _SettingPageState extends State<SettingPage> {
                           decoration: InputDecoration(
                               prefixText: "New location here: ",
                               helperText: AppSettings.savePath),
-                          //onChanged: (x) => AppSettings.savePath = x,
+                          onChanged: (x) => AppSettings.savePath = x,
                         ),
                       ),
                     ),
