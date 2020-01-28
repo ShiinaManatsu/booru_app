@@ -4,8 +4,8 @@ import 'package:flutter_page_transition/flutter_page_transition.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:yande_web/pages/post_view_page.dart';
 import 'package:yande_web/pages/setting_page.dart';
+import 'package:yande_web/pages/testGroundPage.dart';
 import 'android/notifier.dart';
-import 'android/post_downloader.dart';
 import 'pages/home_page.dart';
 import 'pages/search_tagged_posts_page.dart';
 import 'themes/theme_light.dart';
@@ -14,7 +14,6 @@ import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride, kIsWeb;
 
 Notifier notifier;
-PostDownloader postDownloader;
 
 void _desktopInitHack() {
   if (kIsWeb) return;
@@ -34,8 +33,6 @@ void main() {
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
     notifier = Notifier();
   }
-
-  postDownloader = PostDownloader();
 }
 
 // Routes
@@ -43,12 +40,14 @@ const String homePage = '/';
 const String searchTaggedPostsPage = '/searchTaggedPostsPage';
 const String postViewPage = '/postViewPage';
 const String settingsPage = '/settingsPage';
+const String testGroundPage = '/testGroundPage';
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(
-        SystemUiOverlayStyle(statusBarColor: Colors.transparent));
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+        statusBarColor: Colors.white.withOpacity(0.95),
+        statusBarIconBrightness: Brightness.dark));
 
     return OverlaySupport(
       child: MaterialApp(
@@ -90,6 +89,9 @@ class MyApp extends StatelessWidget {
                     break;
                   case settingsPage:
                     return SettingPage();
+                    break;
+                  case testGroundPage:
+                    return TestGroundPage();
                     break;
                   default:
                     return null;
