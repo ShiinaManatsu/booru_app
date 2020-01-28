@@ -22,7 +22,9 @@ class _PostPreviewState extends State<PostPreview>
     return MouseRegion(
       onEnter: (event) => setState(() => _isHover = true),
       onExit: (event) => setState(() => _isHover = false),
-      child: Container(
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        curve: Curves.ease,
         decoration: BoxDecoration(
           border: Border.all(
               color: !_isHover ? Colors.black54 : Colors.pink,

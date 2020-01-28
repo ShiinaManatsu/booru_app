@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:rxdart/rxdart.dart';
@@ -100,7 +99,7 @@ class _HomePageState extends State<HomePage>
                   automaticallyImplyLeading: false,
                   //snap: false,
                   //pinned: true,
-                  backgroundColor: Color.fromARGB(240, 255, 255, 255),
+                  backgroundColor: Colors.white.withOpacity(0.95),
                   floating: true,
                   title: Container(
                     margin: EdgeInsets.only(bottom: 5), // Fix the displacement
@@ -219,7 +218,7 @@ class _HomePageState extends State<HomePage>
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
         child: Container(
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withOpacity(0.95),
           width: 300,
           alignment: Alignment.topLeft,
           child: SingleChildScrollView(
@@ -289,10 +288,13 @@ class _HomePageState extends State<HomePage>
                           arg: PopularByMonthArgs(time: DateTime.now())));
                     }, "Popular posts by month", FetchType.PopularByMonth),
 
-                    _spliter("Other"),
+                    _spliter("Others"),
                     _buildDrawerEmptyButton(
                         () => Navigator.pushNamed(context, settingsPage),
                         "Settings"),
+                    _buildDrawerEmptyButton(
+                        () => Navigator.pushNamed(context, settingsPage),
+                        "About"),
                   ],
                 ),
               ],

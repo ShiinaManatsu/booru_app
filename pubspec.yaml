@@ -30,6 +30,8 @@ dependencies:
   # Transition
   flutter_page_transition: ^0.1.6
   animated_stream_list: ^1.1.0
+  # File path combiner
+  path: ^1.6.4
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
