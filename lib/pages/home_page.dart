@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_snake_navigationbar/flutter_snake_navigationbar.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:yande_web/main.dart';
@@ -40,7 +41,7 @@ class _HomePageState extends State<HomePage>
     booruBloc = BooruBloc(BooruAPI(), panelWidth);
     taskBloc = TaskBloc();
 
-    Observable.timer(() {}, Duration(milliseconds: 50)).listen((x) {
+    Rx.timer(() {}, Duration(milliseconds: 50)).listen((x) {
       booruBloc.onUpdate
           .add(UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
     });
@@ -53,7 +54,7 @@ class _HomePageState extends State<HomePage>
           _type = x;
         }
         if (_type == FetchType.PopularRecent) {
-          _searchNabor = _buildPeroidChip();
+          _searchNabor = Text("Recent Popular");
         } else if (_type == FetchType.Search) {
           _searchNabor = Text(searchTerm);
         } else if (_type == FetchType.PopularByWeek) {
@@ -76,6 +77,8 @@ class _HomePageState extends State<HomePage>
     print("panelWidth build");
     var _controller = new ScrollController();
     return Scaffold(
+        bottomNavigationBar:
+            _type == FetchType.PopularRecent ? _buildPeroidChip() : null,
         drawer: _appDrawer(),
         body: Builder(
           builder: (context) => SmartRefresher(
@@ -92,13 +95,8 @@ class _HomePageState extends State<HomePage>
               controller: _controller,
               physics: BouncingScrollPhysics(),
               slivers: <Widget>[
-                // SliverPadding(
-                //   padding: EdgeInsets.only(top: 10),
-                // ),
                 SliverFloatingBar(
                   automaticallyImplyLeading: false,
-                  //snap: false,
-                  //pinned: true,
                   backgroundColor: Colors.white.withOpacity(0.95),
                   floating: true,
                   title: Container(
@@ -149,7 +147,7 @@ class _HomePageState extends State<HomePage>
                           curve: Curves.ease,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
+                            mainAxisSize: MainAxisSize.max,
                             children: <Widget>[
                               IconButton(
                                 onPressed: () => {
@@ -159,19 +157,20 @@ class _HomePageState extends State<HomePage>
                                 },
                                 icon: Icon(Icons.search),
                               ),
-                              AnimatedSize(
-                                duration: Duration(milliseconds: 500),
-                                vsync: this,
-                                curve: Curves.ease,
-                                child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 500),
-                                  child: AnimatedSize(
-                                      duration: Duration(milliseconds: 500),
-                                      vsync: this,
-                                      curve: Curves.ease,
-                                      child: _searchNabor),
-                                ),
-                              ),
+                              // AnimatedSize(
+                              //   duration: Duration(milliseconds: 500),
+                              //   vsync: this,
+                              //   curve: Curves.ease,
+                              //   child: AnimatedSwitcher(
+                              //     duration: const Duration(milliseconds: 500),
+                              //     child: AnimatedSize(
+                              //         duration: Duration(milliseconds: 500),
+                              //         vsync: this,
+                              //         curve: Curves.ease,
+                              //         child: _searchNabor),
+                              //   ),
+                              // ),
+                              _searchNabor
                             ],
                           ),
                         )
@@ -212,7 +211,6 @@ class _HomePageState extends State<HomePage>
   }
 
   /// The app drawer
-  /// TODO: Animate the blur parameters
   Widget _appDrawer() {
     return SafeArea(
       child: BackdropFilter(
@@ -295,6 +293,9 @@ class _HomePageState extends State<HomePage>
                     _buildDrawerEmptyButton(
                         () => Navigator.pushNamed(context, settingsPage),
                         "About"),
+                    _buildDrawerEmptyButton(
+                        () => Navigator.pushNamed(context, testGroundPage),
+                        "Test Ground"),
                   ],
                 ),
               ],
@@ -341,59 +342,53 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+  int _currentIndex = 0;
+  TextStyle _unSelected = TextStyle(color: Colors.black54);
+  TextStyle _selectedTextStyle = TextStyle(color: Colors.white);
+
   /// Peroid picker
   Widget _buildPeroidChip() {
-    return Row(
-      children: <Widget>[
-        ChoiceChip(
-          label: Text("Last 24h"),
-          selected: _period == Period.None,
-          onSelected: (x) {
-            setState(() {
-              _period = Period.None;
-            });
-            booruBloc.onUpdate.add(UpdateArg(
-                fetchType: FetchType.PopularRecent,
-                arg: PopularRecentArgs(period: _period)));
-          },
+    return SnakeNavigationBar(
+      snakeShape: SnakeShape.rectangle,
+      selectedIconColor: Colors.white,
+      snakeColor: Colors.black,
+      backgroundColor: Colors.transparent,
+      items: [
+        BottomNavigationBarItem(
+          icon: Text(
+            "Last 24h",
+            style: _currentIndex == 0 ? _selectedTextStyle : _unSelected,
+          ),
         ),
-        ChoiceChip(
-          label: Text("Week"),
-          selected: _period == Period.Week,
-          onSelected: (x) {
-            setState(() {
-              _period = Period.Week;
-            });
-            booruBloc.onUpdate.add(UpdateArg(
-                fetchType: FetchType.PopularRecent,
-                arg: PopularRecentArgs(period: _period)));
-          },
+        BottomNavigationBarItem(
+          icon: Text(
+            "Week",
+            style: _currentIndex == 1 ? _selectedTextStyle : _unSelected,
+          ),
         ),
-        ChoiceChip(
-          label: Text("Month"),
-          selected: _period == Period.Month,
-          onSelected: (x) {
-            setState(() {
-              _period = Period.Month;
-            });
-            booruBloc.onUpdate.add(UpdateArg(
-                fetchType: FetchType.PopularRecent,
-                arg: PopularRecentArgs(period: _period)));
-          },
+        BottomNavigationBarItem(
+          icon: Text(
+            "Month",
+            style: _currentIndex == 2 ? _selectedTextStyle : _unSelected,
+          ),
         ),
-        ChoiceChip(
-          label: Text("Year"),
-          selected: _period == Period.Year,
-          onSelected: (x) {
-            setState(() {
-              _period = Period.Year;
-            });
-            booruBloc.onUpdate.add(UpdateArg(
-                fetchType: FetchType.PopularRecent,
-                arg: PopularRecentArgs(period: _period)));
-          },
+        BottomNavigationBarItem(
+          icon: Text(
+            "Year",
+            style: _currentIndex == 3 ? _selectedTextStyle : _unSelected,
+          ),
         ),
       ],
+      currentIndex: _currentIndex,
+      onPositionChanged: (value) {
+        setState(() {
+          _currentIndex = value;
+          _period = Period.values[value];
+        });
+        booruBloc.onUpdate.add(UpdateArg(
+            fetchType: FetchType.PopularRecent,
+            arg: PopularRecentArgs(period: _period)));
+      },
     );
   }
 
