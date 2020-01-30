@@ -100,7 +100,7 @@ class BooruBloc {
     var state = _state.mergeWith([panelWidthChanged]).asBroadcastStream();
 
     var pagePrevious = onPage
-        .where((x) => BooruBloc.page >= 1)
+        .where((x) => BooruBloc.page > 1)
         .where((x) => x == PageNavigationType.Previous)
         .map<int>((x) => -1);
 

@@ -15,10 +15,13 @@ class AppSettings {
   static DateTime konachanFirstday = DateTime(2008, 2);
 
   /// Photo save location
-  static String savePath="D:/";
+  static String savePath = "D:/";
 
   /// Post limit for post and search
   static double postLimit = 50;
+
+  static String token =
+      "password_hash=9b86532bf85edf67fbc5c96561c178edaefc6d37&login=yande_loli";
 
   /// Return the current client `url`
   static String get currentBaseUrl {

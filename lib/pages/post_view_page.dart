@@ -16,6 +16,7 @@ import 'package:yande_web/models/yande/tags.dart';
 import 'package:yande_web/pages/home_page.dart';
 import 'package:yande_web/settings/app_settings.dart';
 import 'package:expandable/expandable.dart';
+import 'package:yande_web/windows/task_bloc.dart';
 
 class PostViewPage extends StatefulWidget {
   final Post post;
@@ -261,7 +262,7 @@ class _PostViewPageState extends State<PostViewPage>
   }
 
   Widget _buildContentPanel() {
-    return Column(
+    var content = Column(
       mainAxisSize: MainAxisSize.max,
       children: <Widget>[
         // Sub buttons
@@ -375,6 +376,42 @@ class _PostViewPageState extends State<PostViewPage>
         ),
       ],
     );
+
+    return Platform.isAndroid
+        ? Stack(
+            children: <Widget>[
+              StreamBuilder<List<DownloadTask>>(
+                stream: taskBloc.tasks,
+                builder: (context, snapshot) {
+                  var task = snapshot.data == null || snapshot.data?.length == 0
+                      ? null
+                      : snapshot.data.where((x) => x.post == _post)?.first;
+                  return task == null
+                      ? Container()
+                      : Container(
+                          alignment: Alignment.topCenter,
+                          height: 60,
+                          child: TweenAnimationBuilder(
+                            duration: Duration(milliseconds: 300),
+                            curve: Curves.ease,
+                            tween: Tween<double>(begin: 0, end: task.progress),
+                            builder: (context, double value, child) =>
+                                LinearProgressIndicator(
+                              value: value,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color.lerp(
+                                      Colors.blueAccent,
+                                      Colors.pinkAccent,
+                                      task == null ? 0 : task.progress)),
+                            ),
+                          ),
+                        );
+                },
+              ),
+              content
+            ],
+          )
+        : content;
   }
 
   Widget _buildExpandablePanel() {
@@ -411,9 +448,6 @@ class _PostViewPageState extends State<PostViewPage>
                               child: Text("Back"),
                             ),
                           ]),
-                          hasIcon: false,
-                          tapBodyToCollapse: true,
-                          tapHeaderToExpand: true,
                         ),
                       ],
                     ),

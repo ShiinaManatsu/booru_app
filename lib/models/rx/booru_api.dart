@@ -96,6 +96,24 @@ class BooruAPI {
     return responseJson.map((m) => Comment.fromJson(m)).toList();
   }
 
+  /// Leave comment
+  static Future<bool> leaveComment(
+      {@required int postID,
+      @required String content,
+      bool anonymous = false}) async {
+    var url =
+        "${AppSettings.currentBaseUrl}/comment/create.json?comment[post_id]=$postID&comment[body]=$content&${AppSettings.token}";
+    http.Response response = await http.get(url);
+    List decodedJson = json.decode(response.body);
+    return decodedJson.map((f) {
+      return (f as Map<dynamic, dynamic>)["success"] as bool;
+    }).first;
+  }
+
+  /* Incoming feature
+  https://yande.re/comment/create.json?comment[post_id]=605753&comment[body]="hso"&$token
+  */
+
   // 125*125
   static String get avatarUrl {
     switch (AppSettings.currentClient) {

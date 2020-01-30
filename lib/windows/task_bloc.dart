@@ -68,13 +68,13 @@ class TaskBloc {
 
     var tasks = downloadTask.mergeWith([update, remove]).asBroadcastStream();
 
-    Rx.timer(() {}, Duration(seconds: 1)).listen((_) => showOverlay(
-            (context, t) {
+    Rx.timer(() {}, Duration(seconds: 1)).listen((_) {
+      if (Platform.isWindows) {
+        showOverlay((context, t) {
           return AnimatedOverlay(value: t);
-        },
-            key: ValueKey('hello'),
-            curve: Curves.ease,
-            duration: Duration.zero));
+        }, key: ValueKey('hello'), curve: Curves.ease, duration: Duration.zero);
+      }
+    });
 
     return TaskBloc._(
         addDownload, progressUpdate, progressCompleteUpdate, removeTask, tasks);
