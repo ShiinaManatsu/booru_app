@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
-import 'package:yande_web/settings/app_settings.dart';
+import 'package:booru_app/settings/app_settings.dart';
 import 'package:http/http.dart' as http;
 
 class TagDataBase {

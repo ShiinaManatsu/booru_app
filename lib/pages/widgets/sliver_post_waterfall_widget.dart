@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:yande_web/models/rx/post_state.dart';
-import 'package:yande_web/pages/home_page.dart';
+import 'package:booru_app/models/rx/post_state.dart';
+import 'package:booru_app/pages/home_page.dart';
 import 'post_preview.dart';
 
 class SliverPostWaterfall extends StatefulWidget {

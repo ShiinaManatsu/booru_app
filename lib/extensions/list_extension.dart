@@ -1,7 +1,7 @@
 import 'dart:core';
-import 'package:yande_web/models/yande/post.dart';
-import 'package:yande_web/settings/app_settings.dart';
-import 'package:yande_web/pages/home_page.dart';
+import 'package:booru_app/models/yande/post.dart';
+import 'package:booru_app/settings/app_settings.dart';
+import 'package:booru_app/pages/home_page.dart';
 // We are moving all the fetched post to the optimized list
 
 extension ListExtension on List<Post> {

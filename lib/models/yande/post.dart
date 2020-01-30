@@ -1,5 +1,5 @@
-import 'package:yande_web/settings/app_settings.dart';
-import 'package:yande_web/windows/task_bloc.dart';
+import 'package:booru_app/settings/app_settings.dart';
+import 'package:booru_app/windows/task_bloc.dart';
 
 class Post implements Downloadable {
   int id;

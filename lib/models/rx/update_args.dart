@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:yande_web/models/rx/booru_api.dart';
+import 'package:booru_app/models/rx/booru_api.dart';
 
 /// Argument for update method
 class UpdateArg {

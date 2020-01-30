@@ -1,4 +1,4 @@
-# yande_web
+# booru_app
 
 A new Flutter project.
 

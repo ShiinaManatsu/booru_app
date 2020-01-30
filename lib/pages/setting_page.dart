@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:yande_web/pages/widgets/sliver_floating_bar.dart';
-import 'package:yande_web/settings/app_settings.dart';
+import 'package:booru_app/pages/widgets/sliver_floating_bar.dart';
+import 'package:booru_app/settings/app_settings.dart';
 
 class SettingPage extends StatefulWidget {
   @override

@@ -8,15 +8,15 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:yande_web/models/rx/booru_api.dart';
-import 'package:yande_web/models/rx/booru_bloc.dart';
-import 'package:yande_web/models/yande/comment.dart';
-import 'package:yande_web/models/yande/post.dart';
-import 'package:yande_web/models/yande/tags.dart';
-import 'package:yande_web/pages/home_page.dart';
-import 'package:yande_web/settings/app_settings.dart';
+import 'package:booru_app/models/rx/booru_api.dart';
+import 'package:booru_app/models/rx/booru_bloc.dart';
+import 'package:booru_app/models/yande/comment.dart';
+import 'package:booru_app/models/yande/post.dart';
+import 'package:booru_app/models/yande/tags.dart';
+import 'package:booru_app/pages/home_page.dart';
+import 'package:booru_app/settings/app_settings.dart';
 import 'package:expandable/expandable.dart';
-import 'package:yande_web/windows/task_bloc.dart';
+import 'package:booru_app/windows/task_bloc.dart';
 
 class PostViewPage extends StatefulWidget {
   final Post post;

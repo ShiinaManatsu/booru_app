@@ -1,4 +1,4 @@
-import 'package:yande_web/models/yande/post.dart';
+import 'package:booru_app/models/yande/post.dart';
 
 class PostState {}
 

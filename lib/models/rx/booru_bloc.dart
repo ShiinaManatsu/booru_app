@@ -1,11 +1,11 @@
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:yande_web/models/rx/booru_api.dart';
-import 'package:yande_web/models/rx/post_state.dart';
-import 'package:yande_web/models/rx/update_args.dart';
-import 'package:yande_web/models/yande/post.dart';
-import 'package:yande_web/extensions/list_extension.dart';
-import 'package:yande_web/pages/home_page.dart';
+import 'package:booru_app/models/rx/booru_api.dart';
+import 'package:booru_app/models/rx/post_state.dart';
+import 'package:booru_app/models/rx/update_args.dart';
+import 'package:booru_app/models/yande/post.dart';
+import 'package:booru_app/extensions/list_extension.dart';
+import 'package:booru_app/pages/home_page.dart';
 
 class BooruBloc {
   // Subjects

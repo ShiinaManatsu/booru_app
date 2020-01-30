@@ -1,4 +1,4 @@
-package com.ShiinaManatsu.Yande.yande_web
+package com.ShiinaManatsu.Yande.booru_app
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity

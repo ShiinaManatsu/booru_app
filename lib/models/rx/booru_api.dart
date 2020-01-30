@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:yande_web/models/rx/update_args.dart';
-import 'package:yande_web/models/yande/comment.dart';
+import 'package:booru_app/models/rx/update_args.dart';
+import 'package:booru_app/models/yande/comment.dart';
 import 'dart:convert';
-import 'package:yande_web/models/yande/post.dart';
-import 'package:yande_web/settings/app_settings.dart';
+import 'package:booru_app/models/yande/post.dart';
+import 'package:booru_app/settings/app_settings.dart';
 
 /*  Provide base link
     Create post

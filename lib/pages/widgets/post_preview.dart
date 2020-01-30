@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:yande_web/main.dart';
-import 'package:yande_web/models/yande/post.dart';
-import 'package:yande_web/settings/app_settings.dart';
+import 'package:booru_app/main.dart';
+import 'package:booru_app/models/yande/post.dart';
+import 'package:booru_app/settings/app_settings.dart';
 
 class PostPreview extends StatefulWidget {
   final Post post;

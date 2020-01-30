@@ -3,9 +3,9 @@ import 'package:enum_to_string/enum_to_string.dart';
 import 'package:floating_search_bar/floating_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:yande_web/models/rx/booru_api.dart';
-import 'package:yande_web/models/rx/update_args.dart';
-import 'package:yande_web/models/yande/tags.dart';
+import 'package:booru_app/models/rx/booru_api.dart';
+import 'package:booru_app/models/rx/update_args.dart';
+import 'package:booru_app/models/yande/tags.dart';
 import 'home_page.dart';
 
 HashSet<Tag> _chips = HashSet<Tag>();

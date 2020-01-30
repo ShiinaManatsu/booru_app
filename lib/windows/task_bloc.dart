@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:yande_web/main.dart';
-import 'package:yande_web/models/rx/booru_api.dart';
-import 'package:yande_web/models/yande/post.dart';
-import 'package:yande_web/pages/home_page.dart';
-import 'package:yande_web/pages/widgets/task_overlay.dart';
-import 'package:yande_web/settings/app_settings.dart';
+import 'package:booru_app/main.dart';
+import 'package:booru_app/models/rx/booru_api.dart';
+import 'package:booru_app/models/yande/post.dart';
+import 'package:booru_app/pages/home_page.dart';
+import 'package:booru_app/pages/widgets/task_overlay.dart';
+import 'package:booru_app/settings/app_settings.dart';
 
 class TaskBloc {
   /// Add new download task
