@@ -81,6 +81,7 @@ class _HomePageState extends State<HomePage>
         bottomNavigationBar:
             _type == FetchType.PopularRecent ? _buildPeroidChip() : null,
         drawer: _appDrawer(),
+        drawerEdgeDragWidth: 100,
         body: Builder(
           builder: (context) => SmartRefresher(
             header: WaterDropMaterialHeader(
@@ -275,7 +276,7 @@ class _HomePageState extends State<HomePage>
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
         child: Container(
-          color: Colors.white.withOpacity(0.95),
+          color: Colors.white.withOpacity(0.8),
           width: 300,
           alignment: Alignment.topLeft,
           child: SingleChildScrollView(
