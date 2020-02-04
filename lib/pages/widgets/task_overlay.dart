@@ -2,7 +2,7 @@ import 'package:animated_stream_list/animated_stream_list.dart';
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
 import 'package:booru_app/pages/home_page.dart';
-import 'package:booru_app/windows/task_bloc.dart';
+import 'package:booru_app/models/rx/task_bloc.dart';
 
 class TaskOverlay extends StatefulWidget {
   @override

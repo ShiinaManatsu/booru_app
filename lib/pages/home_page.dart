@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:booru_app/pages/widgets/login_box.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_snake_navigationbar/flutter_snake_navigationbar.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -10,7 +11,7 @@ import 'package:booru_app/models/rx/update_args.dart';
 import 'package:booru_app/pages/widgets/sliver_floating_bar.dart';
 import 'package:booru_app/pages/widgets/sliver_post_waterfall_widget.dart';
 import 'package:booru_app/settings/app_settings.dart';
-import 'package:booru_app/windows/task_bloc.dart';
+import 'package:booru_app/models/rx/task_bloc.dart';
 
 BooruBloc booruBloc;
 TaskBloc taskBloc;
@@ -115,10 +116,6 @@ class _HomePageState extends State<HomePage>
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
-                                IconButton(
-                                  onPressed: () {},
-                                  icon: Icon(Icons.person),
-                                ),
                                 Center(
                                   child: DropdownButton(
                                     underline: Container(),
@@ -210,6 +207,68 @@ class _HomePageState extends State<HomePage>
     }
   }
 
+  void _buttonLogin() {
+    showDialog(
+      context: context,
+      builder: (context) => LoginBox(() {
+        if (mounted) {
+          setState(() {});
+        }
+      }),
+    );
+  }
+
+  Widget _user() {
+    if (AppSettings.localUsers.length > 0) {
+      switch (AppSettings.currentClient) {
+        case ClientType.Yande:
+          var u = AppSettings.localUsers
+              .firstWhere((x) => x.clientType == ClientType.Yande);
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(15, 0, 0, 15),
+            child: Row(
+              children: <Widget>[
+                CircleAvatar(
+                  backgroundImage: NetworkImage(u.avatarUrl),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 15),
+                  child:
+                      Text(u.username, style: TextStyle(color: Colors.black87)),
+                )
+              ],
+            ),
+          );
+          break;
+        case ClientType.Konachan:
+          var u = AppSettings.localUsers
+              .firstWhere((x) => x.clientType == ClientType.Konachan);
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(15, 0, 0, 15),
+            child: Row(
+              children: <Widget>[
+                CircleAvatar(
+                  backgroundImage: NetworkImage(u.avatarUrl),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 15),
+                  child:
+                      Text(u.username, style: TextStyle(color: Colors.black87)),
+                )
+              ],
+            ),
+          );
+          break;
+        default:
+          return Container();
+          break;
+      }
+    } else {
+      // Login
+      return _buildDrawerEmptyButton(_buttonLogin, "Login");
+    }
+  }
+
   /// The app drawer
   Widget _appDrawer() {
     return SafeArea(
@@ -235,6 +294,7 @@ class _HomePageState extends State<HomePage>
                           : "Konachan",
                       style: TextStyle(fontSize: 30),
                     )),
+                _user(),
                 // Spliter
                 _spliter("Posts"),
                 Column(

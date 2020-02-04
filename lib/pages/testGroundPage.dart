@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_snake_navigationbar/flutter_snake_navigationbar.dart';
 
@@ -56,10 +59,8 @@ class _TestGroundPageState extends State<TestGroundPage> {
         child: PageView(
           onPageChanged: _onPageChanged,
           children: <Widget>[
-            PagerPageWidget(
-              text: 'This is our beloved SnakeBar.',
-              description: 'Swipe right to see different styles',
-              image: Text("Image"),
+            Center(
+              child: Text(sha1.convert(utf8.encode("choujin-steiner--visitheshiyu--")).toString()),
             ),
             PagerPageWidget(
               text: 'It comes in all shapes and sizes...',

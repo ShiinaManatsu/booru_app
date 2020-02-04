@@ -1,10 +1,12 @@
 import 'dart:io';
+import 'package:booru_app/settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_page_transition/flutter_page_transition.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:booru_app/pages/post_view_page.dart';
 import 'package:booru_app/pages/setting_page.dart';
 import 'package:booru_app/pages/testGroundPage.dart';
+import 'package:rxdart/rxdart.dart';
 import 'android/notifier.dart';
 import 'pages/home_page.dart';
 import 'pages/search_tagged_posts_page.dart';
@@ -13,7 +15,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride, kIsWeb;
 
+/// Global variables
+/// Global events
+/// Do function after check account
+PublishSubject<Function> accountOperation = PublishSubject<Function>();
+
 Notifier notifier;
+
+void globalInitial() {
+  accountOperation
+      .where((_) => AppSettings.localUsers.contains(
+          (LocalUser user) => user.clientType == AppSettings.currentClient))
+      .listen((event) => event());
+}
 
 void _desktopInitHack() {
   if (kIsWeb) return;

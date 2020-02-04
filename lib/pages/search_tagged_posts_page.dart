@@ -137,6 +137,23 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage>
       decoration: InputDecoration.collapsed(
         hintText: "Search tags...",
       ),
+      onSubmitted: (x) {
+        if (_chips.length != 0) {
+          searchTerm = _chips.map((x) => x.content).join(" ");
+          homePageFetchTypeChanged.add(FetchType.Search);
+          booruBloc.onReset.add(null);
+          booruBloc.onUpdate.add(UpdateArg(
+              fetchType: FetchType.Search,
+              arg: TaggedArgs(tags: searchTerm, page: 1)));
+          Navigator.pop(context);
+        } else {
+          homePageFetchTypeChanged.add(FetchType.Search);
+          booruBloc.onReset.add(null);
+          booruBloc.onUpdate.add(UpdateArg(
+              fetchType: FetchType.Search, arg: TaggedArgs(tags: x, page: 1)));
+          Navigator.pop(context);
+        }
+      },
     ));
   }
 }

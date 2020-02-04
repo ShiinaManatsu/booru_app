@@ -1,5 +1,5 @@
 import 'package:booru_app/settings/app_settings.dart';
-import 'package:booru_app/windows/task_bloc.dart';
+import 'package:booru_app/models/rx/task_bloc.dart';
 
 class Post implements Downloadable {
   int id;

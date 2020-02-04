@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:booru_app/main.dart';
+import 'package:esys_flutter_share/esys_flutter_share.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +18,8 @@ import 'package:booru_app/models/yande/tags.dart';
 import 'package:booru_app/pages/home_page.dart';
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:expandable/expandable.dart';
-import 'package:booru_app/windows/task_bloc.dart';
+import 'package:booru_app/models/rx/task_bloc.dart';
+import 'package:http/http.dart' as http;
 
 class PostViewPage extends StatefulWidget {
   final Post post;
@@ -89,7 +92,6 @@ class _PostViewPageState extends State<PostViewPage>
 
   @override
   Widget build(BuildContext context) {
-    PanelController controller = PanelController();
     return Scaffold(
         extendBody: true,
         body: Builder(builder: (context) {
@@ -99,21 +101,16 @@ class _PostViewPageState extends State<PostViewPage>
               .listen((x) => Navigator.pop(context));
           // Mobile devices
           if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-            return Stack(
-              children: <Widget>[
-                SlidingUpPanel(
-                    controller: controller,
-                    backdropColor: Colors.black,
-                    backdropOpacity: 0.5,
-                    minHeight: 60,
-                    maxHeight: 800,
-                    parallaxEnabled: true,
-                    backdropEnabled: true,
-                    // When coollapsed
-                    panel: _buildContentPanel(),
-                    body: _buildGallery()),
-              ],
-            );
+            return SlidingUpPanel(
+                backdropColor: Colors.black,
+                backdropOpacity: 0.5,
+                minHeight: 60,
+                maxHeight: 800,
+                parallaxEnabled: true,
+                backdropEnabled: true,
+                // When coollapsed
+                panel: _buildContentPanel(),
+                body: _buildGallery());
           }
           // Windows or Web
           else {
@@ -195,8 +192,10 @@ class _PostViewPageState extends State<PostViewPage>
                                     }
                                   }, Icon(Icons.file_download)),
                                   _buildQuadIconButton(() {
-                                    _launchURL(
-                                        "https://yande.re/post/show/${_post.id}");
+                                    accountOperation.add(() =>
+                                        BooruAPI.votePost(
+                                            postID: _index,
+                                            type: VoteType.Favorite));
                                   }, Icon(Icons.favorite_border)),
                                 ]),
                           ),
@@ -278,6 +277,12 @@ class _PostViewPageState extends State<PostViewPage>
               _buildQuadIconButton(() {
                 taskBloc.addDownload.add(_post);
               }, Icon(Icons.file_download)),
+              _buildQuadIconButton(() async {
+                var response = await http.get(_post.jpegUrl);
+                await Share.file('${_post.id}', '${_post.id}.png',
+                    response.bodyBytes, 'image/png',
+                    text: "Share to ...");
+              }, Icon(Icons.share)),
               Text(
                 "${_post.id}",
                 style: TextStyle(fontSize: 20),

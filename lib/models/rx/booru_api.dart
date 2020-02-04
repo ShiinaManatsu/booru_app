@@ -1,3 +1,5 @@
+import 'package:booru_app/models/yande/User.dart';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -13,13 +15,13 @@ import 'package:booru_app/settings/app_settings.dart';
     Destroy post
     Revert tags
     *Vote post
-    Tags
     Artists - artists page
     *Comments
     Wiki
     Notes
     Search users
     Favorites
+    black list
 */
 
 class BooruAPI {
@@ -29,6 +31,24 @@ class BooruAPI {
     List responseJson = json.decode(response.body);
     return responseJson.map((m) => Post.fromJson(m)).toList();
   }
+
+  /// Password
+  /// Get the hashed string by the given string
+  static String getSha1Password(String password) {
+    return sha1.convert(utf8.encode("choujin-steiner--$password--")).toString();
+  }
+
+  /// Search user
+  /// Get user info by id or name
+  static Future<List<User>> getUsers({int id, String name}) async {
+    var url =
+        "${AppSettings.currentBaseUrl}/user.json?${id == null ? "" : "id=$id"}${name == null ? "" : "name=$name"}";
+    http.Response response = await http.post(url);
+    List decodedJson = json.decode(response.body);
+    return decodedJson.map((m) => User.fromJson(m)).toList();
+  }
+
+  /// Posts
 
   /// Fetch tagged posts
   static Future<List<Post>> fetchTagged(
@@ -88,6 +108,20 @@ class BooruAPI {
     return await _httpGet(url);
   }
 
+  /// Vote
+  /// Fetch post comment
+  static Future<bool> votePost(
+      {@required int postID, @required VoteType type}) async {
+    var url =
+        "${AppSettings.currentBaseUrl}/post/vote.json?${AppSettings.token}&id=$postID&score=${type.index - 1}";
+    http.Response response = await http.post(url);
+    Map decodedJson = json.decode(response.body);
+    return decodedJson["success"];
+  }
+
+  /// Posts
+
+  /// Comnents
   /// Fetch post comment
   static Future<List<Comment>> fetchPostsComments({int postID}) async {
     var url = "${AppSettings.currentBaseUrl}/comment.json?post_id=$postID";
@@ -109,10 +143,6 @@ class BooruAPI {
       return (f as Map<dynamic, dynamic>)["success"] as bool;
     }).first;
   }
-
-  /* Incoming feature
-  https://yande.re/comment/create.json?comment[post_id]=605753&comment[body]="hso"&$token
-  */
 
   // 125*125
   static String get avatarUrl {
@@ -139,6 +169,13 @@ enum Period {
   Month,
   Year,
 }
+
+///  Bad = -1,
+///      None = 0,
+///      Good = 1,
+///     Great = 2,
+///     Favorite = 3
+enum VoteType { Bad, None, Good, Great, Favorite }
 
 Map<Period, String> periodMap = {
   Period.None: "1d",

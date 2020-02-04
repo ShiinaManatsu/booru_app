@@ -1,3 +1,5 @@
+import 'package:booru_app/models/rx/booru_api.dart';
+
 /// Settings fot the whole application.
 ///
 /// This may gonna implement to database.
@@ -20,8 +22,10 @@ class AppSettings {
   /// Post limit for post and search
   static double postLimit = 50;
 
-  static String token =
-      "password_hash=9b86532bf85edf67fbc5c96561c178edaefc6d37&login=yande_loli";
+  static String get token =>
+      localUsers.where((x) => x.clientType == currentClient).first.token;
+
+  static List<LocalUser> localUsers = List<LocalUser>();
 
   /// Return the current client `url`
   static String get currentBaseUrl {
@@ -41,3 +45,23 @@ class AppSettings {
 
 /// Indicate a booru client type
 enum ClientType { Yande, Konachan }
+
+/// User object
+/// "password_hash=9b86532bf85edf67fbc5c96561c178edaefc6d37&login=yande_loli";
+class LocalUser {
+  int id;
+  ClientType clientType;
+  String hashedPassword = "";
+  String username = "";
+  String get token => "login=$username&password_hash=$hashedPassword";
+  List<String> blacklist = [];
+
+  String get avatarUrl =>
+      "${AppSettings.currentBaseUrl}/data/avatars/${id.toString()}.jpg";
+
+  LocalUser(this.clientType, String username, String password) {
+    this.username = username;
+    hashedPassword = BooruAPI.getSha1Password(password);
+    BooruAPI.getUsers(name: username).then((x) => id = x.first.id);
+  }
+}
