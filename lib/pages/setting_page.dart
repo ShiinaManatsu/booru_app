@@ -1,3 +1,4 @@
+import 'package:booru_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:booru_app/pages/widgets/sliver_floating_bar.dart';
 import 'package:booru_app/settings/app_settings.dart';
@@ -17,7 +18,7 @@ class _SettingPageState extends State<SettingPage> {
           SliverFloatingBar(
             backgroundColor: Colors.white,
             automaticallyImplyLeading: true,
-            title: Text("Settings"),
+            title: Text("${language.content.settings}"),
             leading: IconButton(
               icon: Icon(Icons.arrow_back),
               onPressed: () => Navigator.pop(context),
@@ -39,14 +40,14 @@ class _SettingPageState extends State<SettingPage> {
                       isExpanded: locationIsExpand,
                       headerBuilder: (context, d) {
                         return ListTile(
-                          title: Text("Download Location"),
+                          title: Text("${language.content.download} ${language.content.location}"),
                         );
                       },
                       body: ListTile(
-                        title: Text("Location"),
+                        title: Text("${language.content.location}"),
                         subtitle: TextField(
                           decoration: InputDecoration(
-                              prefixText: "New location here: ",
+                              prefixText: "${language.content.newLocationHere}: ",
                               helperText: AppSettings.savePath),
                           onChanged: (x) => AppSettings.savePath = x,
                         ),
@@ -57,7 +58,7 @@ class _SettingPageState extends State<SettingPage> {
                       isExpanded: locationIsExpand,
                       headerBuilder: (context, d) {
                         return ListTile(
-                          title: Text("Single page post load limit"),
+                          title: Text("${language.content.singlePagePostLoadLimit}"),
                         );
                       },
                       body: ListTile(
@@ -65,7 +66,7 @@ class _SettingPageState extends State<SettingPage> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           mainAxisSize: MainAxisSize.max,
                           children: <Widget>[
-                            Text("Current Limit: ${AppSettings.postLimit.toInt()}"),
+                            Text("${language.content.currentLimit}: ${AppSettings.postLimit.toInt()}"),
                             Slider(
                               value: AppSettings.postLimit,
                               onChanged: (value) {

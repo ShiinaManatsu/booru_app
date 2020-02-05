@@ -1,15 +1,13 @@
+import 'package:booru_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:booru_app/models/rx/post_state.dart';
 import 'package:booru_app/pages/home_page.dart';
 import 'post_preview.dart';
 
 class SliverPostWaterfall extends StatefulWidget {
-  // The width this widght will take
-  @required
-  final double panelWidth;
   final ScrollController controller;
 
-  SliverPostWaterfall({this.panelWidth, this.controller, Key key})
+  SliverPostWaterfall({this.controller, Key key})
       : super(key: key);
 
   @override
@@ -39,7 +37,7 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
               return Container(
                 child: SingleChildScrollView(
                   child: Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                      padding: const EdgeInsets.fromLTRB(4, 5, 4, 0), // Don't know why 1px shift
                       child: Wrap(
                         spacing: 4,
                         runSpacing: 4,
@@ -55,7 +53,7 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
               print(date.error);
               return _buildText(date.error.toString());
             } else {
-              return _buildText("Loading..");
+              return _buildText("${language.content.loading}..");
             }
           },
         )

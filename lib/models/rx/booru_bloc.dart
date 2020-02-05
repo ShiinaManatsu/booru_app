@@ -72,7 +72,6 @@ class BooruBloc {
     // Cache last update
     onUpdate.distinct().listen((x) {
       last = x;
-      print("update state updated");
     });
 
     // Fetch posts
@@ -93,11 +92,13 @@ class BooruBloc {
     var panelWidthChanged =
         onPanelWidth.distinct().switchMap<PostState>((x) async* {
       panelWidth = x;
-      print("cache size:${cache.length}");
       yield PostSuccess(await cache.arrange());
     });
 
-    var state = _state.mergeWith([panelWidthChanged]).asBroadcastStream();
+    var state = _state
+        .mergeWith([panelWidthChanged])
+        .startWith(PostSuccess(List<Post>()))
+        .asBroadcastStream();
 
     var pagePrevious = onPage
         .where((x) => BooruBloc.page > 1)
@@ -138,7 +139,6 @@ class BooruBloc {
       var date = x(postDateTime);
       postDateTime = date;
 
-      print(postDateTime.toUtc());
       if (last.fetchType == FetchType.PopularByDay) {
         onUpdate.add(UpdateArg(
             fetchType: last.fetchType,

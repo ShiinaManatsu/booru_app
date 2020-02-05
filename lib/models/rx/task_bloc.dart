@@ -52,7 +52,6 @@ class TaskBloc {
         progressUpdate.throttleTime(Duration(milliseconds: 500));
     var update = updateThrottled.mergeWith(
         [progressCompleteUpdate]).switchMap<List<DownloadTask>>((x) async* {
-      print("Progress Updated");
       yield tasksList;
     }).startWith(List<DownloadTask>());
 
@@ -135,6 +134,7 @@ class DownloadTask {
           (await getExternalStorageDirectories(type: StorageDirectory.pictures))
               .first
               .path;
+      print(dir);
       filePath = p.join(dir, fileName);
     }
 
@@ -155,7 +155,7 @@ class DownloadTask {
   void _showNotification(int id, String text, String photoPath) {
     if (Platform.isAndroid) {
       notifier.sendNotificationWithBitmap(
-          id, 'Finished download', 'Post $text downloaded', photoPath);
+          id, '${language.content.finishedDownload}', 'Post $text ${language.content.downloaded}', photoPath);
     }
   }
 

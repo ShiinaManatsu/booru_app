@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:booru_app/main.dart';
 import 'package:http/http.dart' as http;
 import 'package:booru_app/models/rx/booru_api.dart';
 import 'package:booru_app/settings/app_settings.dart';
@@ -61,7 +62,7 @@ class _LoginBoxState extends State<LoginBox> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         Text(
-                          "Username:",
+                          "${language.content.username}:",
                           style: TextStyle(fontSize: 24),
                         ),
                         Container(
@@ -82,7 +83,7 @@ class _LoginBoxState extends State<LoginBox> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         Text(
-                          "Password:",
+                          "${language.content.password}:",
                           style: TextStyle(fontSize: 24),
                         ),
                         Container(
@@ -119,7 +120,7 @@ class _LoginBoxState extends State<LoginBox> {
                               }
                             });
                           });
-                        }, "Login")
+                        }, "${language.content.login}")
                       ],
                     )
                   ],

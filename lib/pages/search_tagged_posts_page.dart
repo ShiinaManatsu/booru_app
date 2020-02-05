@@ -1,6 +1,7 @@
 import 'dart:collection';
+import 'package:booru_app/main.dart';
+import 'package:booru_app/pages/widgets/floating_search_bar.dart';
 import 'package:enum_to_string/enum_to_string.dart';
-import 'package:floating_search_bar/floating_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:booru_app/models/rx/booru_api.dart';
@@ -28,7 +29,7 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage>
   void initState() {
     super.initState();
     searchedTags = _onTextChanged
-        .throttleTime(Duration(milliseconds: 200))
+        .throttleTime(Duration(milliseconds: 100))
         .distinct()
         .where((x) => x != "")
         .switchMap<List<Tag>>((mapper) => _search(mapper));
@@ -48,6 +49,7 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage>
   Widget build(BuildContext context) {
     return Scaffold(
         body: FloatingSearchBar.builder(
+      backgroundColor: Colors.white.withOpacity(0.95),
       itemCount: _tags.length,
       itemBuilder: (BuildContext context, int index) {
         return ListTile(
@@ -73,13 +75,6 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage>
                 _chips.add(_tags[index]);
               }
             });
-            // searchTerm = _tags[index].content;
-            // homePageFetchTypeChanged.add(FetchType.Search);
-            // booruBloc.onReset.add(null);
-            // booruBloc.onUpdate.add(UpdateArg(
-            //     fetchType: FetchType.Search,
-            //     arg: TaggedArgs(tags: searchTerm, page: 1)));
-            // Navigator.pop(context);
           },
         );
       },
@@ -135,7 +130,7 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage>
         _onTextChanged.add(x);
       },
       decoration: InputDecoration.collapsed(
-        hintText: "Search tags...",
+        hintText: "${language.content.searchTags}...",
       ),
       onSubmitted: (x) {
         if (_chips.length != 0) {

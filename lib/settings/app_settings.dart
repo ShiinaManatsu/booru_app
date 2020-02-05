@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:booru_app/models/rx/booru_api.dart';
 
 /// Settings fot the whole application.
@@ -8,7 +10,7 @@ class AppSettings {
   static ClientType currentClient = ClientType.Yande;
 
   /// The height of post in the post list
-  static const double fixedPostHeight = 256.0;
+  static double fixedPostHeight = Platform.isAndroid ? 256.0 : 384.0;
 
   /// The first day that yande has datas
   static DateTime yandeFirstday = DateTime(2006, 9);

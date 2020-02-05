@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:booru_app/settings/app_settings.dart';
+import 'package:booru_app/settings/language.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_page_transition/flutter_page_transition.dart';
 import 'package:overlay_support/overlay_support.dart';
@@ -19,6 +20,7 @@ import 'package:flutter/foundation.dart'
 /// Global events
 /// Do function after check account
 PublishSubject<Function> accountOperation = PublishSubject<Function>();
+Language language;
 
 Notifier notifier;
 
@@ -47,6 +49,7 @@ void main() {
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
     notifier = Notifier();
   }
+  globalInitial();
 }
 
 // Routes
@@ -66,27 +69,6 @@ class MyApp extends StatelessWidget {
     return OverlaySupport(
       child: MaterialApp(
           debugShowCheckedModeBanner: false,
-          // onGenerateRoute: (settings) {
-          //   final Map<String, dynamic> arg = settings.arguments;
-          //   Widget screen;
-          //   switch (settings.name) {
-          //     case homePage:
-          //       screen = HomePage();
-          //       break;
-          //     case searchTaggedPostsPage:
-          //       screen = SearchTaggedPostsPage(key: arg["key"]);
-          //       break;
-          //     case postViewPage:
-          //       screen = PostViewPage(post: arg["post"]);
-          //       break;
-          //     case settingsPage:
-          //       screen = SettingPage();
-          //       break;
-          //     default:
-          //       return null;
-          //   }
-          //   return MaterialPageRoute(builder: (BuildContext contex) => screen);
-          // },
           onGenerateRoute: (settings) => PageRouteBuilder(
               settings: settings,
               pageBuilder: (context, animation, secondaryAnimation) {

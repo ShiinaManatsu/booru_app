@@ -1,25 +1,27 @@
 import 'dart:io';
-import 'package:booru_app/main.dart';
-import 'package:esys_flutter_share/esys_flutter_share.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'dart:math';
+
+import "package:booru_app/main.dart";
+import "package:booru_app/pages/widgets/per_platform_method.dart";
+import "package:esys_flutter_share/esys_flutter_share.dart";
+import "package:flutter/foundation.dart";
+import "package:flutter/gestures.dart";
+import "package:flutter/material.dart";
 import 'package:flutter/services.dart';
-import 'package:photo_view/photo_view.dart';
-import 'package:photo_view/photo_view_gallery.dart';
-import 'package:rxdart/rxdart.dart';
-import 'package:sliding_up_panel/sliding_up_panel.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:booru_app/models/rx/booru_api.dart';
-import 'package:booru_app/models/rx/booru_bloc.dart';
-import 'package:booru_app/models/yande/comment.dart';
-import 'package:booru_app/models/yande/post.dart';
-import 'package:booru_app/models/yande/tags.dart';
-import 'package:booru_app/pages/home_page.dart';
-import 'package:booru_app/settings/app_settings.dart';
-import 'package:expandable/expandable.dart';
-import 'package:booru_app/models/rx/task_bloc.dart';
-import 'package:http/http.dart' as http;
+import "package:photo_view/photo_view.dart";
+import "package:photo_view/photo_view_gallery.dart";
+import "package:sliding_up_panel/sliding_up_panel.dart";
+import "package:url_launcher/url_launcher.dart";
+import "package:booru_app/models/rx/booru_api.dart";
+import "package:booru_app/models/rx/booru_bloc.dart";
+import "package:booru_app/models/yande/comment.dart";
+import "package:booru_app/models/yande/post.dart";
+import "package:booru_app/models/yande/tags.dart";
+import "package:booru_app/pages/home_page.dart";
+import "package:booru_app/settings/app_settings.dart";
+import "package:expandable/expandable.dart";
+import "package:booru_app/models/rx/task_bloc.dart";
+import "package:http/http.dart" as http;
 
 class PostViewPage extends StatefulWidget {
   final Post post;
@@ -32,7 +34,6 @@ class PostViewPage extends StatefulWidget {
 
 class _PostViewPageState extends State<PostViewPage>
     with TickerProviderStateMixin {
-  PublishSubject _onPanelExit = PublishSubject();
   List<Comment> _comments = List<Comment>();
   int buttonCount = 3;
   double barHeight = 64;
@@ -92,34 +93,28 @@ class _PostViewPageState extends State<PostViewPage>
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark));
     return Scaffold(
-        extendBody: true,
-        body: Builder(builder: (context) {
-          _onPanelExit
-              .throttleTime(Duration(milliseconds: 500))
-              .takeWhile((x) => Scaffold.of(context).isDrawerOpen)
-              .listen((x) => Navigator.pop(context));
-          // Mobile devices
-          if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-            return SlidingUpPanel(
-                backdropColor: Colors.black,
-                backdropOpacity: 0.5,
-                minHeight: 60,
-                maxHeight: 800,
-                parallaxEnabled: true,
-                backdropEnabled: true,
-                // When coollapsed
-                panel: _buildContentPanel(),
-                body: _buildGallery());
-          }
-          // Windows or Web
-          else {
-            return Stack(children: <Widget>[
-              _buildGallery(),
-              _buildTopRightPanel(MediaQuery.of(context).size.height),
-            ]);
-          }
-        }));
+      body: PerPlatform(
+        android: SlidingUpPanel(
+            backdropColor: Colors.black,
+            backdropOpacity: 0.5,
+            minHeight: 60,
+            maxHeight: MediaQuery.of(context).size.height -
+                MediaQuery.of(context).padding.top,
+            parallaxEnabled: true,
+            backdropEnabled: true,
+            // When coollapsed
+            panel: _buildContentPanel(),
+            body: _buildGallery()),
+        windows: Stack(children: <Widget>[
+          _buildGallery(),
+          _buildTopRightPanel(MediaQuery.of(context).size.height),
+        ]),
+      ),
+    );
   }
 
   Widget _buildTopRightPanel(double height) {
@@ -240,10 +235,7 @@ class _PostViewPageState extends State<PostViewPage>
                 child: Container(
                   width: commentsPanelWidth,
                   alignment: Alignment.topCenter,
-                  child: SingleChildScrollView(
-                    child: _buildContentPanel(),
-                    physics: BouncingScrollPhysics(),
-                  ),
+                  child: _buildContentPanel(),
                 ),
               ),
             )
@@ -261,129 +253,35 @@ class _PostViewPageState extends State<PostViewPage>
   }
 
   Widget _buildContentPanel() {
-    var content = Column(
-      mainAxisSize: MainAxisSize.max,
-      children: <Widget>[
-        // Sub buttons
-        Container(
+    var buttonGroup = Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+      _buildQuadIconButton(() {
+        accountOperation.add(
+            () => BooruAPI.votePost(postID: _index, type: VoteType.Favorite));
+      }, Icon(Icons.favorite_border)),
+      _buildQuadIconButton(() {
+        taskBloc.addDownload.add(_post);
+      }, Icon(Icons.file_download)),
+      _buildQuadIconButton(() => _galleryController.rotation -= pi / 2,
+          Icon(Icons.rotate_90_degrees_ccw)),
+      _buildQuadIconButton(() async {
+        var response = await http.get(_post.jpegUrl);
+        await Share.file(
+            "${_post.id}", "${_post.id}.png", response.bodyBytes, "image/png",
+            text: "${language.content.shareTo} ...");
+      }, Icon(Icons.share)),
+    ]);
+
+    var topBar = PerPlatform(
+      windows: Container(
+          color: Colors.white,
           alignment: Alignment.centerLeft,
           height: barHeight,
-          child: Container(
-            child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-              _buildQuadIconButton(
-                  () => Clipboard.setData(ClipboardData(
-                      text: "https://yande.re/post/show/${_post.id}")),
-                  Icon(Icons.content_copy)),
-              _buildQuadIconButton(() {
-                taskBloc.addDownload.add(_post);
-              }, Icon(Icons.file_download)),
-              _buildQuadIconButton(() async {
-                var response = await http.get(_post.jpegUrl);
-                await Share.file('${_post.id}', '${_post.id}.png',
-                    response.bodyBytes, 'image/png',
-                    text: "Share to ...");
-              }, Icon(Icons.share)),
-              Text(
-                "${_post.id}",
-                style: TextStyle(fontSize: 20),
-              ),
-            ]),
-          ),
-        ),
-        SingleChildScrollView(
-          physics: BouncingScrollPhysics(),
-          child: Container(
-            margin: EdgeInsets.all(30),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                //------------------
-                _buildTitleSpliter(Text(
-                  "Size",
-                  style: TextStyle(fontSize: 20),
-                )),
-                Text("${_post.width}x${_post.height}"),
-                _buildTitleSpliter(Text(
-                  "File Size",
-                  style: TextStyle(fontSize: 20),
-                )),
-                Text(_post.fileSize < 1024 * 1024
-                    ? (_post.fileSize / 1024).toStringAsFixed(3) + " KB"
-                    : (_post.fileSize / 1024 / 1024).toStringAsFixed(3) +
-                        " MB"),
-
-                _buildTitleSpliter(Text(
-                  "Author",
-                  style: TextStyle(fontSize: 20),
-                )),
-                Row(
-                  children: <Widget>[
-                    CircleAvatar(
-                      backgroundImage: NetworkImage(
-                          "${AppSettings.currentBaseUrl}/data/avatars/${_post.creatorId}.jpg"),
-                    ),
-                    Container(
-                        margin: EdgeInsets.only(left: 10),
-                        child: Text("${_post.author}")),
-                  ],
-                ),
-                _buildTitleSpliter(Text(
-                  "Score",
-                  style: TextStyle(fontSize: 20),
-                )),
-                Text("${_post.score}"),
-                _buildTitleSpliter(Text(
-                  "Tags",
-                  style: TextStyle(fontSize: 20),
-                )),
-                Wrap(
-                  spacing: 3,
-                  children: List.generate(
-                    tags.length,
-                    (index) => Chip(
-                      label: Text(tags[index].content),
-                      backgroundColor: TagToColorMap[tags[index].tagType],
-                      deleteIcon: Icon(Icons.close),
-                    ),
-                  ),
-                ),
-                _buildTitleSpliter(Text(
-                  "Rating",
-                  style: TextStyle(fontSize: 20),
-                )),
-                Text("${_post.rating.toString()}"),
-                // Source link
-                _buildTitleSpliter(Text(
-                  "Source",
-                  style: TextStyle(fontSize: 20),
-                )),
-                RichText(
-                  text: new TextSpan(
-                    text: _post.sourceUrl == "" ? "No source" : _post.sourceUrl,
-                    style: new TextStyle(color: Colors.blue),
-                    recognizer: new TapGestureRecognizer()
-                      ..onTap = () {
-                        _launchURL(_post.sourceUrl);
-                      },
-                  ),
-                ),
-
-                _buildTitleSpliter(Text(
-                  "Comments",
-                  style: TextStyle(fontSize: 20),
-                )),
-                // Comments
-                _buildExpandablePanel()
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-
-    return Platform.isAndroid
-        ? Stack(
+          child: buttonGroup),
+      android: Container(
+          color: Colors.white,
+          alignment: Alignment.centerLeft,
+          height: barHeight,
+          child: Stack(
             children: <Widget>[
               StreamBuilder<List<DownloadTask>>(
                 stream: taskBloc.tasks,
@@ -413,11 +311,163 @@ class _PostViewPageState extends State<PostViewPage>
                         );
                 },
               ),
-              content
+              buttonGroup,
             ],
-          )
-        : content;
+          )),
+    );
+
+    return Column(
+      children: <Widget>[
+        // Top bar
+        topBar,
+        // Content
+        SingleChildScrollView(
+          physics: BouncingScrollPhysics(),
+          child: Container(
+            margin: EdgeInsets.all(12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                //------------------
+                _buildDoubleWidgetRow(
+                  Text(
+                    "${language.content.id}",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  Text(
+                    "${_post.id}",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                ),
+
+                _buildDoubleWidgetRow(
+                  Text(
+                    "${language.content.size}",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  Text("${_post.width}x${_post.height}"),
+                ),
+
+                _buildDoubleWidgetRow(
+                  Text(
+                    "${language.content.fileSize}",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  Text(_post.fileSize < 1024 * 1024
+                      ? (_post.fileSize / 1024).toStringAsFixed(3) + " KB"
+                      : (_post.fileSize / 1024 / 1024).toStringAsFixed(3) +
+                          " MB"),
+                ),
+
+                _buildDoubleWidgetRow(
+                  Text(
+                    "${language.content.author}",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  Row(
+                    children: <Widget>[
+                      CircleAvatar(
+                        backgroundImage: NetworkImage(
+                            "${AppSettings.currentBaseUrl}/data/avatars/${_post.creatorId}.jpg"),
+                      ),
+                      Container(
+                          margin: EdgeInsets.only(left: 10),
+                          child: Text("${_post.author}")),
+                    ],
+                  ),
+                ),
+
+                _buildDoubleWidgetRow(
+                  Text(
+                    "${language.content.score}",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  Text("${_post.score}"),
+                ),
+
+                _buildDoubleWidgetRow(
+                    Text(
+                      "${language.content.tags}",
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    Expanded(
+                      child: Wrap(
+                        spacing: 3,
+                        children: List.generate(
+                          tags.length,
+                          (index) => Chip(
+                            label: Text(tags[index].content),
+                            backgroundColor: TagToColorMap[tags[index].tagType],
+                            deleteIcon: Icon(Icons.close),
+                          ),
+                        ),
+                      ),
+                    ),
+                    alignmentFix: true),
+
+                _buildDoubleWidgetRow(
+                  Text(
+                    "${language.content.rating}",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  Text("${_post.rating.toString()}"),
+                ),
+
+                // Source link
+                _buildDoubleWidgetRow(
+                  Text(
+                    "${language.content.source}",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  Expanded(
+                    child: RichText(
+                      text: new TextSpan(
+                        text: _post.sourceUrl == ""
+                            ? "${language.content.noSource}"
+                            : _post.sourceUrl,
+                        style: new TextStyle(color: Colors.blue),
+                        recognizer: new TapGestureRecognizer()
+                          ..onTap = () {
+                            _launchURL(_post.sourceUrl);
+                          },
+                      ),
+                    ),
+                  ),
+                ),
+
+                _buildDoubleWidgetRow(
+                    Text(
+                      "${language.content.comments}",
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    // Comments
+                    _buildExpandablePanel(),
+                    alignmentFix: true)
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
+
+  Widget _buildDoubleWidgetRow(Widget left, Widget right,
+          {bool alignmentFix = false}) =>
+      Row(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment:
+            alignmentFix ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        children: <Widget>[
+          Container(
+            margin: EdgeInsets.symmetric(vertical: 8),
+            width: 100,
+            child: left,
+          ),
+          right
+        ],
+      );
 
   Widget _buildExpandablePanel() {
     if (_comments.length == 0) {
@@ -462,24 +512,18 @@ class _PostViewPageState extends State<PostViewPage>
     }
   }
 
-  Widget _buildTitleSpliter(Widget title) {
-    return Container(
-        margin: EdgeInsets.fromLTRB(0, 10, 0, 5),
-        alignment: Alignment.centerLeft,
-        child: title);
-  }
-
   _launchURL(String url) async {
     if (await canLaunch(url)) {
       await launch(url);
     } else {
-      throw 'Could not launch $url';
+      return;
     }
   }
 
   Widget _buildGallery() {
     return Container(
       child: PhotoViewGallery.builder(
+        enableRotation: true,
         backgroundDecoration: BoxDecoration(color: Colors.transparent),
         scrollPhysics: const BouncingScrollPhysics(),
         builder: (context, index) => PhotoViewGalleryPageOptions(

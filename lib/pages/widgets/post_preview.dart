@@ -3,6 +3,8 @@ import 'package:booru_app/main.dart';
 import 'package:booru_app/models/yande/post.dart';
 import 'package:booru_app/settings/app_settings.dart';
 
+double postPreviewBorder = 2;
+
 class PostPreview extends StatefulWidget {
   final Post post;
   PostPreview({this.post});
@@ -13,7 +15,6 @@ class PostPreview extends StatefulWidget {
 
 class _PostPreviewState extends State<PostPreview>
     with AutomaticKeepAliveClientMixin {
-  double _borderWidth = 2;
   bool _isHover = false;
 
   @override
@@ -23,12 +24,12 @@ class _PostPreviewState extends State<PostPreview>
       onEnter: (event) => setState(() => _isHover = true),
       onExit: (event) => setState(() => _isHover = false),
       child: AnimatedContainer(
-        duration: Duration(milliseconds: 300),
+        duration: Duration(milliseconds: 100),
         curve: Curves.ease,
         decoration: BoxDecoration(
           border: Border.all(
-              color: !_isHover ? Colors.black54 : Colors.pink,
-              width: _borderWidth),
+              color: !_isHover ? Colors.black12 : Colors.pink,
+              width: postPreviewBorder),
         ),
         child: GestureDetector(
           onTap: () {
@@ -39,8 +40,8 @@ class _PostPreviewState extends State<PostPreview>
             tag: widget.post,
             child: Image.network(
               widget.post.previewUrl,
-              height: AppSettings.fixedPostHeight - _borderWidth * 2,
-              width: widget.post.widthInPanel - _borderWidth * 2,
+              height: AppSettings.fixedPostHeight - postPreviewBorder * 2,
+              width: widget.post.widthInPanel - postPreviewBorder * 2,
               fit: BoxFit.cover,
               loadingBuilder: (context, child, progress) =>
                   progress == null ? child : CircularProgressIndicator(),

@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:booru_app/pages/widgets/login_box.dart';
+import 'package:booru_app/settings/language.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_snake_navigationbar/flutter_snake_navigationbar.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:rxdart/rxdart.dart';
@@ -39,12 +42,14 @@ class _HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
+    language = Language();
     booruBloc = BooruBloc(BooruAPI(), panelWidth);
     taskBloc = TaskBloc();
 
     Rx.timer(() {}, Duration(milliseconds: 50)).listen((x) {
       booruBloc.onUpdate
           .add(UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
+      setState(() {});
     });
     _onPageChange.listen((x) {
       booruBloc.onPage.add(x);
@@ -53,13 +58,8 @@ class _HomePageState extends State<HomePage>
       setState(() {
         if (_type != x) {
           _type = x;
-        }
-        if (_type == FetchType.PopularRecent) {
-          _searchNabor = Text("Recent Popular");
         } else if (_type == FetchType.Search) {
           _searchNabor = Text(searchTerm);
-        } else if (_type == FetchType.PopularByWeek) {
-          _searchNabor = Text("PopularByWeek");
         } else {
           _searchNabor = Container();
         }
@@ -72,10 +72,12 @@ class _HomePageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+        statusBarColor: Colors.white.withOpacity(0.95),
+        statusBarIconBrightness: Brightness.dark));
     super.build(context);
-    panelWidth = MediaQuery.of(context).size.width - 20;
+    panelWidth = MediaQuery.of(context).size.width - 8; // Minus padding = 8
     booruBloc.onPanelWidth.add(panelWidth);
-    print("panelWidth build");
     var _controller = new ScrollController();
     return Scaffold(
         bottomNavigationBar:
@@ -93,14 +95,14 @@ class _HomePageState extends State<HomePage>
             //enablePullUp: true,
             controller: refreshController,
             child: CustomScrollView(
-              primary: false,
               controller: _controller,
               physics: BouncingScrollPhysics(),
               slivers: <Widget>[
                 SliverFloatingBar(
                   automaticallyImplyLeading: false,
                   backgroundColor: Colors.white.withOpacity(0.95),
-                  floating: true,
+                  floating: Platform.isAndroid,
+                  pinned: true,
                   title: Container(
                     margin: EdgeInsets.only(bottom: 5), // Fix the displacement
                     child: Stack(
@@ -155,19 +157,6 @@ class _HomePageState extends State<HomePage>
                                 },
                                 icon: Icon(Icons.search),
                               ),
-                              // AnimatedSize(
-                              //   duration: Duration(milliseconds: 500),
-                              //   vsync: this,
-                              //   curve: Curves.ease,
-                              //   child: AnimatedSwitcher(
-                              //     duration: const Duration(milliseconds: 500),
-                              //     child: AnimatedSize(
-                              //         duration: Duration(milliseconds: 500),
-                              //         vsync: this,
-                              //         curve: Curves.ease,
-                              //         child: _searchNabor),
-                              //   ),
-                              // ),
                               _searchNabor
                             ],
                           ),
@@ -178,7 +167,6 @@ class _HomePageState extends State<HomePage>
                 ),
                 SliverPostWaterfall(
                   controller: _controller,
-                  panelWidth: panelWidth,
                 ),
                 _buildPageNavigator(),
                 _buildDatePicker()
@@ -212,9 +200,11 @@ class _HomePageState extends State<HomePage>
     showDialog(
       context: context,
       builder: (context) => LoginBox(() {
-        if (mounted) {
-          setState(() {});
-        }
+        Future.delayed(Duration(milliseconds: 300)).then((value) {
+          if (mounted) {
+            setState(() {});
+          }
+        });
       }),
     );
   }
@@ -266,7 +256,7 @@ class _HomePageState extends State<HomePage>
       }
     } else {
       // Login
-      return _buildDrawerEmptyButton(_buttonLogin, "Login");
+      return _buildDrawerEmptyButton(_buttonLogin, "${language.content.login}");
     }
   }
 
@@ -297,7 +287,7 @@ class _HomePageState extends State<HomePage>
                     )),
                 _user(),
                 // Spliter
-                _spliter("Posts"),
+                _spliter("${language.content.posts}"),
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -307,53 +297,60 @@ class _HomePageState extends State<HomePage>
                       booruBloc.onReset.add(null);
                       booruBloc.onUpdate.add(UpdateArg(
                           fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
-                    }, "Posts", FetchType.Posts),
+                    }, "${language.content.posts}", FetchType.Posts),
 
                     _buildDrawerButton(
                         () => Navigator.pushNamed(
                             context, searchTaggedPostsPage,
                             arguments: {"key": _searchPage}),
-                        "Search",
+                        "${language.content.search}",
                         FetchType.Search),
 
                     // Spliter popular
-                    _spliter("Popular Posts"),
+                    _spliter("${language.content.popularPosts}"),
 
                     _buildDrawerButton(() {
                       Navigator.pop(context);
                       booruBloc.onUpdate.add(UpdateArg(
                           fetchType: FetchType.PopularRecent,
                           arg: PopularRecentArgs(period: _period)));
-                    }, "Popular posts by recent", FetchType.PopularRecent),
+                    }, "${language.content.popularPostsByRecent}",
+                        FetchType.PopularRecent),
 
                     _buildDrawerButton(() {
                       Navigator.pop(context);
                       booruBloc.onUpdate.add(UpdateArg(
                           fetchType: FetchType.PopularByDay,
                           arg: PopularByDayArgs(time: DateTime.now())));
-                    }, "Popular posts by day", FetchType.PopularByDay),
+                      booruBloc.onDateTime.add((x) => x = DateTime.now());
+                    }, "${language.content.popularPostsByDay}",
+                        FetchType.PopularByDay),
 
                     _buildDrawerButton(() {
                       Navigator.pop(context);
                       booruBloc.onUpdate.add(UpdateArg(
                           fetchType: FetchType.PopularByWeek,
                           arg: PopularByWeekArgs(time: DateTime.now())));
-                    }, "Popular posts by week", FetchType.PopularByWeek),
+                      booruBloc.onDateTime.add((x) => x = DateTime.now());
+                    }, "${language.content.popularPostsByWeek}",
+                        FetchType.PopularByWeek),
 
                     _buildDrawerButton(() {
                       Navigator.pop(context);
                       booruBloc.onUpdate.add(UpdateArg(
                           fetchType: FetchType.PopularByMonth,
                           arg: PopularByMonthArgs(time: DateTime.now())));
-                    }, "Popular posts by month", FetchType.PopularByMonth),
+                      booruBloc.onDateTime.add((x) => x = DateTime.now());
+                    }, "${language.content.popularPostsByMonth}",
+                        FetchType.PopularByMonth),
 
-                    _spliter("Others"),
+                    _spliter("${language.content.others}"),
                     _buildDrawerEmptyButton(
                         () => Navigator.pushNamed(context, settingsPage),
-                        "Settings"),
+                        "${language.content.settings}"),
                     _buildDrawerEmptyButton(
                         () => Navigator.pushNamed(context, settingsPage),
-                        "About"),
+                        "${language.content.about}"),
                     _buildDrawerEmptyButton(
                         () => Navigator.pushNamed(context, testGroundPage),
                         "Test Ground"),
