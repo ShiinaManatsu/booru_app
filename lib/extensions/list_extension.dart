@@ -2,7 +2,6 @@ import 'dart:core';
 import 'package:booru_app/models/yande/post.dart';
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:booru_app/pages/home_page.dart';
-import 'package:rxdart/rxdart.dart';
 // We are moving all the fetched post to the optimized list
 
 /*
