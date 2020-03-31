@@ -4,10 +4,6 @@ import 'package:booru_app/settings/app_settings.dart';
 import 'package:booru_app/pages/home_page.dart';
 // We are moving all the fetched post to the optimized list
 
-/*
-  TODO: Extend 1px if posts in each row does not fill completely
-*/
-
 extension ListExtension on List<Post> {
   Future<List<Post>> arrange() async {
     if (this.length == 0) {

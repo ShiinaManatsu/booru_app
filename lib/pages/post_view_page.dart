@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'dart:math';
-
 import "package:booru_app/main.dart";
 import "package:booru_app/pages/widgets/per_platform_method.dart";
 import "package:esys_flutter_share/esys_flutter_share.dart";
