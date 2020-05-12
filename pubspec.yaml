@@ -24,7 +24,7 @@ dependencies:
   enum_to_string: ^1.0.8
   expandable: ^4.1.2
   cached_network_image: ^2.0.0
-  path_provider: ^1.6.0
+  path_provider:
   open_file: ^3.0.1
   crypto: ^2.1.3  # Sha1
   # Notification usage
@@ -37,6 +37,7 @@ dependencies:
   path: ^1.6.4
   # Use the navigation bar as a switcher
   flutter_snake_navigationbar: ^0.3.0
+  webview_flutter:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
