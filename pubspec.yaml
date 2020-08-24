@@ -1,7 +1,7 @@
 name: booru_app
 description: App for yande and konachan
 
-version: 0.1.5+1
+version: 0.1.6+2
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -11,6 +11,7 @@ dependencies:
     sdk: flutter
   http: ^0.12.0+2
   dio: ^3.0.8
+  shared_preferences: ">=0.5.8 <2.0.0"
   rxdart: ^0.23.1
   sqflite: ^1.1.7+1
   esys_flutter_share: ^1.0.2
@@ -26,7 +27,7 @@ dependencies:
   cached_network_image: ^2.0.0
   path_provider:
   open_file: ^3.0.1
-  crypto: ^2.1.3  # Sha1
+  crypto: ^2.1.3 # Sha1
   # Notification usage
   flutter_local_notifications: ^1.1.3
   overlay_support: ^1.0.2
@@ -37,6 +38,7 @@ dependencies:
   path: ^1.6.4
   # Use the navigation bar as a switcher
   flutter_snake_navigationbar: ^0.3.0
+  filesystem_picker: ^1.0.2
   webview_flutter:
 
   # The following adds the Cupertino Icons font to your application.
@@ -47,29 +49,23 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-
   # To add assets to your application, add an assets section, like this:
   # assets:
   #  - images/a_dot_burr.jpeg
   #  - images/a_dot_ham.jpeg
-
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
-
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/assets-and-images/#from-packages
-
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
   # "family" key with the font family name, and a "fonts" key with a

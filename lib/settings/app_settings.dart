@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:booru_app/extensions/shared_preferences_extension.dart';
 import 'package:booru_app/models/rx/booru_api.dart';
 
 /// Settings fot the whole application.
@@ -19,10 +20,19 @@ class AppSettings {
   static DateTime konachanFirstday = DateTime(2008, 2);
 
   /// Photo save location
-  static String savePath = "D:/";
+  static Future<String> get savePath async =>
+      await SharedPreferencesExtension.getTyped<String>("savePath") ?? "";
+
+  static setSavePath(String path) =>
+      SharedPreferencesExtension.setTyped<String>("savePath", path);
 
   /// Post limit for post and search
-  static double postLimit = 50;
+  static Future<double> get postLimit async =>
+      await SharedPreferencesExtension.getTyped<double>("postLimit") ?? 50;
+
+  /// Post limit for post and search
+  static setPostLimit(double value) =>
+      SharedPreferencesExtension.setTyped<double>("postLimit", value);
 
   static String get token =>
       localUsers.where((x) => x.clientType == currentClient).first.token;

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:booru_app/extensions/shared_preferences_extension.dart';
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:booru_app/settings/language.dart';
 import 'package:flutter/material.dart';
@@ -69,10 +70,10 @@ class MyApp extends StatelessWidget {
     return OverlaySupport(
       child: MaterialApp(
           debugShowCheckedModeBanner: false,
-          onGenerateRoute: (settings) => PageRouteBuilder(
-              settings: settings,
-              pageBuilder: (context, animation, secondaryAnimation) {
-                final Map<String, dynamic> arg = settings.arguments;
+          onGenerateRoute:(settings)=>MaterialPageRoute(
+            settings: settings,
+            builder: (context) {
+              final Map<String, dynamic> arg = settings.arguments;
                 switch (settings.name) {
                   case homePage:
                     return HomePage();
@@ -92,13 +93,39 @@ class MyApp extends StatelessWidget {
                   default:
                     return null;
                 }
-              },
-              transitionDuration: const Duration(milliseconds: 700),
-              transitionsBuilder:
-                  (context, animation, secondaryAnimation, child) {
-                return effectMap[PageTransitionType.transferRight](
-                    Curves.ease, animation, secondaryAnimation, child);
-              }),
+            },
+          ),
+          // onGenerateRoute: (settings) => PageRouteBuilder(
+          //     settings: settings,
+          //     pageBuilder: (context, animation, secondaryAnimation) {
+          //       final Map<String, dynamic> arg = settings.arguments;
+          //       switch (settings.name) {
+          //         case homePage:
+          //           return HomePage();
+          //           break;
+          //         case searchTaggedPostsPage:
+          //           return SearchTaggedPostsPage(key: arg["key"]);
+          //           break;
+          //         case postViewPage:
+          //           return PostViewPage(post: arg["post"]);
+          //           break;
+          //         case settingsPage:
+          //           return SettingPage();
+          //           break;
+          //         case testGroundPage:
+          //           return TestGroundPage();
+          //           break;
+          //         default:
+          //           return null;
+          //       }
+          //     },
+          //     transitionDuration: const Duration(milliseconds: 700),
+          //     transitionsBuilder:
+          //         (context, animation, secondaryAnimation, child) {
+          //       return effectMap[PageTransitionType.transferRight](
+          //           Curves.ease, animation, secondaryAnimation, child);
+          //     }
+          //     ),
           title: 'Home',
           theme: lightTheme),
     );
