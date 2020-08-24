@@ -45,11 +45,9 @@ class Notifier {
               'Yande channel',
               'Yande channel',
               'Channel for yande app',
-              largeIconBitmapSource: BitmapSource.FilePath,
-              largeIcon: bitmapPath,
-              style: AndroidNotificationStyle.BigPicture,
+              largeIcon: FilePathAndroidBitmap(bitmapPath),
               styleInformation:
-                  BigPictureStyleInformation(bitmapPath, BitmapSource.FilePath),
+                  BigPictureStyleInformation(FilePathAndroidBitmap(bitmapPath)),
               importance: Importance.Max,
               priority: Priority.High,
             ),

@@ -6,6 +6,7 @@ final Color baseBlackColor =
 final Color blueTextColor = Colors.lightBlue; // Accent blue color
 
 final TextStyle baseTextStyle = TextStyle(color: baseBlackColor);
+
 final TextTheme baseTextTheme = TextTheme(
   bodyText2: baseTextStyle,
   bodyText1: baseTextStyle,
@@ -16,8 +17,9 @@ final TextTheme baseTextTheme = TextTheme(
 // Theme
 final ThemeData lightTheme = ThemeData(
   backgroundColor: Colors.white,
+  primaryColor: Colors.pink,
   textTheme: baseTextTheme,
   iconTheme: IconThemeData(color: baseBlackColor),
-  appBarTheme: AppBarTheme(color: Colors.white, textTheme: baseTextTheme),
-  scaffoldBackgroundColor: Colors.white,
+  primaryTextTheme: baseTextTheme,
+  appBarTheme: AppBarTheme(color: Colors.white, textTheme: baseTextTheme)
 );

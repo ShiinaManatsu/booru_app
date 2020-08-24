@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:booru_app/main.dart';
+import 'package:filesystem_picker/filesystem_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:booru_app/pages/widgets/sliver_floating_bar.dart';
 import 'package:booru_app/settings/app_settings.dart';
+import 'package:overlay_support/overlay_support.dart';
+import 'package:rxdart/rxdart.dart';
 
 class SettingPage extends StatefulWidget {
   @override
@@ -10,6 +15,38 @@ class SettingPage extends StatefulWidget {
 
 class _SettingPageState extends State<SettingPage> {
   var locationIsExpand = true;
+  double postLimit = 0;
+  var setLimit = PublishSubject<double>();
+  String savePath = "";
+
+  var expansionStatus = [false, false];
+
+  @override
+  void initState() {
+    super.initState();
+    AppSettings.postLimit.then((value) {
+      setState(() {
+        postLimit = value;
+      });
+    });
+
+    AppSettings.savePath.then((value) {
+      setState(() {
+        savePath = value;
+      });
+    });
+
+    setLimit.throttleTime(Duration(milliseconds: 200)).listen((x) {
+      AppSettings.setPostLimit(x);
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    setLimit.close();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,34 +68,50 @@ class _SettingPageState extends State<SettingPage> {
                 child: ExpansionPanelList(
                   expansionCallback: (index, flag) {
                     setState(() {
-                      locationIsExpand = !flag;
+                      expansionStatus[index] = !flag;
                     });
                   },
                   children: <ExpansionPanel>[
                     ExpansionPanel(
                       canTapOnHeader: true,
-                      isExpanded: locationIsExpand,
+                      isExpanded: expansionStatus[0],
                       headerBuilder: (context, d) {
                         return ListTile(
-                          title: Text("${language.content.download} ${language.content.location}"),
+                          title: Text(
+                              "${language.content.download} ${language.content.location}"),
                         );
                       },
                       body: ListTile(
-                        title: Text("${language.content.location}"),
-                        subtitle: TextField(
-                          decoration: InputDecoration(
-                              prefixText: "${language.content.newLocationHere}: ",
-                              helperText: AppSettings.savePath),
-                          onChanged: (x) => AppSettings.savePath = x,
+                        trailing: FlatButton(
+                          child: Text("Butotn"),
+                          onPressed: () async {
+                            String path = await FilesystemPicker.open(
+                              title: 'Save to folder',
+                              context: context,
+                              rootDirectory: Directory.fromUri(
+                                  Uri.directory("storage/emulated/0/")),
+                              fsType: FilesystemType.folder,
+                              pickText: 'Save file to this folder',
+                              folderIconColor: Colors.pink,
+                            );
+                            AppSettings.setSavePath(path);
+                            AppSettings.savePath.then((value) {
+                              setState(() {
+                                savePath = value;
+                              });
+                            });
+                          },
                         ),
+                        title: Text("$savePath"),
                       ),
                     ),
                     ExpansionPanel(
                       canTapOnHeader: true,
-                      isExpanded: locationIsExpand,
+                      isExpanded: expansionStatus[1],
                       headerBuilder: (context, d) {
                         return ListTile(
-                          title: Text("${language.content.singlePagePostLoadLimit}"),
+                          title: Text(
+                              "${language.content.singlePagePostLoadLimit}"),
                         );
                       },
                       body: ListTile(
@@ -66,12 +119,14 @@ class _SettingPageState extends State<SettingPage> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           mainAxisSize: MainAxisSize.max,
                           children: <Widget>[
-                            Text("${language.content.currentLimit}: ${AppSettings.postLimit.toInt()}"),
+                            Text(
+                                "${language.content.currentLimit}: ${postLimit.toInt()}"),
                             Slider(
-                              value: AppSettings.postLimit,
+                              value: postLimit,
                               onChanged: (value) {
                                 setState(() {
-                                  AppSettings.postLimit = value;
+                                  postLimit = value;
+                                  setLimit.add(value);
                                 });
                               },
                               min: 40,

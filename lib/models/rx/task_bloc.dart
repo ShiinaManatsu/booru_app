@@ -124,20 +124,20 @@ class DownloadTask {
     var fileName = Uri.decodeFull(task.url).split('/').last;
 
     if (Platform.isWindows) {
-      if (!await Directory(AppSettings.savePath).exists()) {
-        await Directory(AppSettings.savePath).create();
+      if (!await Directory(await AppSettings.savePath).exists()) {
+        await Directory(await AppSettings.savePath).create();
       }
 
-      filePath = p.join(AppSettings.savePath, fileName);
+      filePath = p.join(await AppSettings.savePath, fileName);
     } else if (Platform.isAndroid) {
       var dir =
           (await getExternalStorageDirectories(type: StorageDirectory.pictures))
               .first
               .path;
       print(dir);
-      filePath = p.join(dir, fileName);
+      dir= await AppSettings.savePath;
+      filePath = p.join("$dir/BooruPhotos/", fileName);
     }
-
     Dio().download(task.url, filePath,
         onReceiveProgress: (int download, int total) {
       downloadedLength = download;
@@ -155,7 +155,10 @@ class DownloadTask {
   void _showNotification(int id, String text, String photoPath) {
     if (Platform.isAndroid) {
       notifier.sendNotificationWithBitmap(
-          id, '${language.content.finishedDownload}', 'Post $text ${language.content.downloaded}', photoPath);
+          id,
+          '${language.content.finishedDownload}',
+          'Post $text ${language.content.downloaded}',
+          photoPath);
     }
   }
 
