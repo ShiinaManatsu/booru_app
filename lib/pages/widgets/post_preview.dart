@@ -1,5 +1,6 @@
+import 'package:auto_route/auto_route.dart';
+import 'package:booru_app/router.gr.dart';
 import 'package:flutter/material.dart';
-import 'package:booru_app/main.dart';
 import 'package:booru_app/models/yande/post.dart';
 import 'package:booru_app/settings/app_settings.dart';
 
@@ -32,10 +33,8 @@ class _PostPreviewState extends State<PostPreview>
               width: postPreviewBorder),
         ),
         child: GestureDetector(
-          onTap: () {
-            Navigator.pushNamed(context, postViewPage,
-                arguments: {"post": widget.post});
-          },
+          onTap: () => ExtendedNavigator.root.push(Routes.postViewPage,
+              arguments: PostViewPageArguments(post: widget.post)),
           child: Hero(
             tag: widget.post,
             child: Image.network(

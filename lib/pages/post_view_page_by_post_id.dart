@@ -21,16 +21,16 @@ import "package:expandable/expandable.dart";
 import "package:booru_app/models/rx/task_bloc.dart";
 import "package:http/http.dart" as http;
 
-class PostViewPage extends StatefulWidget {
-  final Post post;
+class PostViewPageByPostID extends StatefulWidget {
+  final String postID;
 
-  PostViewPage({@required this.post});
+  PostViewPageByPostID({@required this.postID});
 
   @override
-  _PostViewPageState createState() => _PostViewPageState();
+  _PostViewPageByPostIDState createState() => _PostViewPageByPostIDState();
 }
 
-class _PostViewPageState extends State<PostViewPage>
+class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
     with TickerProviderStateMixin {
   List<Comment> _comments = List<Comment>();
   int buttonCount = 3;
@@ -66,25 +66,32 @@ class _PostViewPageState extends State<PostViewPage>
     _panelContentOffset = _panelOffset + commentsPanelWidth;
     _offset = _panelStartOffset;
 
-    _post = widget.post;
-    _index = BooruBloc.cache.indexOf(_post);
-
-    _post.tags.split(" ").forEach((x) async {
-      var res = await TagDataBase.searchTags(x);
+    BooruAPI.fetchSpecficPost(id: widget.postID).then((value) {
       if (mounted) {
         setState(() {
-          tags.add(res.firstWhere((f) => f.content == x));
-        });
-      }
-    });
+          _post = value.first;
 
-    BooruAPI.fetchPostsComments(postID: _post.id).then((x) {
-      if (x != null) {
-        if (mounted) {
-          setState(() {
-            _comments = x;
+          _post.tags.split(" ").forEach((x) async {
+            var res = await TagDataBase.searchTags(x);
+            if (mounted) {
+              setState(() {
+                tags.add(res.firstWhere((f) => f.content == x));
+              });
+            }
           });
-        }
+
+          BooruAPI.fetchPostsComments(postID: _post.id).then((x) {
+            if (x != null) {
+              if (mounted) {
+                setState(() {
+                  _comments = x;
+                });
+              }
+            }
+          });
+
+          _index = BooruBloc.cache.indexOf(_post);
+        });
       }
     });
   }
@@ -95,7 +102,7 @@ class _PostViewPageState extends State<PostViewPage>
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark));
     return Scaffold(
-      body: PerPlatform(
+      body: _post!=null? PerPlatform(
         android: SlidingUpPanel(
             backdropColor: Colors.black,
             backdropOpacity: 0.5,
@@ -111,7 +118,7 @@ class _PostViewPageState extends State<PostViewPage>
           _buildGallery(),
           _buildTopRightPanel(MediaQuery.of(context).size.height),
         ]),
-      ),
+      ):Center(child: CircularProgressIndicator()),
     );
   }
 
@@ -268,7 +275,8 @@ class _PostViewPageState extends State<PostViewPage>
             text: "${language.content.shareTo} ...");
       }, Icon(Icons.share)),
       _buildQuadIconButton(() {
-        Share.text("${_post.id}", "https://yande.re/post/show/${_post.id}", "text/plain;charset=UTF-8");
+        Share.text("${_post.id}", "https://yande.re/post/show/${_post.id}",
+            "text/plain;charset=UTF-8");
       }, Icon(Icons.link)),
     ]);
 

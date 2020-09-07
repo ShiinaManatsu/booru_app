@@ -1,27 +1,28 @@
 import 'dart:io';
-import 'package:booru_app/extensions/shared_preferences_extension.dart';
+import 'package:auto_route/auto_route.dart';
+import 'package:booru_app/models/rx/booru_api.dart';
+import 'package:booru_app/models/yande/post.dart';
+import 'package:booru_app/pages/home_page.dart';
+import 'package:booru_app/pages/post_view_page.dart';
+import 'package:booru_app/router.gr.dart';
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:booru_app/settings/language.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_page_transition/flutter_page_transition.dart';
 import 'package:overlay_support/overlay_support.dart';
-import 'package:booru_app/pages/post_view_page.dart';
-import 'package:booru_app/pages/setting_page.dart';
-import 'package:booru_app/pages/testGroundPage.dart';
 import 'package:rxdart/rxdart.dart';
 import 'android/notifier.dart';
-import 'pages/home_page.dart';
-import 'pages/search_tagged_posts_page.dart';
 import 'themes/theme_light.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride, kIsWeb;
+import 'package:uni_links/uni_links.dart';
 
 /// Global variables
 /// Global events
 /// Do function after check account
 PublishSubject<Function> accountOperation = PublishSubject<Function>();
 Language language;
+PublishSubject<String> uniLink = PublishSubject<String>();
 
 Notifier notifier;
 
@@ -51,14 +52,19 @@ void main() {
     notifier = Notifier();
   }
   globalInitial();
+  _getInitPost();
 }
 
-// Routes
-const String homePage = '/';
-const String searchTaggedPostsPage = '/searchTaggedPostsPage';
-const String postViewPage = '/postViewPage';
-const String settingsPage = '/settingsPage';
-const String testGroundPage = '/testGroundPage';
+_getInitPost() async {
+  var link = await getInitialLink();
+  if (link == null) return;
+
+  if (link.isNotEmpty) {
+    ExtendedNavigator.root.pushAndRemoveUntil(
+        Routes.postViewPageByPostID, (route) => false,
+        arguments: PostViewPageByPostIDArguments(postID: link.split("/").last));
+  }
+}
 
 class MyApp extends StatelessWidget {
   @override
@@ -66,68 +72,15 @@ class MyApp extends StatelessWidget {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
         statusBarColor: Colors.white.withOpacity(0.95),
         statusBarIconBrightness: Brightness.dark));
+    // uniLink.delay(Duration(seconds: 2)).listen((event) {
+    //   toast(event);
+    // });
+    // getInitialLink().then((value) => uniLink.add(value));
 
     return OverlaySupport(
-      child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          onGenerateRoute:(settings)=>MaterialPageRoute(
-            settings: settings,
-            builder: (context) {
-              final Map<String, dynamic> arg = settings.arguments;
-                switch (settings.name) {
-                  case homePage:
-                    return HomePage();
-                    break;
-                  case searchTaggedPostsPage:
-                    return SearchTaggedPostsPage(key: arg["key"]);
-                    break;
-                  case postViewPage:
-                    return PostViewPage(post: arg["post"]);
-                    break;
-                  case settingsPage:
-                    return SettingPage();
-                    break;
-                  case testGroundPage:
-                    return TestGroundPage();
-                    break;
-                  default:
-                    return null;
-                }
-            },
-          ),
-          // onGenerateRoute: (settings) => PageRouteBuilder(
-          //     settings: settings,
-          //     pageBuilder: (context, animation, secondaryAnimation) {
-          //       final Map<String, dynamic> arg = settings.arguments;
-          //       switch (settings.name) {
-          //         case homePage:
-          //           return HomePage();
-          //           break;
-          //         case searchTaggedPostsPage:
-          //           return SearchTaggedPostsPage(key: arg["key"]);
-          //           break;
-          //         case postViewPage:
-          //           return PostViewPage(post: arg["post"]);
-          //           break;
-          //         case settingsPage:
-          //           return SettingPage();
-          //           break;
-          //         case testGroundPage:
-          //           return TestGroundPage();
-          //           break;
-          //         default:
-          //           return null;
-          //       }
-          //     },
-          //     transitionDuration: const Duration(milliseconds: 700),
-          //     transitionsBuilder:
-          //         (context, animation, secondaryAnimation, child) {
-          //       return effectMap[PageTransitionType.transferRight](
-          //           Curves.ease, animation, secondaryAnimation, child);
-          //     }
-          //     ),
-          title: 'Home',
-          theme: lightTheme),
-    );
+        child: MaterialApp(
+            builder: ExtendedNavigator<Router>(router: Router()),
+            title: 'Home',
+            theme: lightTheme));
   }
 }

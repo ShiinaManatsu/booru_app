@@ -198,6 +198,7 @@ class BooruBloc {
   static Future<PostState> _emptyCheck(Future<List<Post>> future) async {
     try {
       var res = await future;
+      res = res.where((element) => element.rating==Rating.safe).toList();
       if (res.isEmpty) {
         refreshController.refreshCompleted();
         return PostEmpty();

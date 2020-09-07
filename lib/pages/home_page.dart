@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:auto_route/auto_route.dart';
 import 'package:booru_app/pages/widgets/login_box.dart';
+import 'package:booru_app/router.gr.dart';
 import 'package:booru_app/settings/language.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -150,11 +152,12 @@ class _HomePageState extends State<HomePage>
                             mainAxisSize: MainAxisSize.max,
                             children: <Widget>[
                               IconButton(
-                                onPressed: () => {
-                                  Navigator.pushNamed(
-                                      context, searchTaggedPostsPage,
-                                      arguments: {"key": _searchPage})
-                                },
+                                onPressed: () => ExtendedNavigator.root
+                                    .push(
+                                        Routes.searchTaggedPostsPage,
+                                        arguments:
+                                            SearchTaggedPostsPageArguments(
+                                                key: _searchPage)),
                                 icon: Icon(Icons.search),
                               ),
                               _searchNabor
@@ -300,9 +303,8 @@ class _HomePageState extends State<HomePage>
                     }, "${language.content.posts}", FetchType.Posts),
 
                     _buildDrawerButton(
-                        () => Navigator.pushNamed(
-                            context, searchTaggedPostsPage,
-                            arguments: {"key": _searchPage}),
+                        () => 
+                        ExtendedNavigator.root.push(Routes.searchTaggedPostsPage,arguments: SearchTaggedPostsPageArguments(key: _searchPage)),
                         "${language.content.search}",
                         FetchType.Search),
 
@@ -346,13 +348,13 @@ class _HomePageState extends State<HomePage>
 
                     _spliter("${language.content.others}"),
                     _buildDrawerEmptyButton(
-                        () => Navigator.pushNamed(context, settingsPage),
+                        () => ExtendedNavigator.root.push(Routes.settingPage),
                         "${language.content.settings}"),
                     _buildDrawerEmptyButton(
-                        () => Navigator.pushNamed(context, settingsPage),
+                        () => ExtendedNavigator.root.push(Routes.settingPage),
                         "${language.content.about}"),
                     _buildDrawerEmptyButton(
-                        () => Navigator.pushNamed(context, testGroundPage),
+                        () => ExtendedNavigator.root.push(Routes.testGroundPage),
                         "Test Ground"),
                   ],
                 ),
