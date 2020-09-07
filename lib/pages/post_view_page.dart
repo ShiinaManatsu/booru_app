@@ -178,7 +178,7 @@ class _PostViewPageState extends State<PostViewPage>
                                       Icon(Icons.arrow_back)),
                                   _buildQuadIconButton(() {
                                     if (kIsWeb) {
-                                      _launchURL(_post.fileUrl);
+                                      launch(_post.fileUrl);
                                       return;
                                     } else {
                                       taskBloc.addDownload.add(_post);
@@ -430,7 +430,17 @@ class _PostViewPageState extends State<PostViewPage>
                         style: new TextStyle(color: Colors.blue),
                         recognizer: new TapGestureRecognizer()
                           ..onTap = () {
-                            _launchURL(_post.sourceUrl);
+                            var url = _post.sourceUrl;
+                            if (url.startsWith("https://i.pximg.net/")) {
+                              var id = url.split('/').last;
+                              if (id.contains("_")) {
+                                id = id.split("_").first;
+                              } else {
+                                id = id.split(".").first;
+                              }
+                              url = "https://www.pixiv.net/artworks/$id";
+                            }
+                            launch(url);
                           },
                       ),
                     ),
@@ -510,14 +520,6 @@ class _PostViewPageState extends State<PostViewPage>
                   ),
                 )),
       );
-    }
-  }
-
-  _launchURL(String url) async {
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      return;
     }
   }
 

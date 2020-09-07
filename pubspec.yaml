@@ -18,8 +18,6 @@ dependencies:
   floating_search_bar: ^0.2.0
   photo_view: ^0.9.1
   sliding_up_panel: ^1.0.0
-  url_launcher: ^5.4.1
-  url_launcher_web: ^0.1.0+2
   devicelocale: ^0.2.1
   pull_to_refresh: ^1.5.8
   enum_to_string: ^1.0.8
@@ -47,6 +45,11 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
+  url_launcher: ^5.5.0
+  url_launcher_fde:
+    git:
+      url: git://github.com/google/flutter-desktop-embedding.git
+      path: plugins/flutter_plugins/url_launcher_fde
 
 # flutter pub pub run flutter_native_splash:create
 # flutter_native_splash:
