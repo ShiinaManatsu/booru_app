@@ -1,6 +1,9 @@
 import 'dart:math';
+import 'package:booru_app/extensions/shared_preferences_extension.dart';
 import "package:booru_app/main.dart";
+import 'package:booru_app/models/local/statistics.dart';
 import "package:booru_app/pages/widgets/per_platform_method.dart";
+import 'package:enum_to_string/enum_to_string.dart';
 import "package:esys_flutter_share/esys_flutter_share.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/gestures.dart";
@@ -87,6 +90,9 @@ class _PostViewPageState extends State<PostViewPage>
         }
       }
     });
+
+    Statistics.append(StatisticsItem(
+        postEntry: EnumToString.parse(PostEntry.App), post: _post));
   }
 
   @override
@@ -268,7 +274,8 @@ class _PostViewPageState extends State<PostViewPage>
             text: "${language.content.shareTo} ...");
       }, Icon(Icons.share)),
       _buildQuadIconButton(() {
-        Share.text("${_post.id}", "https://yande.re/post/show/${_post.id}", "text/plain;charset=UTF-8");
+        Share.text("${_post.id}", "https://yande.re/post/show/${_post.id}",
+            "text/plain;charset=UTF-8");
       }, Icon(Icons.link)),
     ]);
 

@@ -1,6 +1,8 @@
 import 'dart:math';
 import "package:booru_app/main.dart";
+import 'package:booru_app/models/local/statistics.dart';
 import "package:booru_app/pages/widgets/per_platform_method.dart";
+import 'package:enum_to_string/enum_to_string.dart';
 import "package:esys_flutter_share/esys_flutter_share.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/gestures.dart";
@@ -91,6 +93,8 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
         });
       }
     });
+    Statistics.append(StatisticsItem(
+        postEntry: EnumToString.parse(PostEntry.Link), post: _post));
   }
 
   @override

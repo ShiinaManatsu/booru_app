@@ -43,6 +43,26 @@ class Post implements Downloadable {
         height = json['height'],
         fileSize = json['file_size'];
 
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = id;
+    data['creator_id'] = creatorId;
+    data['source'] = sourceUrl;
+    data['score'] = score;
+    data['author'] = author;
+    data['tags'] = tags;
+    data['has_children'] = hasChildren;
+    data['rating'] = _rating;
+    data['preview_url'] = previewUrl;
+    data['sample_url'] = sampleUrl;
+    data['jpeg_url'] = jpegUrl;
+    data['file_url'] = fileUrl;
+    data['width'] = width;
+    data['height'] = height;
+    data['file_size'] = fileSize;
+    return data;
+  }
+
   double _widthInPanel = 0;
 
   Rating get rating {

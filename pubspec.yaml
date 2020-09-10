@@ -40,6 +40,7 @@ dependencies:
   uni_links: ^0.4.0
   auto_route: ^0.6.7
   animated_splash: ^1.0.0
+  syncfusion_flutter_charts: ^18.2.57
   # flutter_native_splash: ^0.1.9
 
   # The following adds the Cupertino Icons font to your application.

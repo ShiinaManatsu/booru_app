@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:auto_route/auto_route.dart';
+import 'package:booru_app/models/local/statistics.dart';
 import 'package:booru_app/router.gr.dart';
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:booru_app/settings/language.dart';
@@ -49,6 +50,11 @@ void main() {
   }
   globalInitial();
   _getInitPost();
+
+  Rx.timer(null, Duration(seconds: 1)).listen((event) async {
+    var s = await Statistics.getStatistics();
+    toast(s.toJson().toString());
+  });
 }
 
 _getInitPost() async {
