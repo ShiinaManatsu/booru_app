@@ -1,9 +1,5 @@
 import 'dart:io';
 import 'package:auto_route/auto_route.dart';
-import 'package:booru_app/models/rx/booru_api.dart';
-import 'package:booru_app/models/yande/post.dart';
-import 'package:booru_app/pages/home_page.dart';
-import 'package:booru_app/pages/post_view_page.dart';
 import 'package:booru_app/router.gr.dart';
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:booru_app/settings/language.dart';

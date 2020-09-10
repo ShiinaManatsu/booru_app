@@ -40,7 +40,6 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
   PhotoViewController _galleryController = PhotoViewController();
 
   /// Gallery page index
-  int _index;
   Post _post;
 
   // Top-Right panel usage
@@ -89,8 +88,6 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
               }
             }
           });
-
-          _index = BooruBloc.cache.indexOf(_post);
         });
       }
     });
@@ -102,23 +99,25 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark));
     return Scaffold(
-      body: _post!=null? PerPlatform(
-        android: SlidingUpPanel(
-            backdropColor: Colors.black,
-            backdropOpacity: 0.5,
-            minHeight: 60,
-            maxHeight: MediaQuery.of(context).size.height -
-                MediaQuery.of(context).padding.top,
-            parallaxEnabled: true,
-            backdropEnabled: true,
-            // When coollapsed
-            panel: _buildContentPanel(),
-            body: _buildGallery()),
-        windows: Stack(children: <Widget>[
-          _buildGallery(),
-          _buildTopRightPanel(MediaQuery.of(context).size.height),
-        ]),
-      ):Center(child: CircularProgressIndicator()),
+      body: _post != null
+          ? PerPlatform(
+              android: SlidingUpPanel(
+                  backdropColor: Colors.black,
+                  backdropOpacity: 0.5,
+                  minHeight: 60,
+                  maxHeight: MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top,
+                  parallaxEnabled: true,
+                  backdropEnabled: true,
+                  // When coollapsed
+                  panel: _buildContentPanel(),
+                  body: _buildGallery()),
+              windows: Stack(children: <Widget>[
+                _buildGallery(),
+                _buildTopRightPanel(MediaQuery.of(context).size.height),
+              ]),
+            )
+          : Center(child: CircularProgressIndicator()),
     );
   }
 
@@ -194,7 +193,7 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
                                   _buildQuadIconButton(() {
                                     accountOperation.add(() =>
                                         BooruAPI.votePost(
-                                            postID: _index,
+                                            postID: _post.id,
                                             type: VoteType.Favorite));
                                   }, Icon(Icons.favorite_border)),
                                 ]),
@@ -261,7 +260,7 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
     var buttonGroup = Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
       _buildQuadIconButton(() {
         accountOperation.add(
-            () => BooruAPI.votePost(postID: _index, type: VoteType.Favorite));
+            () => BooruAPI.votePost(postID: _post.id, type: VoteType.Favorite));
       }, Icon(Icons.favorite_border)),
       _buildQuadIconButton(() {
         taskBloc.addDownload.add(_post);
@@ -540,17 +539,11 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
           maxScale: 1.0,
           initialScale: PhotoViewComputedScale.contained,
           filterQuality: FilterQuality.high,
-          imageProvider: NetworkImage(BooruBloc.cache[index].sampleUrl),
+          imageProvider: NetworkImage(_post.sampleUrl),
           //heroAttributes: PhotoViewHeroAttributes(tag: _post)
         ),
-        pageController: PageController(initialPage: _index),
-        itemCount: BooruBloc.cache.length,
-        onPageChanged: (index) {
-          setState(() {
-            _index = index;
-            _post = BooruBloc.cache[_index];
-          });
-        },
+        pageController: PageController(),
+        itemCount: 1,
       ),
     );
   }

@@ -210,7 +210,7 @@ packages:
       name: devicelocale
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.2.3"
+    version: "0.3.2"
   dio:
     dependency: "direct main"
     description:
@@ -596,7 +596,7 @@ packages:
       name: rxdart
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.23.1"
+    version: "0.24.1"
   shared_preferences:
     dependency: "direct main"
     description:
@@ -673,7 +673,7 @@ packages:
     source: hosted
     version: "1.7.0"
   sqflite:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: sqflite
       url: "https://pub.flutter-io.cn"
@@ -785,7 +785,7 @@ packages:
     source: hosted
     version: "1.0.7"
   url_launcher_web:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: url_launcher_web
       url: "https://pub.flutter-io.cn"
@@ -835,4 +835,4 @@ packages:
     version: "2.2.1"
 sdks:
   dart: ">=2.8.0 <3.0.0"
-  flutter: ">=1.12.13+hotfix.5 <2.0.0"
+  flutter: ">=1.12.13+hotfix.6 <2.0.0"

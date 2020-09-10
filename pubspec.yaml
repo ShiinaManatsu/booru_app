@@ -1,7 +1,7 @@
 name: booru_app
 description: App for yande and konachan
 
-version: 0.1.6+2
+version: 0.1.7+3
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -12,16 +12,16 @@ dependencies:
   http: ^0.12.0+2
   dio: ^3.0.8
   shared_preferences: ">=0.5.8 <2.0.0"
-  rxdart: ^0.23.1
-  sqflite: ^1.1.7+1
+  rxdart: ^0.24.1
+  # sqflite: ^1.1.7+1
   esys_flutter_share: ^1.0.2
   floating_search_bar: ^0.2.0
   photo_view: ^0.9.1
   sliding_up_panel: ^1.0.0
-  devicelocale: ^0.2.1
+  devicelocale: ^0.3.2
   pull_to_refresh: ^1.5.8
-  enum_to_string: ^1.0.8
-  expandable: ^4.1.2
+  enum_to_string: ^1.0.9
+  expandable: ^4.1.4
   cached_network_image: ^2.0.0
   path_provider:
   open_file: ^3.0.1
@@ -33,7 +33,7 @@ dependencies:
   flutter_page_transition: ^0.1.6
   animated_stream_list: ^1.1.0
   # File path combiner
-  path: ^1.6.4
+  path: ^1.7.0
   # Use the navigation bar as a switcher
   flutter_snake_navigationbar: ^0.3.0
   filesystem_picker: ^1.0.2
@@ -46,10 +46,10 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
   url_launcher: ^5.5.0
-  url_launcher_fde:
-    git:
-      url: git://github.com/google/flutter-desktop-embedding.git
-      path: plugins/flutter_plugins/url_launcher_fde
+  # url_launcher_fde:
+  #   git:
+  #     url: git://github.com/google/flutter-desktop-embedding.git
+  #     path: plugins/flutter_plugins/url_launcher_fde
 
 # flutter pub pub run flutter_native_splash:create
 # flutter_native_splash:
