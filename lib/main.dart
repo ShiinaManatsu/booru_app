@@ -1,12 +1,16 @@
 import 'dart:io';
 import 'package:auto_route/auto_route.dart';
+import 'package:booru_app/extensions/shared_preferences_extension.dart';
 import 'package:booru_app/models/local/statistics.dart';
+import 'package:booru_app/pages/setting_page.dart';
 import 'package:booru_app/router.gr.dart';
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:booru_app/settings/language.dart';
 import 'package:booru_app/themes/theme_dark.dart';
+import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
 import 'package:overlay_support/overlay_support.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:rxdart/rxdart.dart';
 import 'android/notifier.dart';
 import 'themes/theme_light.dart';
@@ -29,6 +33,28 @@ void globalInitial() {
       .where((_) => AppSettings.localUsers.contains(
           (LocalUser user) => user.clientType == AppSettings.currentClient))
       .listen((event) => event());
+  getUriLinksStream().listen((link) {
+    ExtendedNavigator.root.push(Routes.postViewPageByPostID,
+        arguments:
+            PostViewPageByPostIDArguments(postID: link.pathSegments.last));
+  });
+  AppSettings.savePath.then((value) async {
+    if (value == null || value.isEmpty) {
+      AppSettings.setSavePath(
+          (await getExternalStorageDirectory()).absolute.path);
+    }
+  });
+
+  SharedPreferencesExtension.getTyped<String>("PreviewQuality").then((q) {
+    if (q != null) {
+      AppSettings.previewQuality =
+          EnumToString.fromString(PreviewQuality.values, q);
+    } else {
+      AppSettings.previewQuality = PreviewQuality.Medium;
+      SharedPreferencesExtension.setTyped(
+          "PreviewQuality", EnumToString.parse(PreviewQuality.Medium));
+    }
+  });
 }
 
 void _desktopInitHack() {
@@ -50,17 +76,6 @@ void main() {
     notifier = Notifier();
   }
   globalInitial();
-
-  // Rx.timer(null, Duration(seconds: 1)).listen((event) async {
-  //   var s = await Statistics.getStatistics();
-  //   toast(s.toJson().toString());
-  // });
-
-  getUriLinksStream().listen((link) {
-    ExtendedNavigator.root.push(Routes.postViewPageByPostID,
-        arguments:
-            PostViewPageByPostIDArguments(postID: link.pathSegments.last));
-  });
 }
 
 class MyApp extends StatelessWidget {

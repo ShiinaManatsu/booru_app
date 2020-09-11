@@ -9,7 +9,7 @@ import 'package:booru_app/pages/home_page.dart';
 
 class BooruBloc {
   // Subjects
-  /// Call to update posts
+  /// Call to update posts type
   final PublishSubject<UpdateArg> onUpdate;
 
   /// Call to refresh current posts
@@ -32,7 +32,7 @@ class BooruBloc {
   final Stream<PostState> state;
 
   /// Stream of the post page state
-  final Stream<int> pageState;
+  // final Stream<int> pageState;
 
   /// Stream of the date picker
   final Stream<DateTime> postDate;
@@ -41,6 +41,7 @@ class BooruBloc {
   static DateTime postDateTime = DateTime.now();
   static int page = 1;
   static List<Post> cache = List<Post>();
+  static List<List<Post>> evaluated = List<List<Post>>();
 
   factory BooruBloc(BooruAPI booru, double panelWidth) {
     final onUpdate = PublishSubject<UpdateArg>();
@@ -48,8 +49,7 @@ class BooruBloc {
     final onReset = PublishSubject();
     final onPage = PublishSubject<PageNavigationType>();
     final onPanelWidth = PublishSubject<double>();
-    final PublishSubject<DateTime Function(DateTime)> onDateTime =
-        PublishSubject<DateTime Function(DateTime)>();
+    final onDateTime = PublishSubject<DateTime Function(DateTime)>();
 
     UpdateArg last =
         UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1));
@@ -59,23 +59,21 @@ class BooruBloc {
       return _fetchState(last, booru);
     });
 
-    // Call on update
-    var onUpdateChange =
-        onUpdate.distinct().throttleTime(const Duration(seconds: 1));
-
     //pageChange=onPage.throttleTime(Duration(milliseconds: 500)).;
 
     // Laoding stete
-    var loadingState = onUpdateChange
+    var loadingState = onUpdate
         .switchMap<PostState>((x) => Stream<PostState>.value(PostLoading()));
 
     // Cache last update
-    onUpdate.distinct().listen((x) {
+    onUpdate.asBroadcastStream().listen((x) {
       last = x;
+      // refreshController.requestLoading();
+      // refreshController.footerMode.value = LoadStatus.loading;
     });
 
     // Fetch posts
-    var fetchingState = onUpdateChange
+    var fetchingState = onUpdate
         .switchMap<PostState>((UpdateArg x) => _fetchState(x, booru))
         .startWith(PostLoading());
 
@@ -84,37 +82,39 @@ class BooruBloc {
         loadingState.mergeWith([fetchingState, refresh]).asBroadcastStream();
 
     _state.listen((x) {
-      if (x is PostSuccess) {
-        cache = List.from((x).result);
-      }
+      if (x is PostSuccess) cache.addAll(List.from((x).result));
     });
 
     var panelWidthChanged =
         onPanelWidth.distinct().switchMap<PostState>((x) async* {
       panelWidth = x;
-      yield PostSuccess(await cache.arrange());
+      yield PostSuccess(cache);
     });
 
     var state = _state
         .mergeWith([panelWidthChanged])
         .startWith(PostSuccess(List<Post>()))
+        .switchMap<PostState>((x) async* {
+          if (x is PostSuccess)
+            yield PostSuccess(await (x).result.arrange());
+        })
         .asBroadcastStream();
 
-    var pagePrevious = onPage
-        .where((x) => BooruBloc.page > 1)
-        .where((x) => x == PageNavigationType.Previous)
-        .map<int>((x) => -1);
+    // var pagePrevious = onPage
+    //     .where((x) => BooruBloc.page > 1)
+    //     .where((x) => x == PageNavigationType.Previous)
+    //     .map<int>((x) => -1);
 
-    var pageNext = onPage
-        .where((x) => BooruBloc.page >= 1)
-        .where((x) => x == PageNavigationType.Next)
-        .map<int>((x) => 1);
+    // var pageNext = onPage
+    //     .where((x) => BooruBloc.page >= 1)
+    //     .where((x) => x == PageNavigationType.Next)
+    //     .map<int>((x) => 1);
 
     // Hold the page value
-    var pageStateChanged = pagePrevious.mergeWith([pageNext]);
+    // var pageStateChanged = pagePrevious.mergeWith([pageNext]);
 
-    var pageChanged = pageStateChanged.switchMap<int>((x) async* {
-      page += x;
+    onPage.listen((x) {
+      page += 1;
       if (last.fetchType == FetchType.Posts) {
         onUpdate.add(
             UpdateArg(fetchType: last.fetchType, arg: PostsArgs(page: page)));
@@ -123,16 +123,16 @@ class BooruBloc {
             fetchType: last.fetchType,
             arg: TaggedArgs(tags: (last.arg as TaggedArgs).tags, page: page)));
       }
-      yield page;
-    }).startWith(1);
-
-    // Reset page
-    var pageReset = onReset.switchMap<int>((x) async* {
-      page = 1;
-      yield page;
     });
 
-    var pageIndicator = pageChanged.mergeWith([pageReset]);
+    // Reset page
+    onReset.asBroadcastStream().listen((x) {
+      page = 1;
+      cache.clear();
+      evaluated.clear();
+    });
+
+    // var pageIndicator = pageChanged.mergeWith([pageReset]);
 
     // Date time changed
     var postDateChanged = onDateTime.switchMap<DateTime>((x) async* {
@@ -167,11 +167,10 @@ class BooruBloc {
     var postDate = postDateChanged.mergeWith([postDateReset]);
 
     return BooruBloc._(onUpdate, onRefresh, onReset, onPage, onPanelWidth,
-        onDateTime, state, pageIndicator, postDate);
+        onDateTime, state, postDate);
   }
 
   static Stream<PostState> _fetchState(UpdateArg arg, BooruAPI booru) async* {
-    refreshController.headerMode.value = RefreshStatus.refreshing;
     switch (arg.fetchType) {
       case FetchType.Posts:
         yield await _emptyCheck(BooruAPI.fetchPosts(args: arg.arg));
@@ -198,16 +197,19 @@ class BooruBloc {
   static Future<PostState> _emptyCheck(Future<List<Post>> future) async {
     try {
       var res = await future;
-      res = res.where((element) => element.rating==Rating.safe).toList();
+      // res = res.where((element) => element.rating == Rating.safe).toList();
       if (res.isEmpty) {
         refreshController.refreshCompleted();
+        refreshController.loadComplete();
         return PostEmpty();
       } else {
         refreshController.refreshCompleted();
-        return PostSuccess(await res.arrange());
+        refreshController.loadComplete();
+        return PostSuccess(res);
       }
     } catch (e) {
       refreshController.refreshCompleted();
+      refreshController.loadComplete();
       return PostError(error: e);
     }
   }
@@ -229,7 +231,7 @@ class BooruBloc {
       this.onPanelWidth,
       this.onDateTime,
       this.state,
-      this.pageState,
+      // this.pageState,
       this.postDate);
 }
 
