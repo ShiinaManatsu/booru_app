@@ -191,6 +191,7 @@ class _SettingPageState extends State<SettingPage> {
                             onChanged: (value) {
                               SharedPreferencesExtension.setTyped<bool>(
                                   "safemode", value);
+                              AppSettings.safeMode = value;
                               setState(() {
                                 _safeMode = value;
                               });
