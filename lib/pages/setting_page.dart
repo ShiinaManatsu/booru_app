@@ -174,7 +174,7 @@ class _SettingPageState extends State<SettingPage> {
                     ),
                     ExpansionPanel(
                       canTapOnHeader: true,
-                      isExpanded: expansionStatus[2],
+                      isExpanded: expansionStatus[3],
                       headerBuilder: (context, d) {
                         return ListTile(
                           title: Text(

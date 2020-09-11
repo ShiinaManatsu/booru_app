@@ -207,9 +207,9 @@ class ZhCN implements Content {
   @override
   String get quality => "质量";
   @override
-  String get mode => "安全";
+  String get safe => "安全";
   @override
-  String get safe => "模式";
+  String get mode => "模式";
 }
 
 class ZhHk implements Content {
@@ -317,9 +317,9 @@ class ZhHk implements Content {
   @override
   String get quality => "質量";
   @override
-  String get mode => "安全";
+  String get safe => "安全";
   @override
-  String get safe => "模式";
+  String get mode => "模式";
 }
 
 class EN implements Content {
@@ -427,9 +427,9 @@ class EN implements Content {
   @override
   String get quality => "Quality";
   @override
-  String get mode => "Safe";
+  String get safe => "Safe";
   @override
-  String get safe => "Mode";
+  String get mode => "Mode";
 }
 
 const Map<LanguageCodes, String> LanguageMap = {
