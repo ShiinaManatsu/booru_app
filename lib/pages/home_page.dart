@@ -50,7 +50,6 @@ class _HomePageState extends State<HomePage>
     language = Language();
     booruBloc = BooruBloc(BooruAPI(), panelWidth);
     taskBloc = TaskBloc();
-    _controller.addListener(_scrollListener);
 
     Rx.timer(() {}, Duration(milliseconds: 50)).listen((x) {
       booruBloc.onUpdate
@@ -96,10 +95,13 @@ class _HomePageState extends State<HomePage>
                 // backgroundColor: Colors.accents[1],
                 textStyle: Theme.of(context).textTheme.button,
               ),
-              onRefresh: () => booruBloc.onRefresh.add(null),
-              //onLoading: () => _onPageChange.add(PageNavigationType.Next),
+              onRefresh: () {
+                booruBloc.onRefresh.add(null);
+                booruBloc.onReset.add(null);
+              },
+              onLoading: () => _onPageChange.add(PageNavigationType.Next),
               enablePullDown: true,
-              //enablePullUp: true,
+              enablePullUp: _type == FetchType.Posts,
               controller: refreshController,
               child: CustomScrollView(
                 controller: _controller,
@@ -180,7 +182,7 @@ class _HomePageState extends State<HomePage>
                   SliverPostWaterfall(
                     controller: _controller,
                   ),
-                  _buildPageNavigator(),
+                  // _buildPageNavigator(),
                   _buildDatePicker(),
                 ],
               ),
@@ -325,6 +327,7 @@ class _HomePageState extends State<HomePage>
 
                     _buildDrawerButton(() {
                       Navigator.pop(context);
+                      booruBloc.onReset.add(null);
                       booruBloc.onUpdate.add(UpdateArg(
                           fetchType: FetchType.PopularRecent,
                           arg: PopularRecentArgs(period: _period)));
@@ -333,6 +336,7 @@ class _HomePageState extends State<HomePage>
 
                     _buildDrawerButton(() {
                       Navigator.pop(context);
+                      booruBloc.onReset.add(null);
                       booruBloc.onUpdate.add(UpdateArg(
                           fetchType: FetchType.PopularByDay,
                           arg: PopularByDayArgs(time: DateTime.now())));
@@ -342,6 +346,7 @@ class _HomePageState extends State<HomePage>
 
                     _buildDrawerButton(() {
                       Navigator.pop(context);
+                      booruBloc.onReset.add(null);
                       booruBloc.onUpdate.add(UpdateArg(
                           fetchType: FetchType.PopularByWeek,
                           arg: PopularByWeekArgs(time: DateTime.now())));
@@ -351,6 +356,7 @@ class _HomePageState extends State<HomePage>
 
                     _buildDrawerButton(() {
                       Navigator.pop(context);
+                      booruBloc.onReset.add(null);
                       booruBloc.onUpdate.add(UpdateArg(
                           fetchType: FetchType.PopularByMonth,
                           arg: PopularByMonthArgs(time: DateTime.now())));
@@ -462,6 +468,7 @@ class _HomePageState extends State<HomePage>
           _currentIndex = value;
           _period = Period.values[value];
         });
+        booruBloc.onReset.add(null);
         booruBloc.onUpdate.add(UpdateArg(
             fetchType: FetchType.PopularRecent,
             arg: PopularRecentArgs(period: _period)));
@@ -470,24 +477,24 @@ class _HomePageState extends State<HomePage>
   }
 
   /// Page navigator in the bottom
-  Widget _buildPageNavigator() {
-    return StreamBuilder<int>(
-        stream: booruBloc.pageState,
-        initialData: 1,
-        builder: (context, snapshot) {
-          if (_type == FetchType.Posts || _type == FetchType.Search) {
-            return _bottomNavigator(
-                data: snapshot.data.toString(),
-                leftButtonFunction: () =>
-                    _onPageChange.add(PageNavigationType.Previous),
-                rightButtonFunction: () =>
-                    _onPageChange.add(PageNavigationType.Next),
-                middleTextFunction: (x) => print(x.buttons));
-          } else {
-            return SliverList(delegate: SliverChildListDelegate([]));
-          }
-        });
-  }
+  // Widget _buildPageNavigator() {
+  //   return StreamBuilder<int>(
+  //       stream: booruBloc.pageState,
+  //       initialData: 1,
+  //       builder: (context, snapshot) {
+  //         if (_type == FetchType.Posts || _type == FetchType.Search) {
+  //           return _bottomNavigator(
+  //               data: snapshot.data.toString(),
+  //               leftButtonFunction: () =>
+  //                   _onPageChange.add(PageNavigationType.Previous),
+  //               rightButtonFunction: () =>
+  //                   _onPageChange.add(PageNavigationType.Next),
+  //               middleTextFunction: (x) => print(x.buttons));
+  //         } else {
+  //           return SliverList(delegate: SliverChildListDelegate([]));
+  //         }
+  //       });
+  // }
 
   /// Date pikcer in the bottom
   Widget _buildDatePicker() {

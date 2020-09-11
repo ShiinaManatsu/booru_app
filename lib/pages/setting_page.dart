@@ -15,7 +15,7 @@ class SettingPage extends StatefulWidget {
 
 class _SettingPageState extends State<SettingPage> {
   var locationIsExpand = true;
-  double postLimit = 0;
+  double postLimit = 50;
   var setLimit = PublishSubject<double>();
   String savePath = "";
 
@@ -133,7 +133,7 @@ class _SettingPageState extends State<SettingPage> {
                               },
                               min: 40,
                               max: 100,
-                              divisions: 50,
+                              divisions: 60,
                             )
                           ],
                         ),
