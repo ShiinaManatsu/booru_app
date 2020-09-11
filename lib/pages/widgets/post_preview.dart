@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:booru_app/pages/setting_page.dart';
 import 'package:booru_app/router.gr.dart';
 import 'package:flutter/material.dart';
 import 'package:booru_app/models/yande/post.dart';
@@ -15,11 +16,28 @@ class PostPreview extends StatefulWidget {
 }
 
 class _PostPreviewState extends State<PostPreview>
-    with AutomaticKeepAliveClientMixin{
+    with AutomaticKeepAliveClientMixin {
   bool _isHover = false;
 
   @override
   Widget build(BuildContext context) {
+    String url;
+    switch (AppSettings.previewQuality) {
+      case PreviewQuality.Low:
+        url = widget.post.previewUrl;
+        break;
+      case PreviewQuality.Medium:
+        url = widget.post.sampleUrl;
+        break;
+      case PreviewQuality.High:
+        url = widget.post.jpegUrl;
+        break;
+      case PreviewQuality.Original:
+        url = widget.post.fileUrl;
+        break;
+      default:
+    }
+
     super.build(context);
     return MouseRegion(
       onEnter: (event) => setState(() => _isHover = true),
@@ -38,7 +56,7 @@ class _PostPreviewState extends State<PostPreview>
           child: Hero(
             tag: widget.post,
             child: Image.network(
-              widget.post.previewUrl,
+              url ?? widget.post.sampleUrl,
               height: AppSettings.fixedPostHeight - postPreviewBorder * 2,
               width: widget.post.widthInPanel - postPreviewBorder * 2,
               fit: BoxFit.cover,

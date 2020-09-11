@@ -426,11 +426,14 @@ class _HomePageState extends State<HomePage>
   }
 
   int _currentIndex = 0;
-  TextStyle _unSelected = TextStyle(color: Colors.black54);
-  TextStyle _selectedTextStyle = TextStyle(color: Colors.white);
 
   /// Peroid picker
   Widget _buildPeroidChip() {
+    TextStyle _unSelected = Theme.of(context).textTheme.button.copyWith(
+        color: Theme.of(context).textTheme.button.color.withOpacity(0.5));
+    TextStyle _selectedTextStyle =
+        Theme.of(context).textTheme.button.copyWith(color: Colors.white70);
+
     return SnakeNavigationBar(
       snakeShape: SnakeShape.rectangle,
       selectedIconColor: Colors.white,
@@ -468,6 +471,7 @@ class _HomePageState extends State<HomePage>
           _currentIndex = value;
           _period = Period.values[value];
         });
+        refreshController.requestRefresh();
         booruBloc.onReset.add(null);
         booruBloc.onUpdate.add(UpdateArg(
             fetchType: FetchType.PopularRecent,

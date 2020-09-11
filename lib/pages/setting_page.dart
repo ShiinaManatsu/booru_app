@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:booru_app/extensions/shared_preferences_extension.dart';
 import 'package:booru_app/main.dart';
+import 'package:enum_to_string/enum_to_string.dart';
 import 'package:filesystem_picker/filesystem_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:booru_app/pages/widgets/sliver_floating_bar.dart';
@@ -19,7 +21,9 @@ class _SettingPageState extends State<SettingPage> {
   var setLimit = PublishSubject<double>();
   String savePath = "";
 
-  var expansionStatus = [false, false];
+  var expansionStatus = [false, false, false];
+
+  PreviewQuality quality = AppSettings.previewQuality;
 
   @override
   void initState() {
@@ -138,6 +142,34 @@ class _SettingPageState extends State<SettingPage> {
                           ],
                         ),
                       ),
+                    ),
+                    ExpansionPanel(
+                      canTapOnHeader: true,
+                      isExpanded: expansionStatus[2],
+                      headerBuilder: (context, d) {
+                        return ListTile(
+                          title: Text(
+                              "${language.content.preview} ${language.content.quality}"),
+                        );
+                      },
+                      body: ListTile(
+                          title: DropdownButton<PreviewQuality>(
+                        items: PreviewQuality.values
+                            .map((e) => DropdownMenuItem(
+                                  value: e,
+                                  child: Text(EnumToString.parse(e)),
+                                ))
+                            .toList(),
+                        value: quality,
+                        onChanged: (value) {
+                          setState(() {
+                            quality = value;
+                            AppSettings.previewQuality = value;
+                            SharedPreferencesExtension.setTyped(
+                                "PreviewQuality", EnumToString.parse(value));
+                          });
+                        },
+                      )),
                     )
                   ],
                 ),
@@ -149,3 +181,5 @@ class _SettingPageState extends State<SettingPage> {
     );
   }
 }
+
+enum PreviewQuality { Low, Medium, High, Original }

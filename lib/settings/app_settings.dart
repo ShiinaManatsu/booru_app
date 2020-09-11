@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:booru_app/extensions/shared_preferences_extension.dart';
 import 'package:booru_app/models/rx/booru_api.dart';
+import 'package:booru_app/pages/setting_page.dart';
 
 /// Settings fot the whole application.
 ///
@@ -18,6 +19,8 @@ class AppSettings {
 
   /// The first day that konanchan has datas
   static DateTime konachanFirstday = DateTime(2008, 2);
+
+  static PreviewQuality previewQuality = PreviewQuality.Medium;
 
   /// Photo save location
   static Future<String> get savePath async =>

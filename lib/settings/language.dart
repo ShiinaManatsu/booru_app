@@ -96,6 +96,8 @@ abstract class Content {
   String get currentLimit;
   String get select;
   String get folder;
+  String get preview;
+  String get quality;
 }
 
 class ZhCN implements Content {
@@ -198,6 +200,10 @@ class ZhCN implements Content {
   String get select => "选择";
   @override
   String get folder => "文件夹";
+  @override
+  String get preview => "预览";
+  @override
+  String get quality => "质量";
 }
 
 class ZhHk implements Content {
@@ -300,6 +306,10 @@ class ZhHk implements Content {
   String get select => "選擇";
   @override
   String get folder => "文件夾";
+  @override
+  String get preview => "預覽";
+  @override
+  String get quality => "質量";
 }
 
 class EN implements Content {
@@ -402,6 +412,10 @@ class EN implements Content {
   String get select => "Select";
   @override
   String get folder => "Folder";
+  @override
+  String get preview => "Preview";
+  @override
+  String get quality => "Quality";
 }
 
 const Map<LanguageCodes, String> LanguageMap = {
