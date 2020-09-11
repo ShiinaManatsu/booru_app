@@ -53,7 +53,7 @@ class _SettingPageState extends State<SettingPage> {
       body: CustomScrollView(
         slivers: <Widget>[
           SliverFloatingBar(
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).backgroundColor,
             automaticallyImplyLeading: true,
             title: Text("${language.content.settings}"),
             leading: IconButton(
@@ -83,7 +83,8 @@ class _SettingPageState extends State<SettingPage> {
                       },
                       body: ListTile(
                         trailing: FlatButton(
-                          child: Text("Butotn"),
+                          child: Text(
+                              "${language.content.select} ${language.content.folder}"),
                           onPressed: () async {
                             String path = await FilesystemPicker.open(
                               title: 'Save to folder',
@@ -102,7 +103,8 @@ class _SettingPageState extends State<SettingPage> {
                             });
                           },
                         ),
-                        title: Text("$savePath"),
+                        title: Text("$savePath",
+                            style: Theme.of(context).textTheme.button),
                       ),
                     ),
                     ExpansionPanel(

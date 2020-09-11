@@ -75,108 +75,115 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-        statusBarColor: Colors.white.withOpacity(0.95),
-        statusBarIconBrightness: Brightness.dark));
+        statusBarColor: Theme.of(context).backgroundColor.withOpacity(0.95),
+        statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
     super.build(context);
     panelWidth = MediaQuery.of(context).size.width - 8; // Minus padding = 8
     booruBloc.onPanelWidth.add(panelWidth);
     var _controller = new ScrollController();
-    return Scaffold(
-        bottomNavigationBar:
-            _type == FetchType.PopularRecent ? _buildPeroidChip() : null,
-        drawer: _appDrawer(),
-        drawerEdgeDragWidth: 100,
-        body: Builder(
-          builder: (context) => SmartRefresher(
-            header: WaterDropMaterialHeader(
-              backgroundColor: Colors.accents[1],
-            ),
-            onRefresh: () => booruBloc.onRefresh.add(null),
-            //onLoading: () => _onPageChange.add(PageNavigationType.Next),
-            enablePullDown: true,
-            //enablePullUp: true,
-            controller: refreshController,
-            child: CustomScrollView(
-              controller: _controller,
-              physics: BouncingScrollPhysics(),
-              slivers: <Widget>[
-                SliverFloatingBar(
-                  automaticallyImplyLeading: false,
-                  backgroundColor: Colors.white.withOpacity(0.95),
-                  floating: Platform.isAndroid,
-                  pinned: true,
-                  title: Container(
-                    margin: EdgeInsets.only(bottom: 5), // Fix the displacement
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: <Widget>[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            IconButton(
-                              onPressed: () =>
-                                  Scaffold.of(context).openDrawer(),
-                              icon: Icon(Icons.menu),
-                            ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                Center(
-                                  child: DropdownButton(
-                                    underline: Container(),
-                                    items: [
-                                      DropdownMenuItem(
-                                        child: Text("Yande.re"),
-                                        value: ClientType.Yande,
-                                      ),
-                                      DropdownMenuItem(
-                                        child: Text("Konachan"),
-                                        value: ClientType.Konachan,
-                                      )
-                                    ],
-                                    iconSize: 0,
-                                    onChanged: onDropdownChanged,
-                                    value: AppSettings.currentClient,
-                                  ),
-                                )
-                              ],
-                            )
-                          ],
-                        ),
-                        AnimatedSize(
-                          duration: Duration(milliseconds: 500),
-                          vsync: this,
-                          curve: Curves.ease,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.max,
+    return SafeArea(
+      child: Scaffold(
+          bottomNavigationBar:
+              _type == FetchType.PopularRecent ? _buildPeroidChip() : null,
+          drawer: _appDrawer(),
+          drawerEdgeDragWidth: 100,
+          body: Builder(
+            builder: (context) => SmartRefresher(
+              header: ClassicHeader(
+                // backgroundColor: Colors.accents[1],
+                textStyle: Theme.of(context).textTheme.button,
+              ),
+              onRefresh: () => booruBloc.onRefresh.add(null),
+              //onLoading: () => _onPageChange.add(PageNavigationType.Next),
+              enablePullDown: true,
+              //enablePullUp: true,
+              controller: refreshController,
+              child: CustomScrollView(
+                controller: _controller,
+                physics: BouncingScrollPhysics(),
+                slivers: <Widget>[
+                  SliverFloatingBar(
+                    automaticallyImplyLeading: false,
+                    backgroundColor:
+                        Theme.of(context).backgroundColor.withOpacity(0.95),
+                    floating: Platform.isAndroid,
+                    // pinned: true,
+                    title: Container(
+                      margin:
+                          EdgeInsets.only(bottom: 5), // Fix the displacement
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: <Widget>[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               IconButton(
-                                onPressed: () => ExtendedNavigator.root
-                                    .push(
-                                        Routes.searchTaggedPostsPage,
-                                        arguments:
-                                            SearchTaggedPostsPageArguments(
-                                                key: _searchPage)),
-                                icon: Icon(Icons.search),
+                                onPressed: () =>
+                                    Scaffold.of(context).openDrawer(),
+                                icon: Icon(Icons.menu),
                               ),
-                              _searchNabor
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  Center(
+                                    child: DropdownButton(
+                                      underline: Container(),
+                                      items: [
+                                        DropdownMenuItem(
+                                            child: Text("Yande.re",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .button),
+                                            value: ClientType.Yande),
+                                        DropdownMenuItem(
+                                            child: Text("Konachan",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .button),
+                                            value: ClientType.Konachan)
+                                      ],
+                                      iconSize: 0,
+                                      onChanged: onDropdownChanged,
+                                      value: AppSettings.currentClient,
+                                    ),
+                                  )
+                                ],
+                              )
                             ],
                           ),
-                        )
-                      ],
+                          AnimatedSize(
+                            duration: Duration(milliseconds: 500),
+                            vsync: this,
+                            curve: Curves.ease,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.max,
+                              children: <Widget>[
+                                IconButton(
+                                  onPressed: () => ExtendedNavigator.root.push(
+                                      Routes.searchTaggedPostsPage,
+                                      arguments: SearchTaggedPostsPageArguments(
+                                          key: _searchPage)),
+                                  icon: Icon(Icons.search),
+                                ),
+                                _searchNabor
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                SliverPostWaterfall(
-                  controller: _controller,
-                ),
-                _buildPageNavigator(),
-                _buildDatePicker()
-              ],
+                  SliverPostWaterfall(
+                    controller: _controller,
+                  ),
+                  _buildPageNavigator(),
+                  _buildDatePicker()
+                ],
+              ),
             ),
-          ),
-        ));
+          )),
+    );
   }
 
   void onDropdownChanged(item) {
@@ -269,7 +276,7 @@ class _HomePageState extends State<HomePage>
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
         child: Container(
-          color: Colors.white.withOpacity(0.8),
+          color: Theme.of(context).backgroundColor.withOpacity(0.8),
           width: 300,
           alignment: Alignment.topLeft,
           child: SingleChildScrollView(
@@ -303,8 +310,10 @@ class _HomePageState extends State<HomePage>
                     }, "${language.content.posts}", FetchType.Posts),
 
                     _buildDrawerButton(
-                        () => 
-                        ExtendedNavigator.root.push(Routes.searchTaggedPostsPage,arguments: SearchTaggedPostsPageArguments(key: _searchPage)),
+                        () => ExtendedNavigator.root.push(
+                            Routes.searchTaggedPostsPage,
+                            arguments: SearchTaggedPostsPageArguments(
+                                key: _searchPage)),
                         "${language.content.search}",
                         FetchType.Search),
 
@@ -354,7 +363,8 @@ class _HomePageState extends State<HomePage>
                         () => ExtendedNavigator.root.push(Routes.settingPage),
                         "${language.content.about}"),
                     _buildDrawerEmptyButton(
-                        () => ExtendedNavigator.root.push(Routes.testGroundPage),
+                        () =>
+                            ExtendedNavigator.root.push(Routes.testGroundPage),
                         "Test Ground"),
                   ],
                 ),
@@ -379,11 +389,13 @@ class _HomePageState extends State<HomePage>
       child: FlatButton(
         onPressed: func,
         color: fetchType == _type ? Colors.pink[300] : Colors.transparent,
-        highlightColor: Colors.amber,
+        // highlightColor: Colors.amber,
         hoverColor: Colors.pink[50],
         colorBrightness:
             fetchType != _type ? Brightness.light : Brightness.dark,
-        child: Container(alignment: Alignment.centerLeft, child: Text(text)),
+        child: Container(
+            alignment: Alignment.centerLeft,
+            child: Text(text, style: Theme.of(context).textTheme.button)),
       ),
     );
   }
@@ -397,7 +409,9 @@ class _HomePageState extends State<HomePage>
         onPressed: onPressed,
         highlightColor: Colors.amber,
         hoverColor: Colors.pink[50],
-        child: Container(alignment: Alignment.centerLeft, child: Text(text)),
+        child: Container(
+            alignment: Alignment.centerLeft,
+            child: Text(text, style: Theme.of(context).textTheme.button)),
       ),
     );
   }
@@ -575,7 +589,7 @@ class _HomePageState extends State<HomePage>
         children: <Widget>[
           Text(
             text,
-            style: TextStyle(fontSize: 20),
+            style: Theme.of(context).textTheme.headline6,
           ),
           Flexible(
             fit: FlexFit.tight,
@@ -583,7 +597,7 @@ class _HomePageState extends State<HomePage>
               height: 0.5,
               margin: EdgeInsets.only(left: 10),
               decoration: BoxDecoration(
-                color: Colors.black45,
+                color: Theme.of(context).primaryColorLight.withOpacity(0.45),
               ),
             ),
           ),

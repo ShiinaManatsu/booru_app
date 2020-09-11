@@ -74,9 +74,10 @@ class _PostViewPageState extends State<PostViewPage>
 
     _post.tags.split(" ").forEach((x) async {
       var res = await TagDataBase.searchTags(x);
+      var t = res.firstWhere((f) => f.content == x);
       if (mounted) {
         setState(() {
-          tags.add(res.firstWhere((f) => f.content == x));
+          tags.add(t);
         });
       }
     });
@@ -96,15 +97,24 @@ class _PostViewPageState extends State<PostViewPage>
   }
 
   @override
+  void dispose() {
+    super.dispose();
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+        statusBarColor: Theme.of(context).backgroundColor.withOpacity(0.95),
+        statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
+  }
+
+  @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark));
+        statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
     return Scaffold(
       body: PerPlatform(
         android: SlidingUpPanel(
             backdropColor: Colors.black,
             backdropOpacity: 0.5,
+            color: Theme.of(context).backgroundColor,
             minHeight: 60,
             maxHeight: MediaQuery.of(context).size.height -
                 MediaQuery.of(context).padding.top,
@@ -258,35 +268,39 @@ class _PostViewPageState extends State<PostViewPage>
 
   Widget _buildContentPanel() {
     var buttonGroup = Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-      _buildQuadIconButton(() {
-        accountOperation.add(
-            () => BooruAPI.votePost(postID: _index, type: VoteType.Favorite));
-      }, Icon(Icons.favorite_border)),
-      _buildQuadIconButton(() {
-        taskBloc.addDownload.add(_post);
-      }, Icon(Icons.file_download)),
-      _buildQuadIconButton(() => _galleryController.rotation -= pi / 2,
-          Icon(Icons.rotate_90_degrees_ccw)),
-      _buildQuadIconButton(() async {
-        var response = await http.get(_post.jpegUrl);
-        await Share.file(
-            "${_post.id}", "${_post.id}.png", response.bodyBytes, "image/png",
-            text: "${language.content.shareTo} ...");
-      }, Icon(Icons.share)),
-      _buildQuadIconButton(() {
-        Share.text("${_post.id}", "https://yande.re/post/show/${_post.id}",
-            "text/plain;charset=UTF-8");
-      }, Icon(Icons.link)),
+      _buildQuadIconButton(
+          () => accountOperation.add(
+              () => BooruAPI.votePost(postID: _index, type: VoteType.Favorite)),
+          Icon(Icons.favorite_border,
+              color: Theme.of(context).textTheme.button.color)),
+      _buildQuadIconButton(
+          () => taskBloc.addDownload.add(_post),
+          Icon(Icons.file_download,
+              color: Theme.of(context).textTheme.button.color)),
+      _buildQuadIconButton(
+          () => _galleryController.rotation -= pi / 2,
+          Icon(Icons.rotate_90_degrees_ccw,
+              color: Theme.of(context).textTheme.button.color)),
+      _buildQuadIconButton(
+          () async => await Share.file("${_post.id}", "${_post.id}.png",
+              (await http.get(_post.jpegUrl)).bodyBytes, "image/png",
+              text: "${language.content.shareTo} ..."),
+          Icon(Icons.share, color: Theme.of(context).textTheme.button.color)),
+      _buildQuadIconButton(
+          () => Share.text(
+              "${_post.id}",
+              "https://yande.re/post/show/${_post.id}",
+              "text/plain;charset=UTF-8"),
+          Icon(Icons.link, color: Theme.of(context).textTheme.button.color)),
     ]);
 
     var topBar = PerPlatform(
       windows: Container(
-          color: Colors.white,
           alignment: Alignment.centerLeft,
           height: barHeight,
           child: buttonGroup),
       android: Container(
-          color: Colors.white,
+          color: Theme.of(context).backgroundColor,
           alignment: Alignment.centerLeft,
           height: barHeight,
           child: Stack(
@@ -537,13 +551,12 @@ class _PostViewPageState extends State<PostViewPage>
         backgroundDecoration: BoxDecoration(color: Colors.transparent),
         scrollPhysics: const BouncingScrollPhysics(),
         builder: (context, index) => PhotoViewGalleryPageOptions(
-          controller: _galleryController,
-          maxScale: 1.0,
-          initialScale: PhotoViewComputedScale.contained,
-          filterQuality: FilterQuality.high,
-          imageProvider: NetworkImage(BooruBloc.cache[index].sampleUrl),
-          //heroAttributes: PhotoViewHeroAttributes(tag: _post)
-        ),
+            controller: _galleryController,
+            maxScale: 1.0,
+            initialScale: PhotoViewComputedScale.contained,
+            filterQuality: FilterQuality.high,
+            imageProvider: NetworkImage(BooruBloc.cache[index].sampleUrl),
+            heroAttributes: PhotoViewHeroAttributes(tag: _post)),
         pageController: PageController(initialPage: _index),
         itemCount: BooruBloc.cache.length,
         onPageChanged: (index) {

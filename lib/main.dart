@@ -4,6 +4,7 @@ import 'package:booru_app/models/local/statistics.dart';
 import 'package:booru_app/router.gr.dart';
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:booru_app/settings/language.dart';
+import 'package:booru_app/themes/theme_dark.dart';
 import 'package:flutter/material.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:rxdart/rxdart.dart';
@@ -51,10 +52,10 @@ void main() {
   globalInitial();
   _getInitPost();
 
-  Rx.timer(null, Duration(seconds: 1)).listen((event) async {
-    var s = await Statistics.getStatistics();
-    toast(s.toJson().toString());
-  });
+  // Rx.timer(null, Duration(seconds: 1)).listen((event) async {
+  //   var s = await Statistics.getStatistics();
+  //   toast(s.toJson().toString());
+  // });
 }
 
 _getInitPost() async {
@@ -72,8 +73,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-        statusBarColor: Colors.white.withOpacity(0.95),
-        statusBarIconBrightness: Brightness.dark));
+        statusBarColor: Theme.of(context).backgroundColor.withOpacity(0.95),
+        statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
     // uniLink.delay(Duration(seconds: 2)).listen((event) {
     //   toast(event);
     // });
@@ -81,8 +82,14 @@ class MyApp extends StatelessWidget {
 
     return OverlaySupport(
         child: MaterialApp(
-            builder: ExtendedNavigator<Router>(router: Router()),
+            builder: (context, child) {
+              final MediaQueryData data = MediaQuery.of(context);
+              return MediaQuery(
+                  data: data.copyWith(textScaleFactor: data.textScaleFactor),
+                  child: ExtendedNavigator<Router>(router: Router()));
+            },
             title: 'Home',
+            darkTheme: darkTheme,
             theme: lightTheme));
   }
 }

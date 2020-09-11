@@ -94,6 +94,8 @@ abstract class Content {
   String get newLocationHere;
   String get singlePagePostLoadLimit;
   String get currentLimit;
+  String get select;
+  String get folder;
 }
 
 class ZhCN implements Content {
@@ -192,6 +194,10 @@ class ZhCN implements Content {
   String get singlePagePostLoadLimit => "图片单页加载数量";
   @override
   String get currentLimit => "当前数量";
+  @override
+  String get select => "选择";
+  @override
+  String get folder => "文件夹";
 }
 
 class ZhHk implements Content {
@@ -290,6 +296,10 @@ class ZhHk implements Content {
   String get singlePagePostLoadLimit => "";
   @override
   String get currentLimit => "";
+  @override
+  String get select => "選擇";
+  @override
+  String get folder => "文件夾";
 }
 
 class EN implements Content {
@@ -388,6 +398,10 @@ class EN implements Content {
   String get singlePagePostLoadLimit => "Single page post load limit";
   @override
   String get currentLimit => "Current Limit";
+  @override
+  String get select => "Select";
+  @override
+  String get folder => "Folder";
 }
 
 const Map<LanguageCodes, String> LanguageMap = {

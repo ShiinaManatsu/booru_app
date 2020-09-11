@@ -15,7 +15,7 @@ class PostPreview extends StatefulWidget {
 }
 
 class _PostPreviewState extends State<PostPreview>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin{
   bool _isHover = false;
 
   @override

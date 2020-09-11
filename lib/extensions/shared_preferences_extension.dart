@@ -2,28 +2,29 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// An extension for easily get preferences
 /// The extension method cannot apply to package class
-class SharedPreferencesExtension{
+class SharedPreferencesExtension {
   /// Set the type value from SharedPreferences
   /// Where [T] is the type you want ot save
-  static setTyped<T>(String key, T value) async {
+  static Future<bool> setTyped<T>(String key, T value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     switch (T) {
       case bool:
-        prefs.setBool(key, value as bool);
+        return prefs.setBool(key, value as bool);
         break;
       case double:
-        prefs.setDouble(key, value as double);
+        return prefs.setDouble(key, value as double);
         break;
       case int:
-        prefs.setInt(key, value as int);
+        return prefs.setInt(key, value as int);
         break;
       case String:
-        prefs.setString(key, value as String);
+        return prefs.setString(key, value as String);
         break;
       case List:
-        prefs.setStringList(key, value as List<String>);
+        return prefs.setStringList(key, value as List<String>);
         break;
       default:
+        return false;
         break;
     }
   }

@@ -49,7 +49,7 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage>
   Widget build(BuildContext context) {
     return Scaffold(
         body: FloatingSearchBar.builder(
-      backgroundColor: Colors.white.withOpacity(0.95),
+      backgroundColor: Theme.of(context).backgroundColor.withOpacity(0.95),
       itemCount: _tags.length,
       itemBuilder: (BuildContext context, int index) {
         return ListTile(

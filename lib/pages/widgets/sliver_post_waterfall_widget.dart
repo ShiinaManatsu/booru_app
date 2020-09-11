@@ -7,8 +7,7 @@ import 'post_preview.dart';
 class SliverPostWaterfall extends StatefulWidget {
   final ScrollController controller;
 
-  SliverPostWaterfall({this.controller, Key key})
-      : super(key: key);
+  SliverPostWaterfall({this.controller, Key key}) : super(key: key);
 
   @override
   _SliverPostWaterfallState createState() => _SliverPostWaterfallState();
@@ -37,14 +36,13 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
               return Container(
                 child: SingleChildScrollView(
                   child: Padding(
-                      padding: const EdgeInsets.fromLTRB(4, 5, 4, 0), // Don't know why 1px shift
+                      padding: const EdgeInsets.fromLTRB(
+                          4, 5, 4, 0), // Don't know why 1px shift
                       child: Wrap(
                         spacing: 4,
                         runSpacing: 4,
-                        children: <Widget>[]
-                          ..addAll(state.result.map((x) => PostPreview(
-                                post: x,
-                              ))),
+                        children: <Widget>[]..addAll(state.result.map((x) =>
+                            RepaintBoundary(child: PostPreview(post: x)))),
                       )),
                 ),
               );
