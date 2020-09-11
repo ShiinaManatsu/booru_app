@@ -17,6 +17,7 @@ import 'package:booru_app/pages/widgets/sliver_floating_bar.dart';
 import 'package:booru_app/pages/widgets/sliver_post_waterfall_widget.dart';
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:booru_app/models/rx/task_bloc.dart';
+import 'package:uni_links/uni_links.dart';
 
 BooruBloc booruBloc;
 TaskBloc taskBloc;
@@ -40,13 +41,16 @@ class _HomePageState extends State<HomePage>
   double _drawerButtonHeight = 48; // Drawer button height
   Period _period = Period.None;
   Widget _searchNabor = Text(searchTerm);
+  final _controller = new ScrollController();
 
   @override
   void initState() {
     super.initState();
+    _getInitPost();
     language = Language();
     booruBloc = BooruBloc(BooruAPI(), panelWidth);
     taskBloc = TaskBloc();
+    _controller.addListener(_scrollListener);
 
     Rx.timer(() {}, Duration(milliseconds: 50)).listen((x) {
       booruBloc.onUpdate
@@ -80,7 +84,6 @@ class _HomePageState extends State<HomePage>
     super.build(context);
     panelWidth = MediaQuery.of(context).size.width - 8; // Minus padding = 8
     booruBloc.onPanelWidth.add(panelWidth);
-    var _controller = new ScrollController();
     return SafeArea(
       child: Scaffold(
           bottomNavigationBar:
@@ -178,7 +181,7 @@ class _HomePageState extends State<HomePage>
                     controller: _controller,
                   ),
                   _buildPageNavigator(),
-                  _buildDatePicker()
+                  _buildDatePicker(),
                 ],
               ),
             ),
@@ -604,6 +607,32 @@ class _HomePageState extends State<HomePage>
         ],
       ),
     );
+  }
+
+  _scrollListener() {
+    // Reach the bottom
+    if (!refreshController.isLoading &&
+        !refreshController.isRefresh &&
+        !_controller.position.outOfRange &&
+        _controller.offset >= _controller.position.maxScrollExtent - 800) {
+      print('Reach the bottom');
+    }
+    // // Reach the top
+    // if (_controller.offset <= _controller.position.minScrollExtent &&
+    //     !_controller.position.outOfRange) {
+    //     }
+  }
+
+  _getInitPost() async {
+    var link = await getInitialLink();
+    if (link == null) return;
+
+    if (link.isNotEmpty) {
+      ExtendedNavigator.root.pushAndRemoveUntil(
+          Routes.postViewPageByPostID, (route) => false,
+          arguments:
+              PostViewPageByPostIDArguments(postID: link.split("/").last));
+    }
   }
 
   @override

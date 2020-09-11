@@ -50,23 +50,17 @@ void main() {
     notifier = Notifier();
   }
   globalInitial();
-  _getInitPost();
 
   // Rx.timer(null, Duration(seconds: 1)).listen((event) async {
   //   var s = await Statistics.getStatistics();
   //   toast(s.toJson().toString());
   // });
-}
 
-_getInitPost() async {
-  var link = await getInitialLink();
-  if (link == null) return;
-
-  if (link.isNotEmpty) {
-    ExtendedNavigator.root.pushAndRemoveUntil(
-        Routes.postViewPageByPostID, (route) => false,
-        arguments: PostViewPageByPostIDArguments(postID: link.split("/").last));
-  }
+  getUriLinksStream().listen((link) {
+    ExtendedNavigator.root.push(Routes.postViewPageByPostID,
+        arguments:
+            PostViewPageByPostIDArguments(postID: link.pathSegments.last));
+  });
 }
 
 class MyApp extends StatelessWidget {

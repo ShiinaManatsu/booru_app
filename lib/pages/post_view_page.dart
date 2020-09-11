@@ -296,6 +296,7 @@ class _PostViewPageState extends State<PostViewPage>
 
     var topBar = PerPlatform(
       windows: Container(
+          color: Theme.of(context).backgroundColor,
           alignment: Alignment.centerLeft,
           height: barHeight,
           child: buttonGroup),

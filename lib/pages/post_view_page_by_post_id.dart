@@ -71,6 +71,8 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
       if (mounted) {
         setState(() {
           _post = value.first;
+          Statistics.append(StatisticsItem(
+              postEntry: EnumToString.parse(PostEntry.Link), post: _post));
 
           _post.tags.split(" ").forEach((x) async {
             var res = await TagDataBase.searchTags(x);
@@ -93,10 +95,7 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
         });
       }
     });
-    Statistics.append(StatisticsItem(
-        postEntry: EnumToString.parse(PostEntry.Link), post: _post));
   }
-
 
   @override
   void dispose() {
@@ -117,6 +116,7 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
               android: SlidingUpPanel(
                   backdropColor: Colors.black,
                   backdropOpacity: 0.5,
+                  color: Theme.of(context).backgroundColor,
                   minHeight: 60,
                   maxHeight: MediaQuery.of(context).size.height -
                       MediaQuery.of(context).padding.top,
@@ -272,8 +272,8 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
   Widget _buildContentPanel() {
     var buttonGroup = Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
       _buildQuadIconButton(
-          () => accountOperation.add(
-              () => BooruAPI.votePost(postID: _post.id, type: VoteType.Favorite)),
+          () => accountOperation.add(() =>
+              BooruAPI.votePost(postID: _post.id, type: VoteType.Favorite)),
           Icon(Icons.favorite_border,
               color: Theme.of(context).textTheme.button.color)),
       _buildQuadIconButton(
@@ -299,6 +299,7 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
 
     var topBar = PerPlatform(
       windows: Container(
+          color: Theme.of(context).backgroundColor,
           alignment: Alignment.centerLeft,
           height: barHeight,
           child: buttonGroup),
@@ -552,13 +553,12 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
         backgroundDecoration: BoxDecoration(color: Colors.transparent),
         scrollPhysics: const BouncingScrollPhysics(),
         builder: (context, index) => PhotoViewGalleryPageOptions(
-          controller: _galleryController,
-          maxScale: 1.0,
-          initialScale: PhotoViewComputedScale.contained,
-          filterQuality: FilterQuality.high,
-          imageProvider: NetworkImage(_post.sampleUrl),
-          heroAttributes: PhotoViewHeroAttributes(tag: _post)
-        ),
+            controller: _galleryController,
+            maxScale: 1.0,
+            initialScale: PhotoViewComputedScale.contained,
+            filterQuality: FilterQuality.high,
+            imageProvider: NetworkImage(_post.sampleUrl),
+            heroAttributes: PhotoViewHeroAttributes(tag: _post)),
         pageController: PageController(),
         itemCount: 1,
       ),

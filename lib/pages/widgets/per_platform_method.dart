@@ -18,13 +18,10 @@ class _PerPlatformState extends State<PerPlatform> {
   @override
   Widget build(BuildContext context) {
     if (kIsWeb) {
-      print("web");
       return widget.web == null ? Container() : widget.web;
     } else if (Platform.isAndroid) {
-      print("and");
       return widget.android;
     } else {
-      print("win");
       return widget.windows;
     }
   }
