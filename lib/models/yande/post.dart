@@ -16,6 +16,7 @@ class Post implements Downloadable {
   int score;
   String author;
   int fileSize;
+  bool evaluated = false;
 
   /// Source url
   String sourceUrl;

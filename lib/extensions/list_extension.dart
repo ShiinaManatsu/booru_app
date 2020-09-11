@@ -1,4 +1,5 @@
 import 'dart:core';
+import 'package:booru_app/models/rx/booru_bloc.dart';
 import 'package:booru_app/models/yande/post.dart';
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:booru_app/pages/home_page.dart';
@@ -9,17 +10,15 @@ extension ListExtension on List<Post> {
     if (this.length == 0) {
       return List<Post>();
     }
-
-    List<Post> posts = List<Post>.from(this);
+    List<Post> posts = List<Post>.from(this.where((x) => !x.evaluated));
     List<List<Post>> fixedPosts = List<List<Post>>();
+    fixedPosts.addAll(List.from(BooruBloc.evaluated));
     List<Post> row;
 
     var panelRatio = panelWidth / AppSettings.fixedPostHeight;
     const double maxRatioFactor = 0.5; // Allow width overflow with extra ratio
 
-    if (fixedPosts.length == 0) {
-      fixedPosts.add(new List<Post>());
-    }
+    fixedPosts.add(new List<Post>());
 
     while (posts.length != 0) {
       row = fixedPosts.last;
@@ -33,7 +32,6 @@ extension ListExtension on List<Post> {
         row.add(posts.first);
         posts.removeAt(0);
       }
-
       // If row overflow, add row to the new posts list and make new one
       else {
         var flex = <double>[]; // New rule
@@ -54,8 +52,11 @@ extension ListExtension on List<Post> {
 
         row.last.widthInPanel = row.last.widthInPanel.floorToDouble();
 
+        BooruBloc.evaluated.add(List.from(row));
+
         fixedPosts.add(new List<Post>());
         row = fixedPosts.last;
+        posts.first.evaluated = true;
         row.add(posts.first);
         posts.removeAt(0);
       }

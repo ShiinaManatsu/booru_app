@@ -41,6 +41,7 @@ class BooruBloc {
   static DateTime postDateTime = DateTime.now();
   static int page = 1;
   static List<Post> cache = List<Post>();
+  static List<List<Post>> evaluated = List<List<Post>>();
 
   factory BooruBloc(BooruAPI booru, double panelWidth) {
     final onUpdate = PublishSubject<UpdateArg>();
@@ -94,7 +95,8 @@ class BooruBloc {
         .mergeWith([panelWidthChanged])
         .startWith(PostSuccess(List<Post>()))
         .switchMap<PostState>((x) async* {
-          yield PostSuccess(await cache.arrange());
+          if (x is PostSuccess)
+            yield PostSuccess(await (x).result.arrange());
         })
         .asBroadcastStream();
 
@@ -127,6 +129,7 @@ class BooruBloc {
     onReset.asBroadcastStream().listen((x) {
       page = 1;
       cache.clear();
+      evaluated.clear();
     });
 
     // var pageIndicator = pageChanged.mergeWith([pageReset]);
@@ -194,7 +197,7 @@ class BooruBloc {
   static Future<PostState> _emptyCheck(Future<List<Post>> future) async {
     try {
       var res = await future;
-      res = res.where((element) => element.rating == Rating.safe).toList();
+      // res = res.where((element) => element.rating == Rating.safe).toList();
       if (res.isEmpty) {
         refreshController.refreshCompleted();
         refreshController.loadComplete();

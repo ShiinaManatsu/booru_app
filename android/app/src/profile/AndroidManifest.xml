@@ -1,8 +1,8 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.booru_app">
-    <!-- Flutter needs it to communicate with the running application
-         to allow setting breakpoints, to provide hot reload, etc.
-    -->
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <application android:usesCleartextTraffic="true"/>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.ShiinaManatsu.Yande.booru_app">
+	<!--
+	Flutter needs it to communicate with the running application
+	to allow setting breakpoints, to provide hot reload, etc.
+	-->
+	<uses-permission android:name="android.permission.INTERNET" />
+	<application android:usesCleartextTraffic="true" />
 </manifest>
