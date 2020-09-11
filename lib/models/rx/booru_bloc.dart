@@ -1,3 +1,4 @@
+import 'package:booru_app/settings/app_settings.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:booru_app/models/rx/booru_api.dart';
@@ -95,8 +96,7 @@ class BooruBloc {
         .mergeWith([panelWidthChanged])
         .startWith(PostSuccess(List<Post>()))
         .switchMap<PostState>((x) async* {
-          if (x is PostSuccess)
-            yield PostSuccess(await (x).result.arrange());
+          if (x is PostSuccess) yield PostSuccess(await (x).result.arrange());
         })
         .asBroadcastStream();
 
@@ -197,7 +197,8 @@ class BooruBloc {
   static Future<PostState> _emptyCheck(Future<List<Post>> future) async {
     try {
       var res = await future;
-      // res = res.where((element) => element.rating == Rating.safe).toList();
+      if (AppSettings.safeMode)
+        res = res.where((element) => element.rating == Rating.safe).toList();
       if (res.isEmpty) {
         refreshController.refreshCompleted();
         refreshController.loadComplete();

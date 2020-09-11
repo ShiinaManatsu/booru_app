@@ -98,6 +98,8 @@ abstract class Content {
   String get folder;
   String get preview;
   String get quality;
+  String get safe;
+  String get mode;
 }
 
 class ZhCN implements Content {
@@ -204,6 +206,10 @@ class ZhCN implements Content {
   String get preview => "预览";
   @override
   String get quality => "质量";
+  @override
+  String get mode => "安全";
+  @override
+  String get safe => "模式";
 }
 
 class ZhHk implements Content {
@@ -310,6 +316,10 @@ class ZhHk implements Content {
   String get preview => "預覽";
   @override
   String get quality => "質量";
+  @override
+  String get mode => "安全";
+  @override
+  String get safe => "模式";
 }
 
 class EN implements Content {
@@ -416,6 +426,10 @@ class EN implements Content {
   String get preview => "Preview";
   @override
   String get quality => "Quality";
+  @override
+  String get mode => "Safe";
+  @override
+  String get safe => "Mode";
 }
 
 const Map<LanguageCodes, String> LanguageMap = {

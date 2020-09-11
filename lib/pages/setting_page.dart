@@ -21,9 +21,10 @@ class _SettingPageState extends State<SettingPage> {
   var setLimit = PublishSubject<double>();
   String savePath = "";
 
-  var expansionStatus = [false, false, false];
+  var expansionStatus = [false, false, false, false];
 
   PreviewQuality quality = AppSettings.previewQuality;
+  bool _safeMode = AppSettings.safeMode;
 
   @override
   void initState() {
@@ -169,6 +170,33 @@ class _SettingPageState extends State<SettingPage> {
                                 "PreviewQuality", EnumToString.parse(value));
                           });
                         },
+                      )),
+                    ),
+                    ExpansionPanel(
+                      canTapOnHeader: true,
+                      isExpanded: expansionStatus[2],
+                      headerBuilder: (context, d) {
+                        return ListTile(
+                          title: Text(
+                              "${language.content.safe} ${language.content.mode}"),
+                        );
+                      },
+                      body: ListTile(
+                          title: Row(
+                        children: [
+                          Text(
+                              "${language.content.safe} ${language.content.mode}"),
+                          Switch(
+                            value: _safeMode,
+                            onChanged: (value) {
+                              SharedPreferencesExtension.setTyped<bool>(
+                                  "safemode", value);
+                              setState(() {
+                                _safeMode = value;
+                              });
+                            },
+                          )
+                        ],
                       )),
                     )
                   ],

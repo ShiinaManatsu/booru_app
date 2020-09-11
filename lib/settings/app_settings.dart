@@ -20,7 +20,11 @@ class AppSettings {
   /// The first day that konanchan has datas
   static DateTime konachanFirstday = DateTime(2008, 2);
 
+  /// Preview image quality
   static PreviewQuality previewQuality = PreviewQuality.Medium;
+
+  /// Filter only safe images
+  static bool safeMode=false;
 
   /// Photo save location
   static Future<String> get savePath async =>

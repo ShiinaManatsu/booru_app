@@ -55,6 +55,15 @@ void globalInitial() {
           "PreviewQuality", EnumToString.parse(PreviewQuality.Medium));
     }
   });
+
+  SharedPreferencesExtension.getTyped<bool>("safemode").then((value) {
+    if (value != null) {
+      AppSettings.safeMode = value;
+    } else {
+      AppSettings.safeMode = false;
+      SharedPreferencesExtension.setTyped<bool>("safemode", false);
+    }
+  });
 }
 
 void _desktopInitHack() {
