@@ -20,6 +20,7 @@ final ThemeData darkTheme = ThemeData.dark().copyWith(
     primaryColorBrightness: Brightness.light,
     brightness: Brightness.dark,
     primaryColor: Colors.pink,
+    
     // textTheme: baseTextTheme,
     iconTheme: IconThemeData(color: baseWhiteColor),
     // primaryTextTheme: baseTextTheme,

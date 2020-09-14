@@ -1,9 +1,8 @@
 import 'dart:io';
 import 'package:auto_route/auto_route.dart';
 import 'package:booru_app/extensions/shared_preferences_extension.dart';
-import 'package:booru_app/models/local/statistics.dart';
 import 'package:booru_app/pages/setting_page.dart';
-import 'package:booru_app/router.gr.dart';
+import 'package:booru_app/router.gr.dart' as routes;
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:booru_app/settings/language.dart';
 import 'package:booru_app/themes/theme_dark.dart';
@@ -34,9 +33,9 @@ void globalInitial() {
           (LocalUser user) => user.clientType == AppSettings.currentClient))
       .listen((event) => event());
   getUriLinksStream().listen((link) {
-    ExtendedNavigator.root.push(Routes.postViewPageByPostID,
-        arguments:
-            PostViewPageByPostIDArguments(postID: link.pathSegments.last));
+    ExtendedNavigator.root.push(routes.Routes.postViewPageByPostID,
+        arguments: routes.PostViewPageByPostIDArguments(
+            postID: link.pathSegments.last));
   });
   AppSettings.savePath.then((value) async {
     if (value == null || value.isEmpty) {
@@ -50,9 +49,9 @@ void globalInitial() {
       AppSettings.previewQuality =
           EnumToString.fromString(PreviewQuality.values, q);
     } else {
-      AppSettings.previewQuality = PreviewQuality.Medium;
+      AppSettings.previewQuality = PreviewQuality.Low;
       SharedPreferencesExtension.setTyped(
-          "PreviewQuality", EnumToString.parse(PreviewQuality.Medium));
+          "PreviewQuality", EnumToString.parse(PreviewQuality.Low));
     }
   });
 
@@ -90,9 +89,6 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-        statusBarColor: Theme.of(context).backgroundColor.withOpacity(0.95),
-        statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
     // uniLink.delay(Duration(seconds: 2)).listen((event) {
     //   toast(event);
     // });
@@ -104,7 +100,8 @@ class MyApp extends StatelessWidget {
               final MediaQueryData data = MediaQuery.of(context);
               return MediaQuery(
                   data: data.copyWith(textScaleFactor: data.textScaleFactor),
-                  child: ExtendedNavigator<Router>(router: Router()));
+                  child: ExtendedNavigator<routes.Router>(
+                      router: routes.Router()));
             },
             title: 'Home',
             darkTheme: darkTheme,

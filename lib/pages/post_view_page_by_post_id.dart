@@ -2,6 +2,7 @@ import 'dart:math';
 import "package:booru_app/main.dart";
 import 'package:booru_app/models/local/statistics.dart';
 import "package:booru_app/pages/widgets/per_platform_method.dart";
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:enum_to_string/enum_to_string.dart';
 import "package:esys_flutter_share/esys_flutter_share.dart";
 import "package:flutter/foundation.dart";
@@ -13,7 +14,6 @@ import "package:photo_view/photo_view_gallery.dart";
 import "package:sliding_up_panel/sliding_up_panel.dart";
 import "package:url_launcher/url_launcher.dart";
 import "package:booru_app/models/rx/booru_api.dart";
-import "package:booru_app/models/rx/booru_bloc.dart";
 import "package:booru_app/models/yande/comment.dart";
 import "package:booru_app/models/yande/post.dart";
 import "package:booru_app/models/yande/tags.dart";
@@ -97,19 +97,19 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
     });
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-        statusBarColor: Theme.of(context).backgroundColor.withOpacity(0.95),
-        statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
-  }
+  // @override
+  // void dispose() {
+  //   super.dispose();
+  //   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+  //       statusBarColor: Theme.of(context).backgroundColor.withOpacity(0.95),
+  //       statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
+  // }
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
+    // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    //     statusBarColor: Colors.transparent,
+    //     statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
     return Scaffold(
       body: _post != null
           ? PerPlatform(
@@ -557,7 +557,7 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
             maxScale: 1.0,
             initialScale: PhotoViewComputedScale.contained,
             filterQuality: FilterQuality.high,
-            imageProvider: NetworkImage(_post.sampleUrl),
+            imageProvider: CachedNetworkImageProvider(_post.jpegUrl),
             heroAttributes: PhotoViewHeroAttributes(tag: _post)),
         pageController: PageController(),
         itemCount: 1,

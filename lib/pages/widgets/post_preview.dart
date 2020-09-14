@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:booru_app/pages/setting_page.dart';
 import 'package:booru_app/router.gr.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:booru_app/models/yande/post.dart';
 import 'package:booru_app/settings/app_settings.dart';
@@ -55,8 +56,16 @@ class _PostPreviewState extends State<PostPreview>
               arguments: PostViewPageArguments(post: widget.post)),
           child: Hero(
             tag: widget.post,
-            child: Image.network(
-              url ?? widget.post.sampleUrl,
+            // child: Image.network(
+            //   url ?? widget.post.sampleUrl,
+            //   height: AppSettings.fixedPostHeight - postPreviewBorder * 2,
+            //   width: widget.post.widthInPanel - postPreviewBorder * 2,
+            //   fit: BoxFit.cover,
+            //   loadingBuilder: (context, child, progress) =>
+            //       progress == null ? child : CircularProgressIndicator(),
+            // ),
+            child: Image(
+              image: CachedNetworkImageProvider(url),
               height: AppSettings.fixedPostHeight - postPreviewBorder * 2,
               width: widget.post.widthInPanel - postPreviewBorder * 2,
               fit: BoxFit.cover,

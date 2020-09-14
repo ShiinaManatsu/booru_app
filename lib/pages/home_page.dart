@@ -4,6 +4,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:booru_app/pages/widgets/login_box.dart';
 import 'package:booru_app/router.gr.dart';
 import 'package:booru_app/settings/language.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_snake_navigationbar/flutter_snake_navigationbar.dart';
@@ -77,12 +78,17 @@ class _HomePageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-        statusBarColor: Theme.of(context).backgroundColor.withOpacity(0.95),
-        statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
     super.build(context);
+    // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    //     statusBarColor: Theme.of(context).backgroundColor.withOpacity(0.95),
+    //     statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+        statusBarColor: Theme.of(context).brightness == Brightness.light
+            ? Colors.white
+            : Colors.grey[900],
+        statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
     panelWidth = MediaQuery.of(context).size.width - 8; // Minus padding = 8
-    booruBloc.onPanelWidth.add(panelWidth);
+    // booruBloc.onPanelWidth.add(panelWidth);
     return SafeArea(
       child: Scaffold(
           bottomNavigationBar:
@@ -123,8 +129,12 @@ class _HomePageState extends State<HomePage>
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               IconButton(
-                                onPressed: () =>
-                                    Scaffold.of(context).openDrawer(),
+                                onPressed: () {
+                                  setState(() {
+                                    blurSigma = 3;
+                                  });
+                                  Scaffold.of(context).openDrawer();
+                                },
                                 icon: Icon(Icons.menu),
                               ),
                               Row(
@@ -275,109 +285,116 @@ class _HomePageState extends State<HomePage>
     }
   }
 
+  double blurSigma = 0;
+
   /// The app drawer
   Widget _appDrawer() {
     return SafeArea(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-        child: Container(
-          color: Theme.of(context).backgroundColor.withOpacity(0.8),
-          width: 300,
-          alignment: Alignment.topLeft,
-          child: SingleChildScrollView(
-            physics: BouncingScrollPhysics(),
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                // Title
-                Container(
-                    margin: EdgeInsets.fromLTRB(15, 20, 0, 20),
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      AppSettings.currentClient == ClientType.Yande
-                          ? "Yande.re"
-                          : "Konachan",
-                      style: TextStyle(fontSize: 30),
-                    )),
-                _user(),
-                // Spliter
-                _spliter("${language.content.posts}"),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    _buildDrawerButton(() {
-                      Navigator.pop(context);
-                      booruBloc.onReset.add(null);
-                      booruBloc.onUpdate.add(UpdateArg(
-                          fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
-                    }, "${language.content.posts}", FetchType.Posts),
+      child: TweenAnimationBuilder<double>(
+        duration: const Duration(milliseconds: 246),
+        tween: Tween<double>(begin: 0, end: blurSigma),
+        builder: (context, value, child) => BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+          child: Container(
+            color: Theme.of(context).backgroundColor.withOpacity(0.8),
+            width: 300,
+            alignment: Alignment.topLeft,
+            child: SingleChildScrollView(
+              physics: BouncingScrollPhysics(),
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  // Title
+                  Container(
+                      margin: EdgeInsets.fromLTRB(15, 20, 0, 20),
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        AppSettings.currentClient == ClientType.Yande
+                            ? "Yande.re"
+                            : "Konachan",
+                        style: TextStyle(fontSize: 30),
+                      )),
+                  _user(),
+                  // Spliter
+                  _spliter("${language.content.posts}"),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: <Widget>[
+                      _buildDrawerButton(() {
+                        Navigator.pop(context);
+                        booruBloc.onReset.add(null);
+                        booruBloc.onUpdate.add(UpdateArg(
+                            fetchType: FetchType.Posts,
+                            arg: PostsArgs(page: 1)));
+                      }, "${language.content.posts}", FetchType.Posts),
 
-                    _buildDrawerButton(
-                        () => ExtendedNavigator.root.push(
-                            Routes.searchTaggedPostsPage,
-                            arguments: SearchTaggedPostsPageArguments(
-                                key: _searchPage)),
-                        "${language.content.search}",
-                        FetchType.Search),
+                      _buildDrawerButton(
+                          () => ExtendedNavigator.root.push(
+                              Routes.searchTaggedPostsPage,
+                              arguments: SearchTaggedPostsPageArguments(
+                                  key: _searchPage)),
+                          "${language.content.search}",
+                          FetchType.Search),
 
-                    // Spliter popular
-                    _spliter("${language.content.popularPosts}"),
+                      // Spliter popular
+                      _spliter("${language.content.popularPosts}"),
 
-                    _buildDrawerButton(() {
-                      Navigator.pop(context);
-                      booruBloc.onReset.add(null);
-                      booruBloc.onUpdate.add(UpdateArg(
-                          fetchType: FetchType.PopularRecent,
-                          arg: PopularRecentArgs(period: _period)));
-                    }, "${language.content.popularPostsByRecent}",
-                        FetchType.PopularRecent),
+                      _buildDrawerButton(() {
+                        Navigator.pop(context);
+                        booruBloc.onReset.add(null);
+                        booruBloc.onUpdate.add(UpdateArg(
+                            fetchType: FetchType.PopularRecent,
+                            arg: PopularRecentArgs(period: _period)));
+                      }, "${language.content.popularPostsByRecent}",
+                          FetchType.PopularRecent),
 
-                    _buildDrawerButton(() {
-                      Navigator.pop(context);
-                      booruBloc.onReset.add(null);
-                      booruBloc.onUpdate.add(UpdateArg(
-                          fetchType: FetchType.PopularByDay,
-                          arg: PopularByDayArgs(time: DateTime.now())));
-                      booruBloc.onDateTime.add((x) => x = DateTime.now());
-                    }, "${language.content.popularPostsByDay}",
-                        FetchType.PopularByDay),
+                      _buildDrawerButton(() {
+                        Navigator.pop(context);
+                        booruBloc.onReset.add(null);
+                        booruBloc.onUpdate.add(UpdateArg(
+                            fetchType: FetchType.PopularByDay,
+                            arg: PopularByDayArgs(time: DateTime.now())));
+                        booruBloc.onDateTime.add((x) => x = DateTime.now());
+                      }, "${language.content.popularPostsByDay}",
+                          FetchType.PopularByDay),
 
-                    _buildDrawerButton(() {
-                      Navigator.pop(context);
-                      booruBloc.onReset.add(null);
-                      booruBloc.onUpdate.add(UpdateArg(
-                          fetchType: FetchType.PopularByWeek,
-                          arg: PopularByWeekArgs(time: DateTime.now())));
-                      booruBloc.onDateTime.add((x) => x = DateTime.now());
-                    }, "${language.content.popularPostsByWeek}",
-                        FetchType.PopularByWeek),
+                      _buildDrawerButton(() {
+                        Navigator.pop(context);
+                        booruBloc.onReset.add(null);
+                        booruBloc.onUpdate.add(UpdateArg(
+                            fetchType: FetchType.PopularByWeek,
+                            arg: PopularByWeekArgs(time: DateTime.now())));
+                        booruBloc.onDateTime.add((x) => x = DateTime.now());
+                      }, "${language.content.popularPostsByWeek}",
+                          FetchType.PopularByWeek),
 
-                    _buildDrawerButton(() {
-                      Navigator.pop(context);
-                      booruBloc.onReset.add(null);
-                      booruBloc.onUpdate.add(UpdateArg(
-                          fetchType: FetchType.PopularByMonth,
-                          arg: PopularByMonthArgs(time: DateTime.now())));
-                      booruBloc.onDateTime.add((x) => x = DateTime.now());
-                    }, "${language.content.popularPostsByMonth}",
-                        FetchType.PopularByMonth),
+                      _buildDrawerButton(() {
+                        Navigator.pop(context);
+                        booruBloc.onReset.add(null);
+                        booruBloc.onUpdate.add(UpdateArg(
+                            fetchType: FetchType.PopularByMonth,
+                            arg: PopularByMonthArgs(time: DateTime.now())));
+                        booruBloc.onDateTime.add((x) => x = DateTime.now());
+                      }, "${language.content.popularPostsByMonth}",
+                          FetchType.PopularByMonth),
 
-                    _spliter("${language.content.others}"),
-                    _buildDrawerEmptyButton(
-                        () => ExtendedNavigator.root.push(Routes.settingPage),
-                        "${language.content.settings}"),
-                    _buildDrawerEmptyButton(
-                        () => ExtendedNavigator.root.push(Routes.settingPage),
-                        "${language.content.about}"),
-                    _buildDrawerEmptyButton(
-                        () =>
-                            ExtendedNavigator.root.push(Routes.testGroundPage),
-                        "Test Ground"),
-                  ],
-                ),
-              ],
+                      _spliter("${language.content.others}"),
+                      _buildDrawerEmptyButton(
+                          () => ExtendedNavigator.root.push(Routes.settingPage),
+                          "${language.content.settings}"),
+                      _buildDrawerEmptyButton(
+                          () => ExtendedNavigator.root.push(Routes.settingPage),
+                          "${language.content.about}"),
+                      _buildDrawerEmptyButton(
+                          () => ExtendedNavigator.root
+                              .push(Routes.testGroundPage),
+                          "Test Ground"),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -404,7 +421,13 @@ class _HomePageState extends State<HomePage>
             fetchType != _type ? Brightness.light : Brightness.dark,
         child: Container(
             alignment: Alignment.centerLeft,
-            child: Text(text, style: Theme.of(context).textTheme.button)),
+            child: Text(text,
+                style: fetchType == _type
+                    ? Theme.of(context)
+                        .textTheme
+                        .button
+                        .copyWith(color: Colors.grey[200])
+                    : Theme.of(context).textTheme.button)),
       ),
     );
   }
@@ -603,7 +626,7 @@ class _HomePageState extends State<HomePage>
         children: <Widget>[
           Text(
             text,
-            style: Theme.of(context).textTheme.headline6,
+            style: Theme.of(context).textTheme.headline6.copyWith(fontSize: 28),
           ),
           Flexible(
             fit: FlexFit.tight,

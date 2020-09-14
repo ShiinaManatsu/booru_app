@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:booru_app/models/yande/post.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:path/path.dart' as p;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -59,15 +60,13 @@ class TaskBloc {
         .asBroadcastStream()
         .interval(Duration(seconds: 3))
         .switchMap<List<DownloadTask>>((x) async* {
-      print(tasksList);
       tasksList.remove(x);
-      print(tasksList.contains(x));
       yield tasksList;
     }).startWith(List<DownloadTask>());
 
     var tasks = downloadTask.mergeWith([update, remove]).asBroadcastStream();
 
-    Rx.timer(() {}, Duration(seconds: 1)).listen((_) {
+    Rx.timer(null, Duration(seconds: 1)).listen((_) {
       if (Platform.isWindows) {
         showOverlay((context, t) {
           return AnimatedOverlay(value: t);
@@ -118,37 +117,57 @@ class DownloadTask {
   /// Is file already downloaded
   bool isDownloaded = false;
 
+  static const String _locationSuffix = "BooruPhotos/";
+
   /// Download this file.
   _download(Downloadable task) async {
     // Factory the name and the state add to state list
     var fileName = Uri.decodeFull(task.url).split('/').last;
 
     if (Platform.isWindows) {
-      if (!await Directory(await AppSettings.savePath).exists()) {
-        await Directory(await AppSettings.savePath).create();
+      if (!await Directory(p.join(await AppSettings.savePath, _locationSuffix))
+          .exists()) {
+        await Directory(p.join(await AppSettings.savePath, _locationSuffix))
+            .create();
       }
-
       filePath = p.join(await AppSettings.savePath, fileName);
     } else if (Platform.isAndroid) {
       var dir =
           (await getExternalStorageDirectories(type: StorageDirectory.pictures))
               .first
               .path;
-      print(dir);
-      dir= await AppSettings.savePath;
-      filePath = p.join("$dir/BooruPhotos/", fileName);
+      dir = await AppSettings.savePath;
+      filePath = p.join("$dir/", fileName);
     }
-    Dio().download(task.url, filePath,
-        onReceiveProgress: (int download, int total) {
-      downloadedLength = download;
-      totalLength = total;
+
+    var file = await DefaultCacheManager().getFileFromCache(task.url);
+    if (file != null) {
+      if (!await Directory(await AppSettings.savePath).exists()) {
+        await Directory(await AppSettings.savePath).create();
+      }
+      totalLength = -1;
       taskBloc.progressUpdate.add(null);
-    }).then((_) {
-      isDownloaded = true;
-      _showNotification(post.id, post.id.toString(), filePath);
-      taskBloc.removeTask.add(this);
-      taskBloc.progressCompleteUpdate.add(null);
-    }).catchError((x) => taskBloc.removeTask.add(this));
+      DefaultCacheManager().getSingleFile(task.url).then((value) async {
+        File(filePath).writeAsBytes(await file.file.readAsBytes()).then((_) {
+          isDownloaded = true;
+          _showNotification(post.id, post.id.toString(), filePath);
+          taskBloc.removeTask.add(this);
+          taskBloc.progressCompleteUpdate.add(null);
+        });
+      });
+    } else {
+      Dio().download(task.url, filePath,
+          onReceiveProgress: (int download, int total) {
+        downloadedLength = download;
+        totalLength = total;
+        taskBloc.progressUpdate.add(null);
+      }).then((_) {
+        isDownloaded = true;
+        _showNotification(post.id, post.id.toString(), filePath);
+        taskBloc.removeTask.add(this);
+        taskBloc.progressCompleteUpdate.add(null);
+      }).catchError((x) => taskBloc.removeTask.add(this));
+    }
   }
 
   /// Show a notification when download finished

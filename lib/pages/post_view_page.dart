@@ -1,8 +1,8 @@
 import 'dart:math';
-import 'package:booru_app/extensions/shared_preferences_extension.dart';
 import "package:booru_app/main.dart";
 import 'package:booru_app/models/local/statistics.dart';
 import "package:booru_app/pages/widgets/per_platform_method.dart";
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:enum_to_string/enum_to_string.dart';
 import "package:esys_flutter_share/esys_flutter_share.dart";
 import "package:flutter/foundation.dart";
@@ -96,13 +96,13 @@ class _PostViewPageState extends State<PostViewPage>
         postEntry: EnumToString.parse(PostEntry.App), post: _post));
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-        statusBarColor: Theme.of(context).backgroundColor.withOpacity(0.95),
-        statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
-  }
+  // @override
+  // void dispose() {
+  //   super.dispose();
+  //   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+  //       statusBarColor: Theme.of(context).backgroundColor.withOpacity(0.95),
+  //       statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -320,7 +320,8 @@ class _PostViewPageState extends State<PostViewPage>
                           child: TweenAnimationBuilder(
                             duration: Duration(milliseconds: 300),
                             curve: Curves.ease,
-                            tween: Tween<double>(begin: 0, end: task.progress),
+                            tween: Tween<double>(
+                                begin: 0, end: task.progress ?? 1),
                             builder: (context, double value, child) =>
                                 LinearProgressIndicator(
                               value: value,
@@ -328,7 +329,7 @@ class _PostViewPageState extends State<PostViewPage>
                                   Color.lerp(
                                       Colors.blueAccent,
                                       Colors.pinkAccent,
-                                      task == null ? 0 : task.progress)),
+                                      task == null ? 0 : task.progress ?? 1)),
                             ),
                           ),
                         );
@@ -556,7 +557,8 @@ class _PostViewPageState extends State<PostViewPage>
             maxScale: 1.0,
             initialScale: PhotoViewComputedScale.contained,
             filterQuality: FilterQuality.high,
-            imageProvider: NetworkImage(BooruBloc.cache[index].sampleUrl),
+            imageProvider:
+                CachedNetworkImageProvider(BooruBloc.cache[index].jpegUrl),
             heroAttributes: PhotoViewHeroAttributes(tag: _post)),
         pageController: PageController(initialPage: _index),
         itemCount: BooruBloc.cache.length,

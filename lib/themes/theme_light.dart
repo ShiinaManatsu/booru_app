@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 // Color definition
 final Color baseBlackColor =
     Color.fromARGB(255, 95, 99, 104); // Google title black
-final Color blueTextColor = Colors.black; // Accent blue color
 
 final TextStyle baseTextStyle = TextStyle(color: baseBlackColor);
 
