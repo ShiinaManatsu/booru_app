@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:auto_route/auto_route.dart';
 import 'package:booru_app/extensions/shared_preferences_extension.dart';
+import 'package:booru_app/pages/home_page.dart';
 import 'package:booru_app/pages/setting_page.dart';
 import 'package:booru_app/router.gr.dart' as routes;
 import 'package:booru_app/settings/app_settings.dart';
@@ -32,10 +33,22 @@ void globalInitial() {
       .where((_) => AppSettings.localUsers.contains(
           (LocalUser user) => user.clientType == AppSettings.currentClient))
       .listen((event) => event());
+
   getUriLinksStream().listen((link) {
+    if (AppSettings.currentClient == ClientType.Konachan &&
+        link.host.contains("yande")) {
+      AppSettings.currentClient = ClientType.Yande;
+      booruBloc.onReset.add(null);
+      booruBloc.onRefresh.add(null);
+    } else if (AppSettings.currentClient == ClientType.Yande &&
+        link.host.contains("konachan")) {
+      AppSettings.currentClient = ClientType.Konachan;
+      booruBloc.onReset.add(null);
+      booruBloc.onRefresh.add(null);
+    }
     ExtendedNavigator.root.push(routes.Routes.postViewPageByPostID,
         arguments: routes.PostViewPageByPostIDArguments(
-            postID: link.pathSegments.last));
+            postID: link.pathSegments[link.pathSegments.indexOf("show") + 1]));
   });
   AppSettings.savePath.then((value) async {
     if (value == null || value.isEmpty) {

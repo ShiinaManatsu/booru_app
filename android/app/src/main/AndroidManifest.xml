@@ -17,12 +17,13 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 			<!-- App Links -->
-			<intent-filter android:autoVerify="true">
+			<intent-filter>
 				<action android:name="android.intent.action.VIEW" />
 				<category android:name="android.intent.category.DEFAULT" />
 				<category android:name="android.intent.category.BROWSABLE" />
 				<!-- Accepts URIs that begin with https://YOUR_HOST -->
 				<data android:scheme="https" android:host="yande.re" android:pathPrefix="/post/show" />
+				<data android:scheme="https" android:host="konachan.com" android:pathPrefix="/post/show" />
 			</intent-filter>
 		</activity>
 		<!--

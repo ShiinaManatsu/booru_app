@@ -662,10 +662,20 @@ class _HomePageState extends State<HomePage>
     if (link == null) return;
 
     if (link.isNotEmpty) {
+      if (AppSettings.currentClient == ClientType.Konachan &&
+          link.contains("yande")) {
+        AppSettings.currentClient = ClientType.Yande;
+        booruBloc.onRefresh.add(null);
+      } else if (AppSettings.currentClient == ClientType.Yande &&
+          link.contains("konachan")) {
+        AppSettings.currentClient = ClientType.Konachan;
+        booruBloc.onRefresh.add(null);
+      }
+      var links = link.split("/");
       ExtendedNavigator.root.pushAndRemoveUntil(
           Routes.postViewPageByPostID, (route) => false,
-          arguments:
-              PostViewPageByPostIDArguments(postID: link.split("/").last));
+          arguments: PostViewPageByPostIDArguments(
+              postID: links[links.indexOf("show") + 1]));
     }
   }
 
