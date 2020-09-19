@@ -161,6 +161,21 @@ class BooruAPI {
 
   static String avatarUrlFromID(int id) =>
       "${AppSettings.currentBaseUrl}/data/avatars/${id.toString()}.jpg";
+
+  /// Search user
+  /// Get user info by id or name
+  static Future<VersionInfo> getLastestVersion() async {
+    var url =
+        "https://api.github.com/repos/ShiinaManatsu/booru_app/releases?per_page=1&page=1";
+    Map<String, String> header = {"Accept": "application/vnd.github.v3+json"};
+    http.Response response = await http.get(url, headers: header);
+    List decodedJson = json.decode(response.body);
+    return VersionInfo(
+      publishDate: decodedJson.first["published_at"],
+      tagName: decodedJson.first["tag_name"],
+      url: decodedJson.first["assets"].first["browser_download_url"],
+    );
+  }
 }
 
 enum Period {
@@ -192,4 +207,18 @@ enum FetchType {
   PopularByWeek,
   PopularByMonth,
   Search
+}
+
+class VersionInfo {
+  VersionInfo(
+      {@required this.tagName, @required this.url, @required this.publishDate});
+
+  final String tagName;
+  final String url;
+  final String publishDate;
+
+  int get versionCode =>
+      int.parse(tagName.split("-").first.replaceAll(".", ""));
+
+  DateTime get publishDateTime => DateTime.parse(publishDate);
 }

@@ -13,7 +13,6 @@ dependencies:
   dio: ^3.0.8
   shared_preferences: ">=0.5.8 <2.0.0"
   rxdart: ^0.24.1
-  # sqflite: ^1.1.7+1
   esys_flutter_share: ^1.0.2
   floating_search_bar: ^0.2.0
   photo_view: ^0.9.1
@@ -42,6 +41,8 @@ dependencies:
   animated_splash: ^1.0.0
   syncfusion_flutter_charts: ^18.2.57
   flutter_cache_manager: ^1.4.2
+  package_info: '>=0.4.3 <2.0.0'
+  
   # flutter_native_splash: ^0.1.9
 
   # The following adds the Cupertino Icons font to your application.

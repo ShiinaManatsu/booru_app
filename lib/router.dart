@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route_annotations.dart';
+import 'package:booru_app/pages/about_page.dart';
 import 'package:booru_app/pages/post_view_page.dart';
 import 'package:booru_app/pages/post_view_page_by_post_id.dart';
 import 'package:booru_app/pages/search_tagged_posts_page.dart';
@@ -14,7 +15,8 @@ import 'pages/home_page.dart';
     MaterialRoute(page: PostViewPage),
     MaterialRoute(page: SettingPage),
     MaterialRoute(page: TestGroundPage),
-    MaterialRoute(page: PostViewPageByPostID)
+    MaterialRoute(page: PostViewPageByPostID),
+    MaterialRoute(page: AboutPage)
   ],
 )
 class $Router {}

@@ -385,7 +385,7 @@ class _HomePageState extends State<HomePage>
                           () => ExtendedNavigator.root.push(Routes.settingPage),
                           "${language.content.settings}"),
                       _buildDrawerEmptyButton(
-                          () => ExtendedNavigator.root.push(Routes.settingPage),
+                          () => ExtendedNavigator.root.push(Routes.aboutPage),
                           "${language.content.about}"),
                       _buildDrawerEmptyButton(
                           () => ExtendedNavigator.root
@@ -641,20 +641,6 @@ class _HomePageState extends State<HomePage>
         ],
       ),
     );
-  }
-
-  _scrollListener() {
-    // Reach the bottom
-    if (!refreshController.isLoading &&
-        !refreshController.isRefresh &&
-        !_controller.position.outOfRange &&
-        _controller.offset >= _controller.position.maxScrollExtent - 800) {
-      print('Reach the bottom');
-    }
-    // // Reach the top
-    // if (_controller.offset <= _controller.position.minScrollExtent &&
-    //     !_controller.position.outOfRange) {
-    //     }
   }
 
   _getInitPost() async {

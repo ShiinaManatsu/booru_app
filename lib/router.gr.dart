@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'models/yande/post.dart';
+import 'pages/about_page.dart';
 import 'pages/home_page.dart';
 import 'pages/post_view_page.dart';
 import 'pages/post_view_page_by_post_id.dart';
@@ -25,6 +26,7 @@ class Routes {
   static const String settingPage = '/setting-page';
   static const String testGroundPage = '/test-ground-page';
   static const String postViewPageByPostID = '/post-view-page-by-post-iD';
+  static const String aboutPage = '/about-page';
   static const all = <String>{
     homePage,
     searchTaggedPostsPage,
@@ -32,6 +34,7 @@ class Routes {
     settingPage,
     testGroundPage,
     postViewPageByPostID,
+    aboutPage,
   };
 }
 
@@ -45,6 +48,7 @@ class Router extends RouterBase {
     RouteDef(Routes.settingPage, page: SettingPage),
     RouteDef(Routes.testGroundPage, page: TestGroundPage),
     RouteDef(Routes.postViewPageByPostID, page: PostViewPageByPostID),
+    RouteDef(Routes.aboutPage, page: AboutPage),
   ];
   @override
   Map<Type, AutoRouteFactory> get pagesMap => _pagesMap;
@@ -90,6 +94,15 @@ class Router extends RouterBase {
         settings: data,
       );
     },
+    AboutPage: (data) {
+      final args = data.getArgs<AboutPageArguments>(
+        orElse: () => AboutPageArguments(),
+      );
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => AboutPage(key: args.key),
+        settings: data,
+      );
+    },
   };
 }
 
@@ -113,4 +126,10 @@ class PostViewPageArguments {
 class PostViewPageByPostIDArguments {
   final String postID;
   PostViewPageByPostIDArguments({@required this.postID});
+}
+
+/// AboutPage arguments holder class
+class AboutPageArguments {
+  final Key key;
+  AboutPageArguments({this.key});
 }
