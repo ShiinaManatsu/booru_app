@@ -45,15 +45,18 @@ class SharedPreferencesExtension {
   static Future<T> getTyped<T>(String key) async {
     if (Platform.isWindows) {
       var file = File("sp.json");
-      var content = await file.readAsString();
-      
-      if (content.isEmpty) return null;
+      if (await file.exists()) {
+        var content = await file.readAsString();
 
-      Map<String, dynamic> j = json.decode(content);
+        if (content.isEmpty) return null;
 
-      if (j.containsKey(key))
-        return j[key] as T;
-      else
+        Map<String, dynamic> j = json.decode(content);
+
+        if (j.containsKey(key))
+          return j[key] as T;
+        else
+          return null;
+      } else
         return null;
     } else {
       SharedPreferences prefs = await SharedPreferences.getInstance();
