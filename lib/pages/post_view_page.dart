@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 import "package:booru_app/main.dart";
 import 'package:booru_app/models/local/statistics.dart';
@@ -557,8 +558,9 @@ class _PostViewPageState extends State<PostViewPage>
             maxScale: 1.0,
             initialScale: PhotoViewComputedScale.contained,
             filterQuality: FilterQuality.high,
-            imageProvider:
-                CachedNetworkImageProvider(BooruBloc.cache[index].jpegUrl),
+            imageProvider: !Platform.isWindows
+                ? CachedNetworkImageProvider(BooruBloc.cache[index].jpegUrl)
+                : NetworkImage(BooruBloc.cache[index].jpegUrl),
             heroAttributes: PhotoViewHeroAttributes(tag: _post)),
         pageController: PageController(initialPage: _index),
         itemCount: BooruBloc.cache.length,

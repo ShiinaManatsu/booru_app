@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:booru_app/pages/setting_page.dart';
 import 'package:booru_app/router.gr.dart';
@@ -65,7 +67,9 @@ class _PostPreviewState extends State<PostPreview>
             //       progress == null ? child : CircularProgressIndicator(),
             // ),
             child: Image(
-              image: CachedNetworkImageProvider(url),
+              image: !Platform.isWindows
+                  ? CachedNetworkImageProvider(url)
+                  : Image.network(url).image,
               height: AppSettings.fixedPostHeight - postPreviewBorder * 2,
               width: widget.post.widthInPanel - postPreviewBorder * 2,
               fit: BoxFit.cover,

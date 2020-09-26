@@ -26,6 +26,8 @@ class TaskBloc {
   /// Raise a event that going to remove a task
   final PublishSubject<DownloadTask> removeTask;
 
+  final PublishSubject<DownloadTask> cancelTask;
+
   /// First time this start
   //final PublishSubject startUp;
 
@@ -34,16 +36,20 @@ class TaskBloc {
 
   static List<DownloadTask> tasksList = List<DownloadTask>();
 
+  static Map<int, CancelToken> cancelTokens = Map<int, CancelToken>();
+
   factory TaskBloc() {
     final addDownload = PublishSubject<Post>();
     final progressUpdate = PublishSubject();
     final progressCompleteUpdate = PublishSubject();
     final removeTask = PublishSubject<DownloadTask>();
+    final cancelTask = PublishSubject<DownloadTask>();
     // final startUp=Observable.empty();  // Currently this has nothing to do, TODO: need implements
 
-    var downloadTask = addDownload.distinctUnique().map<DownloadTask>((x) {
+    var downloadTask = addDownload.distinct().map<DownloadTask>((x) {
       var task = DownloadTask.fromDownload(x);
       tasksList.add(task);
+      cancelTokens[x.id] = CancelToken();
       return task;
     }).switchMap<List<DownloadTask>>((x) async* {
       yield tasksList;
@@ -57,14 +63,29 @@ class TaskBloc {
     }).startWith(List<DownloadTask>());
 
     var remove = removeTask
+        .distinct()
         .asBroadcastStream()
         .interval(Duration(seconds: 3))
         .switchMap<List<DownloadTask>>((x) async* {
       tasksList.remove(x);
+      cancelTokens.remove(x.post);
       yield tasksList;
     }).startWith(List<DownloadTask>());
 
-    var tasks = downloadTask.mergeWith([update, remove]).asBroadcastStream();
+    var cancel = cancelTask
+        .asBroadcastStream()
+        .switchMap<List<DownloadTask>>((x) async* {
+      print("Canceled");
+      cancelTokens[x.post.id].cancel();
+      cancelTokens.remove(x.post.id);
+      x.cancel();
+      taskBloc.removeTask.add(x);
+      taskBloc.progressCompleteUpdate.add(null);
+      yield tasksList;
+    }).startWith(List<DownloadTask>());
+
+    var tasks =
+        downloadTask.mergeWith([update, remove, cancel]).asBroadcastStream();
 
     Rx.timer(null, Duration(seconds: 1)).listen((_) {
       if (Platform.isWindows) {
@@ -75,7 +96,12 @@ class TaskBloc {
     });
 
     return TaskBloc._(
-        addDownload, progressUpdate, progressCompleteUpdate, removeTask, tasks);
+        addDownload: addDownload,
+        cancelTask: cancelTask,
+        progressCompleteUpdate: progressCompleteUpdate,
+        progressUpdate: progressUpdate,
+        removeTask: removeTask,
+        tasks: tasks);
   }
 
   void dispose() {
@@ -83,11 +109,18 @@ class TaskBloc {
     progressUpdate.close();
     progressCompleteUpdate.close();
     removeTask.close();
+    cancelTask.close();
     //startUp.close();
   }
 
-  TaskBloc._(this.addDownload, this.progressUpdate, this.progressCompleteUpdate,
-      this.removeTask, this.tasks);
+  TaskBloc._({
+    this.addDownload,
+    this.progressUpdate,
+    this.progressCompleteUpdate,
+    this.removeTask,
+    this.cancelTask,
+    this.tasks,
+  });
 }
 
 class DownloadTask {
@@ -117,7 +150,13 @@ class DownloadTask {
   /// Is file already downloaded
   bool isDownloaded = false;
 
-  static const String _locationSuffix = "BooruPhotos/";
+  bool canceled = false;
+
+  cancel() {
+    canceled = true;
+  }
+
+  // static const String _locationSuffix = "downloads/";
 
   /// Download this file.
   _download(Downloadable task) async {
@@ -125,10 +164,10 @@ class DownloadTask {
     var fileName = Uri.decodeFull(task.url).split('/').last;
 
     if (Platform.isWindows) {
-      if (!await Directory(p.join(await AppSettings.savePath, _locationSuffix))
-          .exists()) {
-        await Directory(p.join(await AppSettings.savePath, _locationSuffix))
-            .create();
+      // if (!await Directory(p.join(await AppSettings.savePath, _locationSuffix))
+      if (!await Directory(p.join(await AppSettings.savePath)).exists()) {
+        // await Directory(p.join(await AppSettings.savePath, _locationSuffix))
+        await Directory(p.join(await AppSettings.savePath)).create();
       }
       filePath = p.join(await AppSettings.savePath, fileName);
     } else if (Platform.isAndroid) {
@@ -140,7 +179,12 @@ class DownloadTask {
       filePath = p.join("$dir/", fileName);
     }
 
-    var file = await DefaultCacheManager().getFileFromCache(task.url);
+    FileInfo file;
+    if (!Platform.isWindows)
+      file = await DefaultCacheManager().getFileFromCache(task.url);
+
+    //  TODO:Check if file downloaded
+
     if (file != null) {
       if (!await Directory(await AppSettings.savePath).exists()) {
         await Directory(await AppSettings.savePath).create();
@@ -157,6 +201,7 @@ class DownloadTask {
       });
     } else {
       Dio().download(task.url, filePath,
+          cancelToken: TaskBloc.cancelTokens[post.id],
           onReceiveProgress: (int download, int total) {
         downloadedLength = download;
         totalLength = total;
@@ -187,11 +232,15 @@ class DownloadTask {
     return DownloadTask._fromID(post);
   }
 
-  DownloadTask.fromDownload(this.post) {
+  DownloadTask.fromDownload(
+    this.post,
+  ) {
     _download(post);
   }
 
-  DownloadTask._fromID(this.post) : isDownloaded = true;
+  DownloadTask._fromID(
+    this.post,
+  ) : isDownloaded = true;
 }
 
 /// Downloadable object

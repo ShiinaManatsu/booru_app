@@ -47,7 +47,7 @@ class _TaskOverlayState extends State<TaskOverlay>
 
   /// Animate card in
   Widget _animateInCard(DownloadTask task, Animation<double> animation) {
-    var curvedAnimation = animation.drive(CurveTween(curve: Curves.easeIn));
+    var curvedAnimation = animation.drive(CurveTween(curve: Curves.ease));
     return SlideTransition(
       position: curvedAnimation.drive(Tween<Offset>(
         begin: Offset(1.0, 0.0),
@@ -74,7 +74,7 @@ class _TaskOverlayState extends State<TaskOverlay>
           curve: Curves.ease,
           tween: Tween<double>(begin: 0, end: task.progress),
           builder: (context, double value, child) => LinearProgressIndicator(
-            value: value,
+            value: task.canceled ? null : value,
             valueColor: AlwaysStoppedAnimation<Color>(Color.lerp(
                 Colors.blueAccent,
                 Colors.pinkAccent,
@@ -90,6 +90,9 @@ class _TaskOverlayState extends State<TaskOverlay>
           ),
         ),
         onTap: () => OpenFile.open(task.filePath),
+        trailing: InkWell(
+            onTap: () => taskBloc.cancelTask.add(task),
+            child: Icon(Icons.cancel_rounded)),
       ),
     );
   }

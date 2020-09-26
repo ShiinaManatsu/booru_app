@@ -6,6 +6,7 @@ import 'package:booru_app/pages/setting_page.dart';
 import 'package:booru_app/router.gr.dart' as routes;
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:booru_app/settings/language.dart';
+import 'package:path/path.dart' as p;
 import 'package:booru_app/themes/theme_dark.dart';
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
@@ -34,26 +35,38 @@ void globalInitial() {
           (LocalUser user) => user.clientType == AppSettings.currentClient))
       .listen((event) => event());
 
-  getUriLinksStream().listen((link) {
-    if (AppSettings.currentClient == ClientType.Konachan &&
-        link.host.contains("yande")) {
-      AppSettings.currentClient = ClientType.Yande;
-      booruBloc.onReset.add(null);
-      booruBloc.onRefresh.add(null);
-    } else if (AppSettings.currentClient == ClientType.Yande &&
-        link.host.contains("konachan")) {
-      AppSettings.currentClient = ClientType.Konachan;
-      booruBloc.onReset.add(null);
-      booruBloc.onRefresh.add(null);
-    }
-    ExtendedNavigator.root.push(routes.Routes.postViewPageByPostID,
-        arguments: routes.PostViewPageByPostIDArguments(
-            postID: link.pathSegments[link.pathSegments.indexOf("show") + 1]));
+  PublishSubject().listen((value) {
+    print("Subject listened");
   });
+
+  if (!Platform.isWindows)
+    getUriLinksStream().listen((link) {
+      if (AppSettings.currentClient == ClientType.Konachan &&
+          link.host.contains("yande")) {
+        AppSettings.currentClient = ClientType.Yande;
+        booruBloc.onReset.add(null);
+        booruBloc.onRefresh.add(null);
+      } else if (AppSettings.currentClient == ClientType.Yande &&
+          link.host.contains("konachan")) {
+        AppSettings.currentClient = ClientType.Konachan;
+        booruBloc.onReset.add(null);
+        booruBloc.onRefresh.add(null);
+      }
+      ExtendedNavigator.root.push(routes.Routes.postViewPageByPostID,
+          arguments: routes.PostViewPageByPostIDArguments(
+              postID:
+                  link.pathSegments[link.pathSegments.indexOf("show") + 1]));
+    });
+
   AppSettings.savePath.then((value) async {
-    if (value == null || value.isEmpty) {
+    if (Platform.isAndroid) {
+      if (value == null || value.isEmpty) {
+        AppSettings.setSavePath(
+            (await getExternalStorageDirectory()).absolute.path);
+      }
+    } else {
       AppSettings.setSavePath(
-          (await getExternalStorageDirectory()).absolute.path);
+          p.join(Directory.current.absolute.path, "downloads"));
     }
   });
 

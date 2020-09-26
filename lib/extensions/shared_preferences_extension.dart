@@ -11,10 +11,19 @@ class SharedPreferencesExtension {
   static Future<bool> setTyped<T>(String key, T value) async {
     if (Platform.isWindows) {
       var file = File("sp.json");
-      var j = json.decode(await file.readAsString());
-      j[key] = value;
-      await file.writeAsString(json.encode(j));
-      return true;
+      if (!file.existsSync()) {
+        file.createSync();
+      }
+      var content = await file.readAsString();
+      if (content.isNotEmpty) {
+        var j = json.decode(content);
+        j[key] = value;
+        await file.writeAsString(json.encode(j));
+        return true;
+      } else {
+        await file.writeAsString(json.encode({key: value}));
+        return true;
+      }
     } else {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       switch (T) {

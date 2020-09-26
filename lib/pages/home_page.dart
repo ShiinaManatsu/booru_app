@@ -47,7 +47,8 @@ class _HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
-    _getInitPost();
+    if (!Platform.isWindows) _getInitPost();
+
     language = Language();
     booruBloc = BooruBloc(BooruAPI(), panelWidth);
     taskBloc = TaskBloc();
@@ -88,7 +89,7 @@ class _HomePageState extends State<HomePage>
             : Colors.grey[900],
         statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
     panelWidth = MediaQuery.of(context).size.width - 8; // Minus padding = 8
-    // booruBloc.onPanelWidth.add(panelWidth);
+    if (Platform.isWindows) booruBloc.onPanelWidth.add(panelWidth);
     return SafeArea(
       child: Scaffold(
           bottomNavigationBar:
