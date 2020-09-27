@@ -92,7 +92,7 @@ class _TaskOverlayState extends State<TaskOverlay>
         onTap: () => OpenFile.open(task.filePath),
         trailing: InkWell(
             onTap: () => taskBloc.cancelTask.add(task),
-            child: Icon(Icons.cancel_rounded)),
+            child: Icon(Icons.cancel)),
       ),
     );
   }

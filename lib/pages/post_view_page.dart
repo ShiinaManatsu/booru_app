@@ -128,6 +128,23 @@ class _PostViewPageState extends State<PostViewPage>
           _buildGallery(),
           _buildTopRightPanel(MediaQuery.of(context).size.height),
         ]),
+        web: MediaQuery.of(context).size.aspectRatio >= 1
+            ? Stack(children: <Widget>[
+                _buildGallery(),
+                _buildTopRightPanel(MediaQuery.of(context).size.height),
+              ])
+            : SlidingUpPanel(
+                backdropColor: Colors.black,
+                backdropOpacity: 0.5,
+                color: Theme.of(context).backgroundColor,
+                minHeight: 60,
+                maxHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top,
+                parallaxEnabled: true,
+                backdropEnabled: true,
+                // When coollapsed
+                panel: _buildContentPanel(),
+                body: _buildGallery()),
       ),
     );
   }
@@ -558,7 +575,7 @@ class _PostViewPageState extends State<PostViewPage>
             maxScale: 1.0,
             initialScale: PhotoViewComputedScale.contained,
             filterQuality: FilterQuality.high,
-            imageProvider: !Platform.isWindows
+            imageProvider: !Platform.isWindows && !kIsWeb
                 ? CachedNetworkImageProvider(BooruBloc.cache[index].jpegUrl)
                 : NetworkImage(BooruBloc.cache[index].jpegUrl),
             heroAttributes: PhotoViewHeroAttributes(tag: _post)),
