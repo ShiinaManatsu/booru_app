@@ -62,9 +62,21 @@ class BooruBloc {
 
     //pageChange=onPage.throttleTime(Duration(milliseconds: 500)).;
 
+    onReset.asBroadcastStream().listen((event) {
+      refreshController.requestRefresh();
+    });
+
     // Laoding stete
-    var loadingState = onUpdate
+    var updateLoading = onUpdate
         .switchMap<PostState>((x) => Stream<PostState>.value(PostLoading()));
+
+    var pageLoading = onPage
+        .switchMap<PostState>((x) => Stream<PostState>.value(PostLoading()));
+
+    var resetLoading = onReset
+        .switchMap<PostState>((x) => Stream<PostState>.value(PostLoading()));
+
+    var loadingState = updateLoading.mergeWith([pageLoading, resetLoading]);
 
     // Cache last update
     onUpdate.asBroadcastStream().listen((x) {
