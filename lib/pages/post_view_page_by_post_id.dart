@@ -71,8 +71,8 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
       if (mounted) {
         setState(() {
           _post = value.first;
-          Statistics.append(StatisticsItem(
-              postEntry: EnumToString.parse(PostEntry.Link), post: _post));
+          // Statistics.append(StatisticsItem(
+          //     postEntry: EnumToString.parse(PostEntry.Link), post: _post));
 
           _post.tags.split(" ").forEach((x) async {
             var res = await TagDataBase.searchTags(x);

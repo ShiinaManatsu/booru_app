@@ -12,6 +12,7 @@ import "package:flutter/material.dart";
 import 'package:flutter/services.dart';
 import "package:photo_view/photo_view.dart";
 import "package:photo_view/photo_view_gallery.dart";
+import 'package:rxdart/rxdart.dart';
 import "package:sliding_up_panel/sliding_up_panel.dart";
 import "package:url_launcher/url_launcher.dart";
 import "package:booru_app/models/rx/booru_api.dart";
@@ -42,6 +43,10 @@ class _PostViewPageState extends State<PostViewPage>
   double panelHandlerWidth = 192; // Hover area
   double commentsPanelWidth = 300;
   PhotoViewController _galleryController = PhotoViewController();
+
+  bool _showPanel = true;
+
+  bool get _isWideScreen => MediaQuery.of(context).size.aspectRatio >= 1;
 
   /// Gallery page index
   int _index;
@@ -93,17 +98,14 @@ class _PostViewPageState extends State<PostViewPage>
       }
     });
 
-    Statistics.append(StatisticsItem(
-        postEntry: EnumToString.parse(PostEntry.App), post: _post));
+    // Statistics.append(StatisticsItem(
+    //     postEntry: EnumToString.parse(PostEntry.App), post: _post));
   }
 
-  // @override
-  // void dispose() {
-  //   super.dispose();
-  //   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-  //       statusBarColor: Theme.of(context).backgroundColor.withOpacity(0.95),
-  //       statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
-  // }
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,41 +113,35 @@ class _PostViewPageState extends State<PostViewPage>
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
     return Scaffold(
-      body: PerPlatform(
-        android: SlidingUpPanel(
-            backdropColor: Colors.black,
-            backdropOpacity: 0.5,
-            color: Theme.of(context).backgroundColor,
-            minHeight: 60,
-            maxHeight: MediaQuery.of(context).size.height -
-                MediaQuery.of(context).padding.top,
-            parallaxEnabled: true,
-            backdropEnabled: true,
-            // When coollapsed
-            panel: _buildContentPanel(),
-            body: _buildGallery()),
-        windows: Stack(children: <Widget>[
-          _buildGallery(),
-          _buildTopRightPanel(MediaQuery.of(context).size.height),
-        ]),
-        web: MediaQuery.of(context).size.aspectRatio >= 1
-            ? Stack(children: <Widget>[
-                _buildGallery(),
-                _buildTopRightPanel(MediaQuery.of(context).size.height),
-              ])
-            : SlidingUpPanel(
-                backdropColor: Colors.black,
-                backdropOpacity: 0.5,
-                color: Theme.of(context).backgroundColor,
-                minHeight: 60,
-                maxHeight: MediaQuery.of(context).size.height -
-                    MediaQuery.of(context).padding.top,
-                parallaxEnabled: true,
-                backdropEnabled: true,
-                // When coollapsed
-                panel: _buildContentPanel(),
-                body: _buildGallery()),
-      ),
+      body: MediaQuery.of(context).size.aspectRatio >= 1
+          ? Stack(children: <Widget>[
+              _buildGallery(),
+              _buildTopRightPanel(MediaQuery.of(context).size.height),
+            ])
+          : TweenAnimationBuilder<double>(
+              duration: Duration(milliseconds: 200),
+              curve: Curves.ease,
+              tween: Tween<double>(
+                  begin: _showPanel ? 60 : 0, end: _showPanel ? 60 : 0),
+              builder: (context, value, child) => SlidingUpPanel(
+                  backdropColor: Colors.black,
+                  backdropOpacity: 0.5,
+                  color: Theme.of(context).backgroundColor,
+                  minHeight: value,
+                  maxHeight: MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top,
+                  parallaxEnabled: true,
+                  backdropEnabled: true,
+                  // When coollapsed
+                  panel: _buildContentPanel(),
+                  body: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _showPanel = !_showPanel;
+                        });
+                      },
+                      child: _buildGallery())),
+            ),
     );
   }
 
