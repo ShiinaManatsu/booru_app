@@ -9,6 +9,7 @@ import "package:flutter/foundation.dart";
 import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 import "package:photo_view/photo_view.dart";
 import "package:photo_view/photo_view_gallery.dart";
 import "package:sliding_up_panel/sliding_up_panel.dart";
@@ -195,12 +196,17 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
                                   _buildQuadIconButton(
                                       () => Navigator.pop(context),
                                       Icon(Icons.arrow_back)),
-                                  _buildQuadIconButton(() {
+                                  _buildQuadIconButton(() async {
                                     if (kIsWeb) {
                                       _launchURL(_post.fileUrl);
                                       return;
                                     } else {
-                                      taskBloc.addDownload.add(_post);
+                                      var status =
+                                          await Permission.storage.status;
+                                      if (status == PermissionStatus.granted)
+                                        taskBloc.addDownload.add(_post);
+                                      else
+                                        Permission.storage.request();
                                     }
                                   }, Icon(Icons.file_download)),
                                   _buildQuadIconButton(() {
@@ -276,8 +282,13 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
               BooruAPI.votePost(postID: _post.id, type: VoteType.Favorite)),
           Icon(Icons.favorite_border,
               color: Theme.of(context).textTheme.button.color)),
-      _buildQuadIconButton(
-          () => taskBloc.addDownload.add(_post),
+      _buildQuadIconButton(() async {
+        var status = await Permission.storage.status;
+        if (status == PermissionStatus.granted)
+          taskBloc.addDownload.add(_post);
+        else
+          Permission.storage.request();
+      },
           Icon(Icons.file_download,
               color: Theme.of(context).textTheme.button.color)),
       _buildQuadIconButton(

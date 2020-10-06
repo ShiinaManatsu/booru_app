@@ -26,7 +26,7 @@ dependencies:
   open_file: ^3.0.1
   crypto: ^2.1.3 # Sha1
   # Notification usage
-  flutter_local_notifications: ^1.1.3
+  flutter_local_notifications: ^2.0.0
   overlay_support: ^1.0.2
   # Transition
   flutter_page_transition: ^0.1.6
@@ -38,10 +38,9 @@ dependencies:
   filesystem_picker: ^1.0.2
   uni_links: ^0.4.0
   auto_route: ^0.6.7
-  animated_splash: ^1.0.0
-  syncfusion_flutter_charts: ^18.2.57
   flutter_cache_manager: ^1.4.2
   package_info: '>=0.4.3 <2.0.0'
+  permission_handler: ^5.0.1+1
   
   # flutter_native_splash: ^0.1.9
 

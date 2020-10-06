@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:booru_app/pages/widgets/sliver_floating_bar.dart';
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:overlay_support/overlay_support.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:rxdart/rxdart.dart';
 
 class SettingPage extends StatefulWidget {
@@ -91,21 +92,26 @@ class _SettingPageState extends State<SettingPage> {
                           child: Text(
                               "${language.content.select} ${language.content.folder}"),
                           onPressed: () async {
-                            String path = await FilesystemPicker.open(
-                              title: 'Save to folder',
-                              context: context,
-                              rootDirectory: Directory.fromUri(
-                                  Uri.directory("storage/emulated/0/")),
-                              fsType: FilesystemType.folder,
-                              pickText: 'Save file to this folder',
-                              folderIconColor: Colors.pink,
-                            );
-                            AppSettings.setSavePath(path);
-                            AppSettings.savePath.then((value) {
-                              setState(() {
-                                savePath = value;
+                            var status = await Permission.storage.status;
+                            if (status == PermissionStatus.granted) {
+                              String path = await FilesystemPicker.open(
+                                title: 'Save to folder',
+                                context: context,
+                                rootDirectory: Directory.fromUri(
+                                    Uri.directory("storage/emulated/0/")),
+                                fsType: FilesystemType.folder,
+                                pickText: 'Save file to this folder',
+                                folderIconColor: Colors.pink,
+                              );
+                              AppSettings.setSavePath(path);
+                              AppSettings.savePath.then((value) {
+                                setState(() {
+                                  savePath = value;
+                                });
                               });
-                            });
+                            } else {
+                              Permission.storage.request();
+                            }
                           },
                         ),
                         title: Text("$savePath",
