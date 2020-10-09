@@ -89,6 +89,15 @@ void globalInitial() {
       SharedPreferencesExtension.setTyped<bool>("safemode", false);
     }
   });
+
+  SharedPreferencesExtension.getTyped<bool>("masonryGrid").then((value) {
+    if (value != null) {
+      AppSettings.masonryGrid = value;
+    } else {
+      AppSettings.masonryGrid = false;
+      SharedPreferencesExtension.setTyped<bool>("masonryGrid", false);
+    }
+  });
 }
 
 void _desktopInitHack() {

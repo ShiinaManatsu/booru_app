@@ -1,7 +1,9 @@
 import 'package:booru_app/main.dart';
+import 'package:booru_app/settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:booru_app/models/rx/post_state.dart';
 import 'package:booru_app/pages/home_page.dart';
+import 'package:masonry_grid/masonry_grid.dart';
 import 'post_preview.dart';
 
 class SliverPostWaterfall extends StatefulWidget {
@@ -33,19 +35,42 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
           builder: (context, snapshot) {
             if (snapshot.data is PostSuccess) {
               var state = snapshot.data as PostSuccess;
-              return Container(
-                child: SingleChildScrollView(
-                  child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                          4, 5, 4, 0), // Don't know why 1px shift
-                      child: Wrap(
-                        spacing: 4,
-                        runSpacing: 4,
-                        children: <Widget>[]..addAll(state.result.map((x) =>
-                            RepaintBoundary(child: PostPreview(post: x)))),
-                      )),
-                ),
-              );
+              return !AppSettings.masonryGrid
+                  ? SingleChildScrollView(
+                      child: Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                              4, 5, 4, 0), // Don't know why 1px shift
+                          child: Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: <Widget>[]..addAll(state.result.map((x) =>
+                                RepaintBoundary(child: PostPreview(post: x)))),
+                          )),
+                    )
+                  : CustomScrollView(
+                      physics: BouncingScrollPhysics(),
+                      shrinkWrap: true,
+                      slivers: [
+                        SliverToBoxAdapter(child: SizedBox(height: 4)),
+                        SliverToBoxAdapter(
+                          child: MasonryGrid(
+                              crossAxisSpacing: 4,
+                              mainAxisSpacing: 4,
+                              column: 2,
+                              children: state.result
+                                  .map((x) => RepaintBoundary(
+                                      child: AspectRatio(
+                                          aspectRatio: x.ratio,
+                                          child: Container(
+                                              width: MediaQuery.of(context)
+                                                      .size
+                                                      .width /
+                                                  2,
+                                              child: PostPreview(post: x)))))
+                                  .toList()),
+                        )
+                      ],
+                    );
             } else if (snapshot.data is PostError) {
               var date = snapshot.data as PostError;
               print(date.error);

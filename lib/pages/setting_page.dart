@@ -22,10 +22,11 @@ class _SettingPageState extends State<SettingPage> {
   var setLimit = PublishSubject<double>();
   String savePath = "";
 
-  var expansionStatus = [false, false, false, false];
+  var expansionStatus = [false, false, false, false, false];
 
   PreviewQuality quality = AppSettings.previewQuality;
   bool _safeMode = AppSettings.safeMode;
+  bool _masonryGrid = AppSettings.masonryGrid;
 
   @override
   void initState() {
@@ -200,6 +201,32 @@ class _SettingPageState extends State<SettingPage> {
                               AppSettings.safeMode = value;
                               setState(() {
                                 _safeMode = value;
+                              });
+                            },
+                          )
+                        ],
+                      )),
+                    ),
+                    ExpansionPanel(
+                      canTapOnHeader: true,
+                      isExpanded: expansionStatus[4],
+                      headerBuilder: (context, d) {
+                        return ListTile(
+                          title: Text("Masonry Grid"),
+                        );
+                      },
+                      body: ListTile(
+                          title: Row(
+                        children: [
+                          Text("Use Masonry Grid"),
+                          Switch(
+                            value: _masonryGrid,
+                            onChanged: (value) {
+                              SharedPreferencesExtension.setTyped<bool>(
+                                  "masonryGrid", value);
+                              AppSettings.masonryGrid = value;
+                              setState(() {
+                                _masonryGrid = value;
                               });
                             },
                           )

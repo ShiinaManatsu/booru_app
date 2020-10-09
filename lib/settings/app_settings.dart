@@ -26,6 +26,9 @@ class AppSettings {
   /// Filter only safe images
   static bool safeMode=false;
 
+  /// Use masonry grid
+  static bool masonryGrid=false;
+
   /// Photo save location
   static Future<String> get savePath async =>
       await SharedPreferencesExtension.getTyped<String>("savePath") ?? "";

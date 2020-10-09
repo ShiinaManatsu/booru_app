@@ -1,4 +1,4 @@
-package com.example.booru_app
+package com.ShiinaManatsu.Yande.booru_app
 
 import io.flutter.embedding.android.FlutterActivity
 

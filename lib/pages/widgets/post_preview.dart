@@ -51,7 +51,7 @@ class _PostPreviewState extends State<PostPreview>
         decoration: BoxDecoration(
           border: Border.all(
               color: !_isHover ? Colors.black12 : Colors.pink,
-              width: postPreviewBorder),
+              width: !AppSettings.masonryGrid ? postPreviewBorder : 0),
         ),
         child: GestureDetector(
           onTap: () => ExtendedNavigator.root.push(Routes.postViewPage,
@@ -66,16 +66,25 @@ class _PostPreviewState extends State<PostPreview>
             //   loadingBuilder: (context, child, progress) =>
             //       progress == null ? child : CircularProgressIndicator(),
             // ),
-            child: Image(
-              image: !Platform.isWindows
-                  ? CachedNetworkImageProvider(url)
-                  : Image.network(url).image,
-              height: AppSettings.fixedPostHeight - postPreviewBorder * 2,
-              width: widget.post.widthInPanel - postPreviewBorder * 2,
-              fit: BoxFit.cover,
-              loadingBuilder: (context, child, progress) =>
-                  progress == null ? child : CircularProgressIndicator(),
-            ),
+            child: !AppSettings.masonryGrid
+                ? Image(
+                    image: !Platform.isWindows
+                        ? CachedNetworkImageProvider(url)
+                        : Image.network(url).image,
+                    height: AppSettings.fixedPostHeight - postPreviewBorder * 2,
+                    width: widget.post.widthInPanel - postPreviewBorder * 2,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, progress) =>
+                        progress == null ? child : CircularProgressIndicator(),
+                  )
+                : Image(
+                    image: !Platform.isWindows
+                        ? CachedNetworkImageProvider(url)
+                        : Image.network(url).image,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, progress) =>
+                        progress == null ? child : CircularProgressIndicator(),
+                  ),
           ),
         ),
       ),
