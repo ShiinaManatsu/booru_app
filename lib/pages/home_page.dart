@@ -112,7 +112,7 @@ class _HomePageState extends State<HomePage>
               controller: refreshController,
               child: CustomScrollView(
                 controller: _controller,
-                physics: BouncingScrollPhysics(),
+                // physics: BouncingScrollPhysics(),
                 slivers: <Widget>[
                   SliverFloatingBar(
                     automaticallyImplyLeading: false,
