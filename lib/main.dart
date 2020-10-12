@@ -35,9 +35,6 @@ void globalInitial() {
           (LocalUser user) => user.clientType == AppSettings.currentClient))
       .listen((event) => event());
 
-  PublishSubject().listen((value) {
-    print("Subject listened");
-  });
 
   if (!Platform.isWindows)
     getUriLinksStream().listen((link) {
@@ -45,12 +42,10 @@ void globalInitial() {
           link.host.contains("yande")) {
         AppSettings.currentClient = ClientType.Yande;
         booruBloc.onReset.add(null);
-        booruBloc.onRefresh.add(null);
       } else if (AppSettings.currentClient == ClientType.Yande &&
           link.host.contains("konachan")) {
         AppSettings.currentClient = ClientType.Konachan;
         booruBloc.onReset.add(null);
-        booruBloc.onRefresh.add(null);
       }
       ExtendedNavigator.root.push(routes.Routes.postViewPageByPostID,
           arguments: routes.PostViewPageByPostIDArguments(
@@ -77,7 +72,7 @@ void globalInitial() {
     } else {
       AppSettings.previewQuality = PreviewQuality.Low;
       SharedPreferencesExtension.setTyped(
-          "PreviewQuality", EnumToString.parse(PreviewQuality.Low));
+          "PreviewQuality", EnumToString.convertToString(PreviewQuality.Low));
     }
   });
 

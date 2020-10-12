@@ -1,7 +1,7 @@
 name: booru_app
 description: App for yande and konachan
 
-version: 0.2.3+7
+version: 0.2.4+8
 
 environment:
   sdk: ">=2.8.0 <3.0.0"
@@ -42,6 +42,7 @@ dependencies:
   package_info: '>=0.4.3 <2.0.0'
   permission_handler: ^5.0.1+1
   masonry_grid: ^0.3.1+2
+  darq: ^0.4.0+1
   
   # flutter_native_splash: ^0.1.9
 

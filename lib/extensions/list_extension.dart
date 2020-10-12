@@ -3,18 +3,13 @@ import 'package:booru_app/models/rx/booru_bloc.dart';
 import 'package:booru_app/models/yande/post.dart';
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:booru_app/pages/home_page.dart';
+import 'package:rxdart/rxdart.dart';
 // We are moving all the fetched post to the optimized list
 
 extension ListExtension on List<Post> {
   Future<List<Post>> arrange() async {
     if (AppSettings.masonryGrid) {
-      var cache = BooruBloc.cache;
-      if (this.length == 0) {
-        return cache;
-      } else {
-        cache.addAll(this);
-        return cache;
-      }
+      return BooruBloc.cache;
     } else {
       if (this.length == 0) {
         return List<Post>();

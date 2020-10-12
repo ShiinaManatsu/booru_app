@@ -5,6 +5,7 @@ import 'package:booru_app/models/rx/post_state.dart';
 import 'package:booru_app/pages/home_page.dart';
 import 'package:masonry_grid/masonry_grid.dart';
 import 'post_preview.dart';
+import 'package:darq/darq.dart';
 
 class SliverPostWaterfall extends StatefulWidget {
   final ScrollController controller;
@@ -44,8 +45,9 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
                             child: Wrap(
                               spacing: 4,
                               runSpacing: 4,
-                              children: <Widget>[]..addAll(state.result.map(
-                                  (x) => RepaintBoundary(
+                              children: <Widget>[]..addAll(state.result
+                                  .distinct((x) => x.id)
+                                  .map((x) => RepaintBoundary(
                                       child: PostPreview(post: x)))),
                             )),
                       )
@@ -54,7 +56,7 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
                         mainAxisSpacing: 4,
                         column: 2,
                         children: state.result
-                            .toSet()
+                            .distinct((x) => x.id)
                             .map((x) => RepaintBoundary(
                                 child: AspectRatio(
                                     aspectRatio: x.ratio,
