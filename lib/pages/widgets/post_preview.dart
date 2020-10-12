@@ -75,7 +75,9 @@ class _PostPreviewState extends State<PostPreview>
                     width: widget.post.widthInPanel - postPreviewBorder * 2,
                     fit: BoxFit.cover,
                     loadingBuilder: (context, child, progress) =>
-                        progress == null ? child : CircularProgressIndicator(),
+                        progress == null
+                            ? child
+                            : Center(child: CircularProgressIndicator()),
                   )
                 : Image(
                     image: !Platform.isWindows
@@ -83,7 +85,9 @@ class _PostPreviewState extends State<PostPreview>
                         : Image.network(url).image,
                     fit: BoxFit.cover,
                     loadingBuilder: (context, child, progress) =>
-                        progress == null ? child : CircularProgressIndicator(),
+                        progress == null
+                            ? child
+                            : Center(child: CircularProgressIndicator()),
                   ),
           ),
         ),
