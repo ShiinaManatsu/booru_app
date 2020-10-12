@@ -29,57 +29,50 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
   Widget build(BuildContext context) {
     return SliverList(
       delegate: SliverChildListDelegate([
+        SizedBox(height: 4),
         StreamBuilder<PostState>(
-          stream: booruBloc.state,
-          initialData: PostEmpty(),
-          builder: (context, snapshot) {
-            if (snapshot.data is PostSuccess) {
-              var state = snapshot.data as PostSuccess;
-              return !AppSettings.masonryGrid
-                  ? SingleChildScrollView(
-                      child: Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                              4, 5, 4, 0), // Don't know why 1px shift
-                          child: Wrap(
-                            spacing: 4,
-                            runSpacing: 4,
-                            children: <Widget>[]..addAll(state.result.map((x) =>
-                                RepaintBoundary(child: PostPreview(post: x)))),
-                          )),
-                    )
-                  : CustomScrollView(
-                      physics: BouncingScrollPhysics(),
-                      shrinkWrap: true,
-                      slivers: [
-                        SliverToBoxAdapter(child: SizedBox(height: 4)),
-                        SliverToBoxAdapter(
-                          child: MasonryGrid(
-                              crossAxisSpacing: 4,
-                              mainAxisSpacing: 4,
-                              column: 2,
-                              children: state.result
-                                  .map((x) => RepaintBoundary(
-                                      child: AspectRatio(
-                                          aspectRatio: x.ratio,
-                                          child: Container(
-                                              width: MediaQuery.of(context)
-                                                      .size
-                                                      .width /
-                                                  2,
-                                              child: PostPreview(post: x)))))
-                                  .toList()),
-                        )
-                      ],
-                    );
-            } else if (snapshot.data is PostError) {
-              var date = snapshot.data as PostError;
-              print(date.error);
-              return _buildText(date.error.toString());
-            } else {
-              return _buildText("${language.content.loading}..");
-            }
-          },
-        )
+            stream: booruBloc.state,
+            initialData: PostEmpty(),
+            builder: (context, snapshot) {
+              if (snapshot.data is PostSuccess) {
+                var state = snapshot.data as PostSuccess;
+                return !AppSettings.masonryGrid
+                    ? SingleChildScrollView(
+                        child: Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                                4, 0, 4, 0), // Don't know why 1px shift
+                            child: Wrap(
+                              spacing: 4,
+                              runSpacing: 4,
+                              children: <Widget>[]..addAll(state.result.map(
+                                  (x) => RepaintBoundary(
+                                      child: PostPreview(post: x)))),
+                            )),
+                      )
+                    : MasonryGrid(
+                        crossAxisSpacing: 4,
+                        mainAxisSpacing: 4,
+                        column: 2,
+                        children: state.result
+                            .map((x) => RepaintBoundary(
+                                child: AspectRatio(
+                                    aspectRatio: x.ratio,
+                                    child: Container(
+                                        width:
+                                            MediaQuery.of(context).size.width /
+                                                2,
+                                        child: PostPreview(post: x)))))
+                            .toList());
+              } else if (snapshot.data is PostError) {
+                var date = snapshot.data as PostError;
+                print(date.error);
+                return _buildText(date.error.toString());
+              } else if (snapshot.data is PostLoading) {
+                return _buildText("${language.content.loading}..");
+              } else {
+                return _buildText("${language.content.nothingToShow}..");
+              }
+            })
       ]),
     );
   }
