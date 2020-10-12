@@ -110,9 +110,11 @@ class BooruBloc {
         .switchMap<PostState>((x) async* {
           if (x is PostSuccess)
             yield PostSuccess(await (x).result.arrange());
-          else {
+          else if (x is PostLoading) {
+            if (!(last.fetchType == FetchType.Posts ||
+                last.fetchType == FetchType.Search)) yield x;
+          } else
             yield x;
-          }
         })
         .asBroadcastStream();
 
