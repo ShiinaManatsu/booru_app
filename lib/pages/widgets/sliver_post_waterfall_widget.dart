@@ -54,6 +54,7 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
                         mainAxisSpacing: 4,
                         column: 2,
                         children: state.result
+                            .toSet()
                             .map((x) => RepaintBoundary(
                                 child: AspectRatio(
                                     aspectRatio: x.ratio,
