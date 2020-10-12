@@ -206,16 +206,18 @@ class _HomePageState extends State<HomePage>
     var opt = item as ClientType;
     switch (opt) {
       case ClientType.Yande:
-        booruBloc.onRefresh.add(null);
         setState(() {
           AppSettings.currentClient = ClientType.Yande;
         });
+        booruBloc.onReset.add(null);
+        booruBloc.onRefresh.add(null);
         break;
       case ClientType.Konachan:
-        booruBloc.onRefresh.add(null);
         setState(() {
           AppSettings.currentClient = ClientType.Konachan;
         });
+        booruBloc.onReset.add(null);
+        booruBloc.onRefresh.add(null);
         break;
       default:
         break;
@@ -388,10 +390,10 @@ class _HomePageState extends State<HomePage>
                       _buildDrawerEmptyButton(
                           () => ExtendedNavigator.root.push(Routes.aboutPage),
                           "${language.content.about}"),
-                      _buildDrawerEmptyButton(
-                          () => ExtendedNavigator.root
-                              .push(Routes.testGroundPage),
-                          "Test Ground"),
+                      // _buildDrawerEmptyButton(
+                      //     () => ExtendedNavigator.root
+                      //         .push(Routes.testGroundPage),
+                      //     "Test Ground"),
                     ],
                   ),
                 ],
