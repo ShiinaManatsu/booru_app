@@ -108,7 +108,11 @@ class BooruBloc {
         .mergeWith([panelWidthChanged])
         .startWith(PostSuccess(List<Post>()))
         .switchMap<PostState>((x) async* {
-          if (x is PostSuccess) yield PostSuccess(await (x).result.arrange());
+          if (x is PostSuccess)
+            yield PostSuccess(await (x).result.arrange());
+          else {
+            yield x;
+          }
         })
         .asBroadcastStream();
 
