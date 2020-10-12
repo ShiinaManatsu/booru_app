@@ -52,6 +52,7 @@ abstract class Content {
 
   /// pages/widgets/sliver_post_waterfall_widget
   String get loading;
+  String get nothingToShow;
 
   /// pages/home_page
   String get popularByWeek;
@@ -122,6 +123,8 @@ class ZhCN implements Content {
   /// pages/widgets/sliver_post_waterfall_widget
   @override
   String get loading => "正在加载";
+  @override
+  String get nothingToShow => "没有什么可显示";
 
   /// pages/home_page
   @override
@@ -232,6 +235,8 @@ class ZhHk implements Content {
   /// pages/widgets/sliver_post_waterfall_widget
   @override
   String get loading => "";
+  @override
+  String get nothingToShow => "沒有什麼可顯示";
 
   /// pages/home_page
   @override
@@ -342,6 +347,8 @@ class EN implements Content {
   /// pages/widgets/sliver_post_waterfall_widget
   @override
   String get loading => "Loading";
+  @override
+  String get nothingToShow => "Nothing to show..";
 
   /// pages/home_page
   @override
