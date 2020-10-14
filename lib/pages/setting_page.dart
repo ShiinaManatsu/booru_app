@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:booru_app/extensions/shared_preferences_extension.dart';
 import 'package:booru_app/main.dart';
+import 'package:booru_app/pages/widgets/sliver_post_waterfall_widget.dart';
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:filesystem_picker/filesystem_picker.dart';
 import 'package:flutter/material.dart';
@@ -207,6 +208,62 @@ class _SettingPageState extends State<SettingPage> {
                 _masonryGrid = AppSettings.masonryGrid;
               });
             },
+          )),
+          //  Masonry grid border radius
+          _buildCard(
+              child: ListTile(
+            contentPadding: EdgeInsets.all(16),
+            title: Text("Masonry Grid Border Radius"),
+            subtitle: Row(
+              children: <Widget>[
+                Text(
+                    "${language.content.currentLimit}: ${masonryGridBorderRadius.toInt()}"),
+                Expanded(
+                  child: Slider(
+                    value: masonryGridBorderRadius,
+                    activeColor: Theme.of(context).primaryColor,
+                    inactiveColor:
+                        Theme.of(context).primaryColor.withAlpha(0x80),
+                    onChanged: (value) {
+                      setState(() {
+                        masonryGridBorderRadius = value;
+                      });
+                    },
+                    min: 0,
+                    max: 100,
+                    divisions: 100,
+                  ),
+                )
+              ],
+            ),
+          )),
+          //  Load limit
+          _buildCard(
+              child: ListTile(
+            contentPadding: EdgeInsets.all(16),
+            title: Text("Masonry Grid Spacing"),
+            subtitle: Row(
+              children: <Widget>[
+                Text("${language.content.currentLimit}: ${spacing.toInt()}"),
+                Expanded(
+                  child: Slider(
+                    value: spacing,
+                    activeColor: Theme.of(context).primaryColor,
+                    inactiveColor:
+                        Theme.of(context).primaryColor.withAlpha(0x80),
+                    onChanged: (value) {
+                      setState(() {
+                        spacing = value;
+                        setLimit.add(value);
+                      });
+                    },
+                    min: 0,
+                    max: 100,
+                    divisions: 100,
+                  ),
+                )
+              ],
+            ),
           )),
         ],
       ),

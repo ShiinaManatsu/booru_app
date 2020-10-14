@@ -1,7 +1,7 @@
 name: booru_app
 description: App for yande and konachan
 
-version: 0.2.4+8
+version: 0.2.5+9
 
 environment:
   sdk: ">=2.8.0 <3.0.0"
