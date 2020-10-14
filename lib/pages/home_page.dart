@@ -562,6 +562,16 @@ class _HomePageState extends State<HomePage>
               },
               middleTextFunction: (X) {
                 // open date picker
+                showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: AppSettings.currentClient == ClientType.Yande
+                            ? AppSettings.yandeFirstday
+                            : AppSettings.konachanFirstday,
+                        lastDate: DateTime.now())
+                    .then((date) {
+                  if (date != null) booruBloc.onDateTime.add((x) => date);
+                });
               });
         } else if (_type == FetchType.PopularByMonth) {
           return _bottomNavigator(
@@ -574,6 +584,16 @@ class _HomePageState extends State<HomePage>
               },
               middleTextFunction: (X) {
                 // open date picker
+                showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: AppSettings.currentClient == ClientType.Yande
+                            ? AppSettings.yandeFirstday
+                            : AppSettings.konachanFirstday,
+                        lastDate: DateTime.now())
+                    .then((date) {
+                  if (date != null) booruBloc.onDateTime.add((x) => date);
+                });
               });
         } else {
           return SliverList(delegate: SliverChildListDelegate([]));
