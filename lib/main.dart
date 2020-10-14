@@ -35,7 +35,6 @@ void globalInitial() {
           (LocalUser user) => user.clientType == AppSettings.currentClient))
       .listen((event) => event());
 
-
   if (!Platform.isWindows)
     getUriLinksStream().listen((link) {
       if (AppSettings.currentClient == ClientType.Konachan &&
@@ -61,7 +60,7 @@ void globalInitial() {
       }
     } else {
       AppSettings.setSavePath(
-          p.join(Directory.current.absolute.path, "downloads"));
+          p.join(Directory.current.absolute.path, "/BooruPhotos"));
     }
   });
 

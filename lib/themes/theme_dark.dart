@@ -5,6 +5,8 @@ final Color baseWhiteColor = Colors.grey[200]; // Google title black
 
 final TextStyle baseTextStyle = TextStyle(color: baseWhiteColor);
 
+final double _masonryGridBorderRadius = 12;
+
 final TextTheme baseTextTheme = TextTheme(
     bodyText2: baseTextStyle,
     bodyText1: baseTextStyle,
@@ -15,13 +17,20 @@ final TextTheme baseTextTheme = TextTheme(
 
 // Theme
 final ThemeData darkTheme = ThemeData.dark().copyWith(
-    backgroundColor: Colors.grey[900],
-    primaryColorLight: Colors.white,
-    primaryColorBrightness: Brightness.light,
-    brightness: Brightness.dark,
-    primaryColor: Colors.pink,
-    
-    // textTheme: baseTextTheme,
-    iconTheme: IconThemeData(color: baseWhiteColor),
-    // primaryTextTheme: baseTextTheme,
-    appBarTheme: AppBarTheme(color: Colors.white, textTheme: baseTextTheme));
+  backgroundColor: Colors.grey[900],
+  primaryColorLight: Colors.white,
+  primaryColorBrightness: Brightness.light,
+  brightness: Brightness.dark,
+  primaryColor: Colors.pink,
+
+  // textTheme: baseTextTheme,
+  iconTheme: IconThemeData(color: baseWhiteColor),
+  // primaryTextTheme: baseTextTheme,
+  appBarTheme: AppBarTheme(color: Colors.white, textTheme: baseTextTheme),
+  cardTheme: CardTheme(
+    clipBehavior: Clip.antiAliasWithSaveLayer,
+    elevation: 4,
+    shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(_masonryGridBorderRadius)),
+  ),
+);

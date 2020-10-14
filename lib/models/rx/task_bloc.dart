@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:booru_app/models/yande/post.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:path/path.dart' as p;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -212,6 +213,8 @@ class DownloadTask {
         _showNotification(post.id, post.id.toString(), filePath);
         taskBloc.removeTask.add(this);
         taskBloc.progressCompleteUpdate.add(null);
+        // if(Platform.isAndroid||Platform.isIOS)
+        // ImageGallerySaver.saveFile(filePath);
       }).catchError((x) => taskBloc.removeTask.add(this));
     }
   }

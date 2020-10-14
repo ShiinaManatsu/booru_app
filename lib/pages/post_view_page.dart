@@ -102,12 +102,7 @@ class _PostViewPageState extends State<PostViewPage>
     // Statistics.append(StatisticsItem(
     //     postEntry: EnumToString.parse(PostEntry.App), post: _post));
   }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
+  
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(

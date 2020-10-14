@@ -26,7 +26,7 @@ class UpdateDialogState extends State<UpdateDialog> {
 
     return AlertDialog(
       title: Text(
-        " Updates", //#TN
+        "Updates", //#TN
         style: _textStyle,
       ),
       content: _downloadProgress == 0.0
@@ -56,6 +56,7 @@ class UpdateDialogState extends State<UpdateDialog> {
         ),
         FlatButton(
           child: Text('Cancel'), //#TN
+          onLongPress: null,
           onPressed: () {
             Navigator.of(context).pop();
             if (widget.cancleToken != null) widget.cancleToken.cancel("Cancelled");

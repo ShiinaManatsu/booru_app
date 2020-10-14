@@ -17,7 +17,7 @@ class BooruBloc {
   final PublishSubject onRefresh;
 
   /// Call to reset page
-  final PublishSubject onReset;
+  final PublishSubject<bool> onReset;
 
   /// Call to update page
   final PublishSubject<PageNavigationType> onPage;
@@ -47,7 +47,7 @@ class BooruBloc {
   factory BooruBloc(BooruAPI booru, double panelWidth) {
     final onUpdate = PublishSubject<UpdateArg>();
     final onRefresh = PublishSubject();
-    final onReset = PublishSubject();
+    final onReset = PublishSubject<bool>();
     final onPage = PublishSubject<PageNavigationType>();
     final onPanelWidth = PublishSubject<double>();
     final onDateTime = PublishSubject<DateTime Function(DateTime)>();
@@ -56,13 +56,18 @@ class BooruBloc {
         UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1));
 
     // Call on refresh
-    var refresh = onRefresh.switchMap<PostState>((x) {
+    var refresh = onRefresh
+        .throttleTime(Duration(milliseconds: 100))
+        .switchMap<PostState>((x) {
       return _fetchState(last, booru);
     });
 
     //pageChange=onPage.throttleTime(Duration(milliseconds: 500)).;
 
-    onReset.asBroadcastStream().listen((event) {
+    onReset.asBroadcastStream().listen((x) {
+      page = 1;
+      cache.clear();
+      evaluated.clear();
       refreshController.requestRefresh();
     });
 
@@ -95,7 +100,9 @@ class BooruBloc {
         loadingState.mergeWith([fetchingState, refresh]).asBroadcastStream();
 
     _state.listen((x) {
-      if (x is PostSuccess) cache.addAll(List.from((x).result));
+      if (x is PostSuccess) {
+        cache.addAll(List.from((x).result));
+      }
     });
 
     var panelWidthChanged =
@@ -143,17 +150,14 @@ class BooruBloc {
       }
     });
 
-    // Reset page
-    onReset.asBroadcastStream().listen((x) {
-      page = 1;
-      cache.clear();
-      evaluated.clear();
-    });
-
     // var pageIndicator = pageChanged.mergeWith([pageReset]);
 
     // Date time changed
     var postDateChanged = onDateTime.switchMap<DateTime>((x) async* {
+      //  Clear posts
+      cache.clear();
+      evaluated.clear();
+
       var date = x(postDateTime);
       postDateTime = date;
 

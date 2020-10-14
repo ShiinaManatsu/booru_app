@@ -6,6 +6,8 @@ final Color baseBlackColor =
 
 final TextStyle baseTextStyle = TextStyle(color: baseBlackColor);
 
+final double _masonryGridBorderRadius = 12;
+
 final TextTheme baseTextTheme = TextTheme(
   bodyText2: baseTextStyle,
   bodyText1: baseTextStyle,
@@ -15,11 +17,18 @@ final TextTheme baseTextTheme = TextTheme(
 
 // Theme
 final ThemeData lightTheme = ThemeData(
-    backgroundColor: Colors.white,
-    primaryColor: Colors.pink,
-    textTheme: baseTextTheme,
-    brightness: Brightness.light,
-    primaryColorBrightness: Brightness.dark,
-    iconTheme: IconThemeData(color: baseBlackColor),
-    primaryTextTheme: baseTextTheme,
-    appBarTheme: AppBarTheme(color: Colors.white, textTheme: baseTextTheme));
+  backgroundColor: Colors.white,
+  primaryColor: Colors.pink,
+  textTheme: baseTextTheme,
+  brightness: Brightness.light,
+  primaryColorBrightness: Brightness.dark,
+  iconTheme: IconThemeData(color: baseBlackColor),
+  primaryTextTheme: baseTextTheme,
+  appBarTheme: AppBarTheme(color: Colors.white, textTheme: baseTextTheme),
+  cardTheme: CardTheme(
+    clipBehavior: Clip.antiAliasWithSaveLayer,
+    elevation: 4,
+    shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(_masonryGridBorderRadius)),
+  ),
+);

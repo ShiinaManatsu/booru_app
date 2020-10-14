@@ -98,19 +98,11 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
     });
   }
 
-  // @override
-  // void dispose() {
-  //   super.dispose();
-  //   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-  //       statusBarColor: Theme.of(context).backgroundColor.withOpacity(0.95),
-  //       statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
-  // }
-
   @override
   Widget build(BuildContext context) {
-    // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    //     statusBarColor: Colors.transparent,
-    //     statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
     return Scaffold(
       body: _post != null
           ? PerPlatform(

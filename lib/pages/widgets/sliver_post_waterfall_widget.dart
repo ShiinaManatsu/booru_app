@@ -19,6 +19,8 @@ class SliverPostWaterfall extends StatefulWidget {
 class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
   ScrollController _controller;
 
+  double get _spacing => 4;
+
   @override
   void initState() {
     super.initState();
@@ -28,11 +30,12 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
 
   @override
   Widget build(BuildContext context) {
+    var size = MediaQuery.of(context).size;
     return SliverList(
       delegate: SliverChildListDelegate([
-        SizedBox(height: 4),
+        SizedBox(height: _spacing),
         StreamBuilder<PostState>(
-            stream: booruBloc.state,
+            stream: booruBloc.state.distinct((x, y) => x == y),
             initialData: PostEmpty(),
             builder: (context, snapshot) {
               if (snapshot.data is PostSuccess) {
@@ -40,8 +43,7 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
                 return !AppSettings.masonryGrid
                     ? SingleChildScrollView(
                         child: Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                                4, 0, 4, 0), // Don't know why 1px shift
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
                             child: Wrap(
                               spacing: 4,
                               runSpacing: 4,
@@ -51,21 +53,24 @@ class _SliverPostWaterfallState extends State<SliverPostWaterfall> {
                                       child: PostPreview(post: x)))),
                             )),
                       )
-                    : MasonryGrid(
-                        crossAxisSpacing: 4,
-                        mainAxisSpacing: 4,
-                        column: 2,
-                        children: state.result
-                            .distinct((x) => x.id)
-                            .map((x) => RepaintBoundary(
-                                child: AspectRatio(
-                                    aspectRatio: x.ratio,
-                                    child: Container(
-                                        width:
-                                            MediaQuery.of(context).size.width /
-                                                2,
-                                        child: PostPreview(post: x)))))
-                            .toList());
+                    : Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: _spacing + 4, vertical: _spacing),
+                        child: MasonryGrid(
+                            staggered: false,
+                            crossAxisSpacing: _spacing,
+                            mainAxisSpacing: _spacing,
+                            column: size.width ~/
+                                (size.aspectRatio > 1 ? 400 : 200),
+                            children: state.result
+                                .map((x) => RepaintBoundary(
+                                    child: AspectRatio(
+                                        aspectRatio: x.ratio,
+                                        child: Card(
+                                          child: PostPreview(post: x),
+                                        ))))
+                                .toList()),
+                      );
               } else if (snapshot.data is PostError) {
                 var date = snapshot.data as PostError;
                 print(date.error);
