@@ -104,7 +104,7 @@ class _HomePageState extends State<HomePage>
               ),
               onRefresh: () {
                 booruBloc.onRefresh.add(null);
-                booruBloc.onReset.add(null);
+                // booruBloc.onReset.add(null);
               },
               onLoading: () => _onPageChange.add(PageNavigationType.Next),
               enablePullDown: true,
@@ -359,7 +359,7 @@ class _HomePageState extends State<HomePage>
                         booruBloc.onUpdate.add(UpdateArg(
                             fetchType: FetchType.PopularByDay,
                             arg: PopularByDayArgs(time: DateTime.now())));
-                        booruBloc.onDateTime.add((x) => x = DateTime.now());
+                        // booruBloc.onDateTime.add((x) => x = DateTime.now());
                       }, "${language.content.popularPostsByDay}",
                           FetchType.PopularByDay),
 
@@ -369,7 +369,7 @@ class _HomePageState extends State<HomePage>
                         booruBloc.onUpdate.add(UpdateArg(
                             fetchType: FetchType.PopularByWeek,
                             arg: PopularByWeekArgs(time: DateTime.now())));
-                        booruBloc.onDateTime.add((x) => x = DateTime.now());
+                        // booruBloc.onDateTime.add((x) => x = DateTime.now());
                       }, "${language.content.popularPostsByWeek}",
                           FetchType.PopularByWeek),
 
@@ -379,7 +379,7 @@ class _HomePageState extends State<HomePage>
                         booruBloc.onUpdate.add(UpdateArg(
                             fetchType: FetchType.PopularByMonth,
                             arg: PopularByMonthArgs(time: DateTime.now())));
-                        booruBloc.onDateTime.add((x) => x = DateTime.now());
+                        // booruBloc.onDateTime.add((x) => x = DateTime.now());
                       }, "${language.content.popularPostsByMonth}",
                           FetchType.PopularByMonth),
 
@@ -542,8 +542,18 @@ class _HomePageState extends State<HomePage>
               rightButtonFunction: () {
                 booruBloc.onDateTime.add((x) => x.add(Duration(days: 1)));
               },
-              middleTextFunction: (X) {
+              middleTextFunction: (x) {
                 // open date picker
+                showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: AppSettings.currentClient == ClientType.Yande
+                            ? AppSettings.yandeFirstday
+                            : AppSettings.konachanFirstday,
+                        lastDate: DateTime.now())
+                    .then((date) {
+                  if (date != null) booruBloc.onDateTime.add((x) => date);
+                });
               });
         } else if (_type == FetchType.PopularByWeek) {
           return _bottomNavigator(
