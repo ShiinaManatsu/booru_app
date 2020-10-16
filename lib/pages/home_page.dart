@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui';
 import 'package:auto_route/auto_route.dart';
 import 'package:booru_app/pages/widgets/login_box.dart';
@@ -80,11 +81,8 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    //     statusBarColor: Theme.of(context).backgroundColor.withOpacity(0.95),
-    //     statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-        statusBarColor: Theme.of(context).backgroundColor.withOpacity(0.35),
+        statusBarColor: Theme.of(context).backgroundColor.withOpacity(0.95),
         statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
     panelWidth = MediaQuery.of(context).size.width - 8; // Minus padding = 8
     if (Platform.isWindows) booruBloc.onPanelWidth.add(panelWidth);
@@ -94,104 +92,119 @@ class _HomePageState extends State<HomePage>
       drawer: _appDrawer(),
       drawerEdgeDragWidth: 100,
       body: Builder(
-        builder: (context) => SmartRefresher(
-          header: ClassicHeader(
-            // backgroundColor: Colors.accents[1],
-            textStyle: Theme.of(context).textTheme.button,
-          ),
-          onRefresh: () {
-            booruBloc.onRefresh.add(null);
-            // booruBloc.onReset.add(null);
-          },
-          onLoading: () => _onPageChange.add(PageNavigationType.Next),
-          enablePullDown: true,
-          enablePullUp: _type == FetchType.Posts,
-          controller: refreshController,
-          child: CustomScrollView(
-            controller: _controller,
-            // physics: BouncingScrollPhysics(),
-            slivers: <Widget>[
-              SliverFloatingBar(
-                automaticallyImplyLeading: false,
-                backgroundColor:
-                    Theme.of(context).backgroundColor.withOpacity(0.95),
-                floating: Platform.isAndroid,
-                // pinned: true,
-                title: Container(
-                  margin: EdgeInsets.only(bottom: 5), // Fix the displacement
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: <Widget>[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        builder: (context) => TweenAnimationBuilder<Matrix4>(
+          tween: Matrix4Tween(begin: Matrix4.zero(),end: Matrix4(
+            1,0,0,0,
+            0,1,0,0,
+            0,0,1,0,
+            0,0,0,1,
+          )
+          ..rotateX(0.0*pi)
+          ..rotateY(0.0*pi)
+          ..rotateZ(0.0*pi)),
+          duration: Duration(milliseconds: 300),
+          builder: (context, value, child) => Transform(
+              transform: value,
+              child: SmartRefresher(
+              header: ClassicHeader(
+                // backgroundColor: Colors.accents[1],
+                textStyle: Theme.of(context).textTheme.button,
+              ),
+              onRefresh: () {
+                booruBloc.onRefresh.add(null);
+                // booruBloc.onReset.add(null);
+              },
+              onLoading: () => _onPageChange.add(PageNavigationType.Next),
+              enablePullDown: true,
+              enablePullUp: _type == FetchType.Posts,
+              controller: refreshController,
+              child: CustomScrollView(
+                controller: _controller,
+                // physics: BouncingScrollPhysics(),
+                slivers: <Widget>[
+                  SliverFloatingBar(
+                    automaticallyImplyLeading: false,
+                    backgroundColor:
+                        Theme.of(context).backgroundColor.withOpacity(0.95),
+                    floating: true,
+                    elevation: Platform.isIOS ? 0 : 4,
+                    title: Container(
+                      margin: EdgeInsets.only(bottom: 5), // Fix the displacement
+                      child: Stack(
+                        alignment: Alignment.center,
                         children: <Widget>[
-                          IconButton(
-                            onPressed: () {
-                              setState(() {
-                                blurSigma = 3;
-                              });
-                              Scaffold.of(context).openDrawer();
-                            },
-                            icon: Icon(Icons.menu),
-                          ),
                           Row(
-                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
-                              Center(
-                                child: DropdownButton(
-                                  underline: Container(),
-                                  items: [
-                                    DropdownMenuItem(
-                                        child: Text("Yande.re",
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .button),
-                                        value: ClientType.Yande),
-                                    DropdownMenuItem(
-                                        child: Text("Konachan",
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .button),
-                                        value: ClientType.Konachan)
-                                  ],
-                                  iconSize: 0,
-                                  onChanged: onDropdownChanged,
-                                  value: AppSettings.currentClient,
-                                ),
+                              IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    blurSigma = 3;
+                                  });
+                                  Scaffold.of(context).openDrawer();
+                                },
+                                icon: Icon(Icons.menu),
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  Center(
+                                    child: DropdownButton(
+                                      underline: Container(),
+                                      items: [
+                                        DropdownMenuItem(
+                                            child: Text("Yande.re",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .button),
+                                            value: ClientType.Yande),
+                                        DropdownMenuItem(
+                                            child: Text("Konachan",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .button),
+                                            value: ClientType.Konachan)
+                                      ],
+                                      iconSize: 0,
+                                      onChanged: onDropdownChanged,
+                                      value: AppSettings.currentClient,
+                                    ),
+                                  )
+                                ],
                               )
                             ],
+                          ),
+                          AnimatedSize(
+                            duration: Duration(milliseconds: 500),
+                            vsync: this,
+                            curve: Curves.ease,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.max,
+                              children: <Widget>[
+                                IconButton(
+                                  onPressed: () => ExtendedNavigator.root.push(
+                                      Routes.searchTaggedPostsPage,
+                                      arguments: SearchTaggedPostsPageArguments(
+                                          key: _searchPage)),
+                                  icon: Icon(Icons.search),
+                                ),
+                                _searchNabor
+                              ],
+                            ),
                           )
                         ],
                       ),
-                      AnimatedSize(
-                        duration: Duration(milliseconds: 500),
-                        vsync: this,
-                        curve: Curves.ease,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.max,
-                          children: <Widget>[
-                            IconButton(
-                              onPressed: () => ExtendedNavigator.root.push(
-                                  Routes.searchTaggedPostsPage,
-                                  arguments: SearchTaggedPostsPageArguments(
-                                      key: _searchPage)),
-                              icon: Icon(Icons.search),
-                            ),
-                            _searchNabor
-                          ],
-                        ),
-                      )
-                    ],
+                    ),
                   ),
-                ),
+                  SliverPostWaterfall(
+                    controller: _controller,
+                  ),
+                  // _buildPageNavigator(),
+                  _buildDatePicker(),
+                ],
               ),
-              SliverPostWaterfall(
-                controller: _controller,
-              ),
-              // _buildPageNavigator(),
-              _buildDatePicker(),
-            ],
+            ),
           ),
         ),
       ),

@@ -26,7 +26,7 @@ final ThemeData darkTheme = ThemeData.dark().copyWith(
   // textTheme: baseTextTheme,
   iconTheme: IconThemeData(color: baseWhiteColor),
   // primaryTextTheme: baseTextTheme,
-  appBarTheme: AppBarTheme(color: Colors.white, textTheme: baseTextTheme),
+  appBarTheme: AppBarTheme(color: Colors.grey[900], textTheme: baseTextTheme),
   cardTheme: CardTheme(
     clipBehavior: Clip.antiAliasWithSaveLayer,
     elevation: 4,
