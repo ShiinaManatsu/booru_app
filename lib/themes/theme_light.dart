@@ -9,16 +9,20 @@ final TextStyle baseTextStyle = TextStyle(color: baseBlackColor);
 final double _masonryGridBorderRadius = 12;
 
 final TextTheme baseTextTheme = TextTheme(
-  bodyText2: baseTextStyle,
-  bodyText1: baseTextStyle,
-  button: TextStyle(color: baseBlackColor),
-  headline6: baseTextStyle.copyWith(fontSize: 28),
-);
+    bodyText2: baseTextStyle,
+    bodyText1: baseTextStyle,
+    button: TextStyle(color: baseBlackColor),
+    headline5: baseTextStyle.copyWith(fontSize: 24),
+    headline6:
+        baseTextStyle.copyWith(fontSize: 20, fontWeight: FontWeight.w500),
+    subtitle2: baseTextStyle // Subtitle
+    );
 
 // Theme
 final ThemeData lightTheme = ThemeData(
   backgroundColor: Colors.white,
   primaryColor: Colors.pink,
+  accentColor: Colors.pink,
   textTheme: baseTextTheme,
   brightness: Brightness.light,
   primaryColorBrightness: Brightness.dark,

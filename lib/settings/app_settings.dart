@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:booru_app/extensions/shared_preferences_extension.dart';
 import 'package:booru_app/models/rx/booru_api.dart';
 import 'package:booru_app/pages/setting_page.dart';
+import 'package:flutter/foundation.dart';
 
 /// Settings fot the whole application.
 ///
@@ -12,7 +13,7 @@ class AppSettings {
   static ClientType currentClient = ClientType.Yande;
 
   /// The height of post in the post list
-  static double fixedPostHeight = Platform.isAndroid ? 256.0 : 384.0;
+  static double fixedPostHeight = !kIsWeb && Platform.isAndroid ? 256.0 : 384.0;
 
   /// The first day that yande has datas
   static DateTime yandeFirstday = DateTime(2006, 9);
@@ -24,10 +25,14 @@ class AppSettings {
   static PreviewQuality previewQuality = PreviewQuality.Medium;
 
   /// Filter only safe images
-  static bool safeMode=false;
+  static bool safeMode = false;
 
   /// Use masonry grid
-  static bool masonryGrid=false;
+  static bool masonryGrid = false;
+
+  static double masonryGridBorderRadius = 12;
+
+  static double masonryGridSpacing = 4;
 
   /// Photo save location
   static Future<String> get savePath async =>

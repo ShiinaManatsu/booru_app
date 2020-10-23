@@ -15,8 +15,8 @@ dependencies:
   rxdart: ^0.24.1
   esys_flutter_share: ^1.0.2
   floating_search_bar: ^0.2.0
-  photo_view: ^0.9.1
-  sliding_up_panel: ^1.0.0
+  photo_view: ^0.10.2
+  sliding_up_panel: ^1.0.2
   devicelocale: ^0.3.2
   pull_to_refresh: ^1.5.8
   enum_to_string: ^1.0.9
@@ -44,6 +44,12 @@ dependencies:
   masonry_grid: ^0.3.1+2
   darq: ^0.4.0+1  #LinQ like operators
   image_gallery_saver: ^1.6.0
+
+  # Windows usage
+  file_chooser:
+    git:
+      url: git://github.com/google/flutter-desktop-embedding.git
+      path: plugins/file_chooser
   
   # flutter_native_splash: ^0.1.9
 

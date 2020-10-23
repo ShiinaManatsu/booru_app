@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:devicelocale/devicelocale.dart';
+import 'package:flutter/foundation.dart';
 
 class Language {
   LanguageCodes language = LanguageCodes.en_uk;
@@ -20,7 +21,7 @@ class Language {
   }
 
   getLanguage() {
-    if (Platform.isWindows) return;
+    if (!kIsWeb && Platform.isWindows) return;
 
     Devicelocale.currentLocale.then((locale) {
       if (locale.contains(LanguageMap[LanguageCodes.zh_cn])) {

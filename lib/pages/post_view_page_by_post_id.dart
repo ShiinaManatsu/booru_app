@@ -1,9 +1,9 @@
+import 'dart:io' show Platform;
 import 'dart:math';
 import "package:booru_app/main.dart";
-import 'package:booru_app/models/local/statistics.dart';
+import 'package:booru_app/pages/setting_page.dart';
 import "package:booru_app/pages/widgets/per_platform_method.dart";
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:enum_to_string/enum_to_string.dart';
 import "package:esys_flutter_share/esys_flutter_share.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/gestures.dart";
@@ -41,6 +41,8 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
   double panelHandlerWidth = 192; // Hover area
   double commentsPanelWidth = 300;
   PhotoViewController _galleryController = PhotoViewController();
+
+  bool _showPanel = true;
 
   /// Gallery page index
   Post _post;
@@ -104,26 +106,35 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
     return Scaffold(
-      body: _post != null
-          ? PerPlatform(
-              android: SlidingUpPanel(
+      body: MediaQuery.of(context).size.aspectRatio >= 3 / 4
+          ? Stack(children: <Widget>[
+              _buildGallery(),
+              _buildTopRightPanel(MediaQuery.of(context).size.height),
+            ])
+          : TweenAnimationBuilder<double>(
+              duration: Duration(milliseconds: 200),
+              curve: Curves.ease,
+              tween: Tween<double>(
+                  begin: _showPanel ? 60 : 0, end: _showPanel ? 60 : 0),
+              builder: (context, value, child) => SlidingUpPanel(
                   backdropColor: Colors.black,
                   backdropOpacity: 0.5,
                   color: Theme.of(context).backgroundColor,
-                  minHeight: 60,
+                  minHeight: value,
                   maxHeight: MediaQuery.of(context).size.height -
                       MediaQuery.of(context).padding.top,
                   parallaxEnabled: true,
                   backdropEnabled: true,
                   // When coollapsed
                   panel: _buildContentPanel(),
-                  body: _buildGallery()),
-              windows: Stack(children: <Widget>[
-                _buildGallery(),
-                _buildTopRightPanel(MediaQuery.of(context).size.height),
-              ]),
-            )
-          : Center(child: CircularProgressIndicator()),
+                  body: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _showPanel = !_showPanel;
+                        });
+                      },
+                      child: _buildGallery())),
+            ),
     );
   }
 
@@ -287,17 +298,22 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
           () => _galleryController.rotation -= pi / 2,
           Icon(Icons.rotate_90_degrees_ccw,
               color: Theme.of(context).textTheme.button.color)),
-      _buildQuadIconButton(
-          () async => await Share.file("${_post.id}", "${_post.id}.png",
-              (await http.get(_post.jpegUrl)).bodyBytes, "image/png",
-              text: "${language.content.shareTo} ..."),
-          Icon(Icons.share, color: Theme.of(context).textTheme.button.color)),
-      _buildQuadIconButton(
-          () => Share.text(
-              "${_post.id}",
-              "https://yande.re/post/show/${_post.id}",
-              "text/plain;charset=UTF-8"),
-          Icon(Icons.link, color: Theme.of(context).textTheme.button.color)),
+      (!kIsWeb && (Platform.isAndroid || Platform.isIOS))
+          ? _buildQuadIconButton(
+              () async => await Share.file("${_post.id}", "${_post.id}.png",
+                  (await http.get(_post.jpegUrl)).bodyBytes, "image/png",
+                  text: "${language.content.shareTo} ..."),
+              Icon(Icons.share,
+                  color: Theme.of(context).textTheme.button.color))
+          : Container(),
+      (!kIsWeb && (Platform.isAndroid || Platform.isIOS))
+          ? _buildQuadIconButton(
+              () => Share.text(
+                  "${_post.id}",
+                  "https://yande.re/post/show/${_post.id}",
+                  "text/plain;charset=UTF-8"),
+              Icon(Icons.link, color: Theme.of(context).textTheme.button.color))
+          : Container(),
     ]);
 
     var topBar = PerPlatform(
@@ -550,20 +566,74 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
   }
 
   Widget _buildGallery() {
-    return Container(
+    return Hero(
+      tag: _post,
       child: PhotoViewGallery.builder(
+        gaplessPlayback: true,
         enableRotation: true,
         backgroundDecoration: BoxDecoration(color: Colors.transparent),
         scrollPhysics: const BouncingScrollPhysics(),
         builder: (context, index) => PhotoViewGalleryPageOptions(
-            controller: _galleryController,
-            maxScale: 1.0,
-            initialScale: PhotoViewComputedScale.contained,
-            filterQuality: FilterQuality.high,
-            imageProvider: CachedNetworkImageProvider(_post.jpegUrl),
-            heroAttributes: PhotoViewHeroAttributes(tag: _post)),
+          controller: _galleryController,
+          maxScale: 1.0,
+          initialScale: PhotoViewComputedScale.contained,
+          filterQuality: FilterQuality.high,
+          imageProvider: !kIsWeb && !Platform.isWindows
+              ? CachedNetworkImageProvider(_post.jpegUrl)
+              : NetworkImage(_post.jpegUrl),
+        ),
         pageController: PageController(),
         itemCount: 1,
+        loadingBuilder: (BuildContext context, ImageChunkEvent event) {
+          String url;
+          switch (AppSettings.previewQuality) {
+            case PreviewQuality.Low:
+              url = _post.previewUrl;
+              break;
+            case PreviewQuality.Medium:
+              url = _post.sampleUrl;
+              break;
+            case PreviewQuality.High:
+              url = _post.jpegUrl;
+              break;
+            case PreviewQuality.Original:
+              url = _post.fileUrl;
+              break;
+            default:
+          }
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: -1, end: 1),
+                  duration: Duration(milliseconds: 800),
+                  builder: (BuildContext context, double value, Widget child) =>
+                      Opacity(
+                        opacity: value < 0 ? 0 : value,
+                        child: Image(
+                          gaplessPlayback: true,
+                          fit: BoxFit.contain,
+                          filterQuality: FilterQuality.high,
+                          image: !kIsWeb && !Platform.isWindows
+                              ? CachedNetworkImageProvider(url)
+                              : NetworkImage(url),
+                        ),
+                      )),
+              Center(
+                child: Container(
+                  width: 20.0,
+                  height: 20.0,
+                  child: CircularProgressIndicator(
+                    value: event == null
+                        ? null
+                        : event.cumulativeBytesLoaded /
+                            event.expectedTotalBytes,
+                  ),
+                ),
+              )
+            ],
+          );
+        },
       ),
     );
   }

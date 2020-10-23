@@ -65,7 +65,7 @@ class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage>
                   width: 70,
                   margin: EdgeInsets.only(left: 5),
                   child: Text(
-                      "${EnumToString.parseCamelCase(_tags[index].tagType)}:")),
+                      "${EnumToString.convertToString(_tags[index].tagType)}:")),
             ],
           ),
           title: Text(_tags[index].content),

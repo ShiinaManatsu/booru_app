@@ -4,6 +4,7 @@ import 'package:booru_app/extensions/shared_preferences_extension.dart';
 import 'package:booru_app/main.dart';
 import 'package:booru_app/pages/widgets/sliver_post_waterfall_widget.dart';
 import 'package:enum_to_string/enum_to_string.dart';
+import 'package:file_chooser/file_chooser.dart';
 import 'package:filesystem_picker/filesystem_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:booru_app/pages/widgets/sliver_floating_bar.dart';
@@ -19,7 +20,7 @@ class SettingPage extends StatefulWidget {
 
 class _SettingPageState extends State<SettingPage> {
   var locationIsExpand = true;
-  double postLimit = 50;
+  double _postLimit = 50;
   var setLimit = PublishSubject<double>();
   String savePath = "";
 
@@ -32,7 +33,7 @@ class _SettingPageState extends State<SettingPage> {
     super.initState();
     AppSettings.postLimit.then((value) {
       setState(() {
-        postLimit = value;
+        _postLimit = value;
       });
     });
 
@@ -78,6 +79,15 @@ class _SettingPageState extends State<SettingPage> {
               onPressed: () => Navigator.pop(context),
             ),
           ),
+
+          SliverToBoxAdapter(
+              child: Container(
+                  padding: EdgeInsets.fromLTRB(8, 8, 8, 0),
+                  child: Text(
+                    "Behavior",
+                    style: Theme.of(context).textTheme.button,
+                  ))),
+
           //  Download location
           _buildCard(
               child: ListTile(
@@ -88,25 +98,38 @@ class _SettingPageState extends State<SettingPage> {
             isThreeLine: true,
             trailing: Icon(Icons.folder),
             onTap: () async {
-              var status = await Permission.storage.status;
-              if (status == PermissionStatus.granted) {
-                String path = await FilesystemPicker.open(
-                  title: 'Save to folder',
-                  context: context,
-                  rootDirectory:
-                      Directory.fromUri(Uri.directory("storage/emulated/0/")),
-                  fsType: FilesystemType.folder,
-                  pickText: 'Save file to this folder',
-                  folderIconColor: Colors.pink,
-                );
-                AppSettings.setSavePath(path);
-                AppSettings.savePath.then((value) {
-                  setState(() {
-                    savePath = value;
-                  });
+              if (Platform.isWindows) {
+                showOpenPanel(
+                  canSelectDirectories: true,
+                ).then((path) {
+                  if (!path.canceled) {
+                    AppSettings.setSavePath(path.paths.first);
+                    setState(() {
+                      savePath = path.paths.first;
+                    });
+                  }
                 });
-              } else {
-                Permission.storage.request();
+              } else if (Platform.isAndroid || Platform.isIOS) {
+                var status = await Permission.storage.status;
+                if (status == PermissionStatus.granted) {
+                  String path = await FilesystemPicker.open(
+                    title: 'Save to folder',
+                    context: context,
+                    rootDirectory:
+                        Directory.fromUri(Uri.directory("storage/emulated/0/")),
+                    fsType: FilesystemType.folder,
+                    pickText: 'Save file to this folder',
+                    folderIconColor: Colors.pink,
+                  );
+                  AppSettings.setSavePath(path);
+                  AppSettings.savePath.then((value) {
+                    setState(() {
+                      savePath = value;
+                    });
+                  });
+                } else {
+                  Permission.storage.request();
+                }
               }
             },
           )),
@@ -117,16 +140,16 @@ class _SettingPageState extends State<SettingPage> {
             title: Text("${language.content.singlePagePostLoadLimit}"),
             subtitle: Row(
               children: <Widget>[
-                Text("${language.content.currentLimit}: ${postLimit.toInt()}"),
+                Text("${language.content.currentLimit}: ${_postLimit.toInt()}"),
                 Expanded(
                   child: Slider(
-                    value: postLimit,
+                    value: _postLimit,
                     activeColor: Theme.of(context).primaryColor,
                     inactiveColor:
                         Theme.of(context).primaryColor.withAlpha(0x80),
                     onChanged: (value) {
                       setState(() {
-                        postLimit = value;
+                        _postLimit = value;
                         setLimit.add(value);
                       });
                     },
@@ -177,12 +200,11 @@ class _SettingPageState extends State<SettingPage> {
               },
             ),
             onTap: () {
-              SharedPreferencesExtension.setTyped<bool>(
-                  "safemode", !AppSettings.safeMode);
-              AppSettings.safeMode = !AppSettings.safeMode;
               setState(() {
-                _safeMode = !AppSettings.safeMode;
+                _safeMode = !_safeMode;
               });
+              SharedPreferencesExtension.setTyped<bool>("safemode", _safeMode);
+              AppSettings.safeMode = _safeMode;
             },
           )),
           //  Masonry Grid
@@ -217,16 +239,18 @@ class _SettingPageState extends State<SettingPage> {
             subtitle: Row(
               children: <Widget>[
                 Text(
-                    "${language.content.currentLimit}: ${masonryGridBorderRadius.toInt()}"),
+                    "Current Radius: ${AppSettings.masonryGridBorderRadius.toInt()}"),
                 Expanded(
                   child: Slider(
-                    value: masonryGridBorderRadius,
+                    value: AppSettings.masonryGridBorderRadius,
                     activeColor: Theme.of(context).primaryColor,
                     inactiveColor:
                         Theme.of(context).primaryColor.withAlpha(0x80),
-                    onChanged: (value) {
+                    onChanged: (double value) {
+                      SharedPreferencesExtension.setTyped<double>(
+                          "masonryGridBorderRadius", value);
                       setState(() {
-                        masonryGridBorderRadius = value;
+                        AppSettings.masonryGridBorderRadius = value;
                       });
                     },
                     min: 0,
@@ -244,17 +268,19 @@ class _SettingPageState extends State<SettingPage> {
             title: Text("Masonry Grid Spacing"),
             subtitle: Row(
               children: <Widget>[
-                Text("${language.content.currentLimit}: ${spacing.toInt()}"),
+                Text(
+                    "Current Spacing: ${AppSettings.masonryGridSpacing.toInt()}"),
                 Expanded(
                   child: Slider(
-                    value: spacing,
+                    value: AppSettings.masonryGridSpacing,
                     activeColor: Theme.of(context).primaryColor,
                     inactiveColor:
                         Theme.of(context).primaryColor.withAlpha(0x80),
-                    onChanged: (value) {
+                    onChanged: (double value) {
+                      SharedPreferencesExtension.setTyped<double>(
+                          "masonryGridSpacing", value);
                       setState(() {
-                        spacing = value;
-                        setLimit.add(value);
+                        AppSettings.masonryGridSpacing = value;
                       });
                     },
                     min: 0,

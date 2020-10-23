@@ -1,9 +1,10 @@
 import 'dart:io';
-
+import 'dart:math' as math;
 import 'package:auto_route/auto_route.dart';
 import 'package:booru_app/pages/setting_page.dart';
 import 'package:booru_app/router.gr.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:booru_app/models/yande/post.dart';
 import 'package:booru_app/settings/app_settings.dart';
@@ -45,53 +46,70 @@ class _PostPreviewState extends State<PostPreview>
     return MouseRegion(
       onEnter: (event) => setState(() => _isHover = true),
       onExit: (event) => setState(() => _isHover = false),
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 100),
-        curve: Curves.ease,
-        decoration: BoxDecoration(
-          border: Border.all(
-              color: !_isHover ? Colors.black12 : Colors.pink,
-              width: !AppSettings.masonryGrid ? postPreviewBorder : 0),
-        ),
-        child: GestureDetector(
-          onTap: () => ExtendedNavigator.root.push(Routes.postViewPage,
-              arguments: PostViewPageArguments(post: widget.post)),
-          child: Hero(
-            tag: widget.post,
-            // child: Image.network(
-            //   url ?? widget.post.sampleUrl,
-            //   height: AppSettings.fixedPostHeight - postPreviewBorder * 2,
-            //   width: widget.post.widthInPanel - postPreviewBorder * 2,
-            //   fit: BoxFit.cover,
-            //   loadingBuilder: (context, child, progress) =>
-            //       progress == null ? child : CircularProgressIndicator(),
-            // ),
-            child: !AppSettings.masonryGrid
-                ? Image(
-                    image: !Platform.isWindows
-                        ? CachedNetworkImageProvider(url)
-                        : Image.network(url).image,
-                    height: AppSettings.fixedPostHeight - postPreviewBorder * 2,
-                    width: widget.post.widthInPanel - postPreviewBorder * 2,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, progress) =>
-                        progress == null
-                            ? child
-                            : Center(child: CircularProgressIndicator()),
-                  )
-                : Image(
-                    image: !Platform.isWindows
-                        ? CachedNetworkImageProvider(url)
-                        : Image.network(url).image,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, progress) =>
-                        progress == null
-                            ? child
-                            : Center(child: CircularProgressIndicator()),
+      child: !AppSettings.masonryGrid
+          ? AnimatedContainer(
+              duration: Duration(milliseconds: 100),
+              curve: Curves.ease,
+              decoration: BoxDecoration(
+                border: Border.all(
+                    color: !_isHover ? Colors.black12 : Colors.pink,
+                    width: postPreviewBorder),
+              ),
+              child: GestureDetector(
+                onTap: () => ExtendedNavigator.root.push(Routes.postViewPage,
+                    arguments: PostViewPageArguments(post: widget.post)),
+                child: Hero(
+                    tag: widget.post,
+                    child: Image(
+                      image: kIsWeb || Platform.isWindows
+                          ? Image.network(url).image
+                          : CachedNetworkImageProvider(url),
+                      height:
+                          AppSettings.fixedPostHeight - postPreviewBorder * 2,
+                      width: widget.post.widthInPanel - postPreviewBorder * 2,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, progress) =>
+                          progress == null
+                              ? child
+                              : Center(child: CircularProgressIndicator()),
+                    )),
+              ),
+            )
+          : TweenAnimationBuilder<double>(
+              duration: Duration(milliseconds: 200),
+              curve: Interval(0.0, 1.0, curve: Curves.ease),
+              tween: Tween<double>(begin: 0, end: _isHover ? 1 : 0),
+              builder: (BuildContext context, double value, Widget child) =>
+                  Transform.scale(
+                scale: 1 + value * 0.02,
+                child: Card(
+                  elevation: (_isHover ? 1.5 : 1) *
+                      Theme.of(context).cardTheme.elevation,
+                  shape: RoundedRectangleBorder(
+                      //  Remvoe this after we ensure we wont change this in setting page
+                      borderRadius: BorderRadius.circular(
+                          AppSettings.masonryGridBorderRadius)),
+                  child: GestureDetector(
+                    onTap: () => ExtendedNavigator.root.push(
+                        Routes.postViewPage,
+                        arguments: PostViewPageArguments(post: widget.post)),
+                    child: Hero(
+                      tag: widget.post,
+                      child: Image(
+                      image: kIsWeb || Platform.isWindows
+                          ? Image.network(url).image
+                          : CachedNetworkImageProvider(url),
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, progress) =>
+                            progress == null
+                                ? child
+                                : Center(child: CircularProgressIndicator()),
+                      ),
+                    ),
                   ),
-          ),
-        ),
-      ),
+                ),
+              ),
+            ),
     );
   }
 

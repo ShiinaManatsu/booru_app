@@ -1,29 +1,58 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// An extension for easily get preferences
 /// The extension method cannot apply to package class
 class SharedPreferencesExtension {
+  static PublishSubject<Map<String, dynamic>> _worker;
+  static File _file;
+  static Map _spJson;
+
+  static PublishSubject _saver;
+
+  bool _finishedWrite = true;
+
+  SharedPreferencesExtension.windows() {
+    _file = File("sp.json");
+    if (_file != null) if (!_file.existsSync()) _file.createSync();
+
+    var content = _file.readAsStringSync();
+
+    if (content.isNotEmpty)
+      _spJson = json.decode(content);
+    else
+      _spJson = Map();
+
+    _worker = PublishSubject<Map<String, dynamic>>();
+    _saver = PublishSubject();
+
+    _saver
+        .throttle((x) => TimerStream(x, Duration(milliseconds: 100)),
+            trailing: true)
+        .takeWhile((element) => _finishedWrite)
+        .listen((value) async {
+      _finishedWrite = false;
+      await _file.writeAsString(json.encode(_spJson));
+      _finishedWrite = true;
+    });
+
+    _worker.listen((value) async {
+      _spJson[value.keys.first] = value.values.first;
+      _saver.add(null);
+    });
+  }
+
   /// Set the type value from SharedPreferences
   /// Where [T] is the type you want ot save
   static Future<bool> setTyped<T>(String key, T value) async {
-    if (Platform.isWindows) {
-      var file = File("sp.json");
-      if (!file.existsSync()) {
-        file.createSync();
-      }
-      var content = await file.readAsString();
-      if (content.isNotEmpty) {
-        var j = json.decode(content);
-        j[key] = value;
-        await file.writeAsString(json.encode(j));
-        return true;
-      } else {
-        await file.writeAsString(json.encode({key: value}));
-        return true;
-      }
+    if (!kIsWeb && Platform.isWindows) {
+      if (_file != null) if (!_file.existsSync()) _file.createSync();
+      _worker.add({key: value});
+      return true;
     } else {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       switch (T) {
@@ -52,7 +81,7 @@ class SharedPreferencesExtension {
   /// Get the type value from SharedPreferences
   /// Where [T] is the type you want ot get
   static Future<T> getTyped<T>(String key) async {
-    if (Platform.isWindows) {
+    if (!kIsWeb && Platform.isWindows) {
       var file = File("sp.json");
       if (await file.exists()) {
         var content = await file.readAsString();

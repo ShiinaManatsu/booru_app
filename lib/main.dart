@@ -35,7 +35,7 @@ void globalInitial() {
           (LocalUser user) => user.clientType == AppSettings.currentClient))
       .listen((event) => event());
 
-  if (!Platform.isWindows)
+  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
     getUriLinksStream().listen((link) {
       if (AppSettings.currentClient == ClientType.Konachan &&
           link.host.contains("yande")) {
@@ -51,16 +51,22 @@ void globalInitial() {
               postID:
                   link.pathSegments[link.pathSegments.indexOf("show") + 1]));
     });
+  }
+
+  if (!kIsWeb && Platform.isWindows) {
+    SharedPreferencesExtension.windows();
+  }
 
   AppSettings.savePath.then((value) async {
-    if (Platform.isAndroid) {
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
       if (value == null || value.isEmpty) {
         AppSettings.setSavePath(
             (await getExternalStorageDirectory()).absolute.path);
       }
     } else {
-      AppSettings.setSavePath(
-          p.join(Directory.current.absolute.path, "/BooruPhotos"));
+      if (!kIsWeb)
+        AppSettings.setSavePath(
+            p.join(Directory.current.absolute.path, "/BooruPhotos"));
     }
   });
 
@@ -90,6 +96,27 @@ void globalInitial() {
     } else {
       AppSettings.masonryGrid = false;
       SharedPreferencesExtension.setTyped<bool>("masonryGrid", false);
+    }
+  });
+
+  SharedPreferencesExtension.getTyped<double>("masonryGridBorderRadius")
+      .then((value) {
+    if (value != null) {
+      AppSettings.masonryGridBorderRadius = value;
+    } else {
+      AppSettings.masonryGridBorderRadius = 12;
+      SharedPreferencesExtension.setTyped<double>(
+          "masonryGridBorderRadius", 12);
+    }
+  });
+
+  SharedPreferencesExtension.getTyped<double>("masonryGridSpacing")
+      .then((value) {
+    if (value != null) {
+      AppSettings.masonryGridSpacing = value;
+    } else {
+      AppSettings.masonryGridSpacing = 4;
+      SharedPreferencesExtension.setTyped<double>("masonryGridSpacing", 4);
     }
   });
 }

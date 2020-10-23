@@ -11,7 +11,9 @@ final TextTheme baseTextTheme = TextTheme(
     bodyText2: baseTextStyle,
     bodyText1: baseTextStyle,
     button: TextStyle(color: baseWhiteColor),
-    headline6: baseTextStyle.copyWith(fontSize: 28), // Title
+    headline5: baseTextStyle.copyWith(fontSize: 24),
+    headline6:
+        baseTextStyle.copyWith(fontSize: 20, fontWeight: FontWeight.w500),
     subtitle2: baseTextStyle // Subtitle
     );
 
@@ -22,10 +24,10 @@ final ThemeData darkTheme = ThemeData.dark().copyWith(
   primaryColorBrightness: Brightness.light,
   brightness: Brightness.dark,
   primaryColor: Colors.pink,
-
-  // textTheme: baseTextTheme,
+  accentColor: Colors.pink,
+  textTheme: baseTextTheme,
   iconTheme: IconThemeData(color: baseWhiteColor),
-  // primaryTextTheme: baseTextTheme,
+  primaryTextTheme: baseTextTheme,
   appBarTheme: AppBarTheme(color: Colors.grey[900], textTheme: baseTextTheme),
   cardTheme: CardTheme(
     clipBehavior: Clip.antiAliasWithSaveLayer,
