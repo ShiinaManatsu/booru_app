@@ -18,25 +18,30 @@ class _TaskOverlayState extends State<TaskOverlay>
         right: 20,
         bottom: 20,
         child: ClipRRect(
-          child: Container(
-            padding: EdgeInsets.all(12),
-            alignment: Alignment.bottomRight,
-            width: 400,
-            color: Colors.transparent,
-            child: SingleChildScrollView(
-              child: Column(
-                children: <Widget>[
-                  //Text("Text"),
-                  AnimatedStreamList<DownloadTask>(
-                    shrinkWrap: true,
-                    streamList: taskBloc.tasks,
-                    duration: Duration(milliseconds: 300),
-                    itemBuilder: (item, index, context, animation) =>
-                        _animateInCard(item, animation),
-                    itemRemovedBuilder: (item, index, context, animation) =>
-                        _animateOutCard(item, animation),
-                  ),
-                ],
+          child: StreamBuilder<List<DownloadTask>>(
+            stream: taskBloc.tasks,
+            builder: (context, snapshot) => Container(
+              padding: snapshot.data.length != 0
+                  ? EdgeInsets.all(12)
+                  : EdgeInsets.zero,
+              alignment: Alignment.bottomRight,
+              width: 400,
+              color: Colors.transparent,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    //Text("Text"),
+                    AnimatedStreamList<DownloadTask>(
+                      shrinkWrap: true,
+                      streamList: taskBloc.tasks,
+                      duration: Duration(milliseconds: 300),
+                      itemBuilder: (item, index, context, animation) =>
+                          _animateInCard(item, animation),
+                      itemRemovedBuilder: (item, index, context, animation) =>
+                          _animateOutCard(item, animation),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
