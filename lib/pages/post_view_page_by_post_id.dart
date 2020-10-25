@@ -442,7 +442,7 @@ class _PostViewPageByPostIDState extends State<PostViewPageByPostID>
                         child: Row(
                           children: <Widget>[
                             CircleAvatar(
-                              backgroundImage: Platform.isWindows
+                              backgroundImage: kIsWeb || Platform.isWindows
                                   ? NetworkImage(
                                       "${AppSettings.currentBaseUrl}/data/avatars/${_post.creatorId}.jpg")
                                   : CachedNetworkImageProvider(
