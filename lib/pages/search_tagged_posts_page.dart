@@ -9,8 +9,6 @@ import 'package:booru_app/models/rx/update_args.dart';
 import 'package:booru_app/models/yande/tags.dart';
 import 'home_page.dart';
 
-HashSet<Tag> _chips = HashSet<Tag>();
-
 class SearchTaggedPostsPage extends StatefulWidget {
   SearchTaggedPostsPage({Key key}) : super(key: key);
 
@@ -20,6 +18,7 @@ class SearchTaggedPostsPage extends StatefulWidget {
 
 class _SearchTaggedPostsPageState extends State<SearchTaggedPostsPage>
     with TickerProviderStateMixin {
+  HashSet<Tag> _chips = HashSet<Tag>();
   List<Tag> _tags = List<Tag>();
 
   Stream<List<Tag>> searchedTags;

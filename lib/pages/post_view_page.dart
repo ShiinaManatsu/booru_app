@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'dart:math';
+import 'package:auto_route/auto_route.dart';
 import "package:booru_app/main.dart";
+import 'package:booru_app/models/rx/update_args.dart';
 import 'package:booru_app/pages/setting_page.dart';
 import "package:booru_app/pages/widgets/per_platform_method.dart";
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:enum_to_string/enum_to_string.dart';
 import "package:esys_flutter_share/esys_flutter_share.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/gestures.dart";
@@ -13,7 +14,6 @@ import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import "package:photo_view/photo_view.dart";
 import "package:photo_view/photo_view_gallery.dart";
-import 'package:rxdart/rxdart.dart';
 import "package:sliding_up_panel/sliding_up_panel.dart";
 import "package:url_launcher/url_launcher.dart";
 import "package:booru_app/models/rx/booru_api.dart";
@@ -65,7 +65,9 @@ class _PostViewPageState extends State<PostViewPage>
   // Top-Right panel usage
 
   // Post Tags
-  List<Tag> tags = List<Tag>();
+  List<TagWrapper> _tags = List<TagWrapper>();
+
+  List<Tag> _selectedTags = List<Tag>();
 
   @override
   void initState() {
@@ -84,7 +86,7 @@ class _PostViewPageState extends State<PostViewPage>
       var t = res.firstWhere((f) => f.content == x);
       if (mounted) {
         setState(() {
-          tags.add(t);
+          _tags.add(TagWrapper(t));
         });
       }
     });
@@ -120,23 +122,25 @@ class _PostViewPageState extends State<PostViewPage>
               tween: Tween<double>(
                   begin: _showPanel ? 60 : 0, end: _showPanel ? 60 : 0),
               builder: (context, value, child) => SlidingUpPanel(
-                  backdropColor: Colors.black,
-                  backdropOpacity: 0.5,
-                  color: Theme.of(context).backgroundColor,
-                  minHeight: value,
-                  maxHeight: MediaQuery.of(context).size.height -
-                      MediaQuery.of(context).padding.top,
-                  parallaxEnabled: true,
-                  backdropEnabled: true,
-                  // When coollapsed
-                  panel: _buildContentPanel(),
-                  body: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _showPanel = !_showPanel;
-                        });
-                      },
-                      child: _buildGallery())),
+                backdropColor: Colors.black,
+                backdropOpacity: 0.5,
+                color: Theme.of(context).backgroundColor.withOpacity(0.8),
+                minHeight: value,
+                maxHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top,
+                parallaxEnabled: true,
+                backdropEnabled: true,
+                // When coollapsed
+                panelBuilder: (sc) => _buildContentPanel(sc),
+                body: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _showPanel = !_showPanel;
+                    });
+                  },
+                  child: _buildGallery(),
+                ),
+              ),
             ),
     );
   }
@@ -266,7 +270,7 @@ class _PostViewPageState extends State<PostViewPage>
                 child: Container(
                   width: commentsPanelWidth,
                   alignment: Alignment.topCenter,
-                  child: _buildContentPanel(),
+                  child: _buildContentPanel(ScrollController()),
                 ),
               ),
             )
@@ -283,8 +287,14 @@ class _PostViewPageState extends State<PostViewPage>
     );
   }
 
-  Widget _buildContentPanel() {
+  Widget _buildContentPanel(ScrollController sc) {
     var buttonGroup = Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+      (kIsWeb || Platform.isWindows)
+          ? _buildQuadIconButton(
+              () => ExtendedNavigator.root.pop(),
+              Icon(Icons.arrow_back,
+                  color: Theme.of(context).textTheme.button.color))
+          : Container(),
       _buildQuadIconButton(
           () => accountOperation.add(
               () => BooruAPI.votePost(postID: _index, type: VoteType.Favorite)),
@@ -376,149 +386,226 @@ class _PostViewPageState extends State<PostViewPage>
           child: buttonGroup),
     );
 
-    return Column(
-      children: <Widget>[
-        // Top bar
-        topBar,
-        // Content
-        SingleChildScrollView(
-          physics: BouncingScrollPhysics(),
-          child: Container(
-            margin: EdgeInsets.all(12),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                //------------------
-                _buildDoubleWidgetRow(
-                  Text(
-                    "${language.content.id}",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Text(
-                    "${_post.id}",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                ),
-
-                _buildDoubleWidgetRow(
-                  Text(
-                    "${language.content.size}",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Text("${_post.width}x${_post.height}"),
-                ),
-
-                _buildDoubleWidgetRow(
-                  Text(
-                    "${language.content.fileSize}",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Text(_post.fileSize < 1024 * 1024
-                      ? (_post.fileSize / 1024).toStringAsFixed(3) + " KB"
-                      : (_post.fileSize / 1024 / 1024).toStringAsFixed(3) +
-                          " MB"),
-                ),
-
-                _buildDoubleWidgetRow(
-                  Text(
-                    "${language.content.author}",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Row(
-                    children: <Widget>[
-                      CircleAvatar(
-                        backgroundImage: NetworkImage(
-                            "${AppSettings.currentBaseUrl}/data/avatars/${_post.creatorId}.jpg"),
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).backgroundColor,
+        boxShadow: [
+          BoxShadow(
+            offset: Offset(-1, 0),
+            color: Colors.black45,
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Column(
+        children: <Widget>[
+          // Top bar
+          topBar,
+          // Content
+          Flexible(
+            child: SingleChildScrollView(
+              controller: sc,
+              physics: BouncingScrollPhysics(),
+              child: Container(
+                padding: EdgeInsets.all(12),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    //------------------
+                    _buildDoubleWidgetRow(
+                      Text(
+                        "${language.content.id}",
+                        style: TextStyle(fontSize: 20),
                       ),
-                      Container(
-                          margin: EdgeInsets.only(left: 10),
-                          child: Text("${_post.author}")),
-                    ],
-                  ),
-                ),
-
-                _buildDoubleWidgetRow(
-                  Text(
-                    "${language.content.score}",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Text("${_post.score}"),
-                ),
-
-                _buildDoubleWidgetRow(
-                    Text(
-                      "${language.content.tags}",
-                      style: TextStyle(fontSize: 20),
+                      Text(
+                        "${_post.id}",
+                        style: TextStyle(fontSize: 20),
+                      ),
                     ),
-                    Expanded(
-                      child: Wrap(
-                        spacing: 3,
-                        children: List.generate(
-                          tags.length,
-                          (index) => Chip(
-                            label: Text(tags[index].content),
-                            backgroundColor: TagToColorMap[tags[index].tagType],
-                            deleteIcon: Icon(Icons.close),
+
+                    _buildDoubleWidgetRow(
+                      Text(
+                        "${language.content.size}",
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      Text("${_post.width}x${_post.height}"),
+                    ),
+
+                    _buildDoubleWidgetRow(
+                      Text(
+                        "${language.content.fileSize}",
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      Text(_post.fileSize < 1024 * 1024
+                          ? (_post.fileSize / 1024).toStringAsFixed(3) + " KB"
+                          : (_post.fileSize / 1024 / 1024).toStringAsFixed(3) +
+                              " MB"),
+                    ),
+
+                    _buildDoubleWidgetRow(
+                      Text(
+                        "${language.content.author}",
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      GestureDetector(
+                        child: Row(
+                          children: <Widget>[
+                            CircleAvatar(
+                              backgroundImage: Platform.isWindows
+                                  ? NetworkImage(
+                                      "${AppSettings.currentBaseUrl}/data/avatars/${_post.creatorId}.jpg")
+                                  : CachedNetworkImageProvider(
+                                      "${AppSettings.currentBaseUrl}/data/avatars/${_post.creatorId}.jpg"),
+                            ),
+                            Container(
+                              margin: EdgeInsets.only(left: 10),
+                              child: Text("${_post.author}"),
+                            ),
+                          ],
+                        ),
+                        onTap: () {
+                          searchTerm = "user:${_post.author}";
+                          homePageFetchTypeChanged.add(FetchType.Search);
+                          booruBloc.onReset.add(null);
+                          booruBloc.onUpdate.add(
+                            UpdateArg(
+                              fetchType: FetchType.Search,
+                              arg: TaggedArgs(tags: searchTerm, page: 1),
+                            ),
+                          );
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ),
+
+                    _buildDoubleWidgetRow(
+                      Text(
+                        "${language.content.score}",
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      Text("${_post.score}"),
+                    ),
+
+                    _buildDoubleWidgetRow(
+                      Text(
+                        "${language.content.tags}",
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      Flexible(
+                        child: Wrap(
+                          spacing: 3,
+                          children: List.generate(
+                            _tags.length,
+                            (index) => Chip(
+                              label: Text(_tags[index].tag.content),
+                              deleteButtonTooltipMessage:
+                                  "Add or remove search",
+                              backgroundColor:
+                                  TagToColorMap[_tags[index].tag.tagType],
+                              deleteIcon: Icon(_tags[index].selected
+                                  ? Icons.remove
+                                  : Icons.add),
+                              onDeleted: () {
+                                if (_tags[index].selected) {
+                                  _selectedTags.remove(_tags[index].tag);
+                                } else
+                                  _selectedTags.add(_tags[index].tag);
+
+                                setState(() {
+                                  _tags[index].selected =
+                                      !_tags[index].selected;
+                                });
+                              },
+                            ),
+                          )..add(_selectedTags.length != 0
+                              ? GestureDetector(
+                                  child: Chip(
+                                    label: Icon(Icons.search,
+                                        color:
+                                            Theme.of(context).backgroundColor),
+                                    backgroundColor:
+                                        Theme.of(context).accentColor,
+                                  ),
+                                  onTap: () {
+                                    searchTerm = _selectedTags
+                                        .map((x) => x.content)
+                                        .join(" ");
+                                    homePageFetchTypeChanged
+                                        .add(FetchType.Search);
+                                    booruBloc.onReset.add(null);
+                                    booruBloc.onUpdate.add(
+                                      UpdateArg(
+                                        fetchType: FetchType.Search,
+                                        arg: TaggedArgs(
+                                            tags: searchTerm, page: 1),
+                                      ),
+                                    );
+                                    Navigator.pop(context);
+                                  },
+                                )
+                              : Container()),
+                        ),
+                      ),
+                      alignmentFix: true,
+                    ),
+
+                    _buildDoubleWidgetRow(
+                      Text(
+                        "${language.content.rating}",
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      Text("${_post.rating.toString()}"),
+                    ),
+
+                    // Source link
+                    _buildDoubleWidgetRow(
+                      Text(
+                        "${language.content.source}",
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      Expanded(
+                        child: RichText(
+                          text: new TextSpan(
+                            text: _post.sourceUrl == ""
+                                ? "${language.content.noSource}"
+                                : _post.sourceUrl,
+                            style: new TextStyle(color: Colors.blue),
+                            recognizer: new TapGestureRecognizer()
+                              ..onTap = () {
+                                var url = _post.sourceUrl;
+                                if (url.startsWith("https://i.pximg.net/")) {
+                                  var id = url.split('/').last;
+                                  if (id.contains("_")) {
+                                    id = id.split("_").first;
+                                  } else {
+                                    id = id.split(".").first;
+                                  }
+                                  url = "https://www.pixiv.net/artworks/$id";
+                                }
+                                launch(url);
+                              },
                           ),
                         ),
                       ),
                     ),
-                    alignmentFix: true),
 
-                _buildDoubleWidgetRow(
-                  Text(
-                    "${language.content.rating}",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Text("${_post.rating.toString()}"),
+                    _buildDoubleWidgetRow(
+                        Text(
+                          "${language.content.comments}",
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        // Comments
+                        _buildExpandablePanel(),
+                        alignmentFix: true)
+                  ],
                 ),
-
-                // Source link
-                _buildDoubleWidgetRow(
-                  Text(
-                    "${language.content.source}",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Expanded(
-                    child: RichText(
-                      text: new TextSpan(
-                        text: _post.sourceUrl == ""
-                            ? "${language.content.noSource}"
-                            : _post.sourceUrl,
-                        style: new TextStyle(color: Colors.blue),
-                        recognizer: new TapGestureRecognizer()
-                          ..onTap = () {
-                            var url = _post.sourceUrl;
-                            if (url.startsWith("https://i.pximg.net/")) {
-                              var id = url.split('/').last;
-                              if (id.contains("_")) {
-                                id = id.split("_").first;
-                              } else {
-                                id = id.split(".").first;
-                              }
-                              url = "https://www.pixiv.net/artworks/$id";
-                            }
-                            launch(url);
-                          },
-                      ),
-                    ),
-                  ),
-                ),
-
-                _buildDoubleWidgetRow(
-                    Text(
-                      "${language.content.comments}",
-                      style: TextStyle(fontSize: 20),
-                    ),
-                    // Comments
-                    _buildExpandablePanel(),
-                    alignmentFix: true)
-              ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -677,3 +764,10 @@ class OpenCommentPanelArg extends PanelArg {
 }
 
 enum PanelState { Open, Close }
+
+class TagWrapper {
+  final Tag tag;
+  bool selected;
+
+  TagWrapper(this.tag, {this.selected = false});
+}
