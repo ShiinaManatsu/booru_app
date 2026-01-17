@@ -1,261 +1,207 @@
-import 'package:booru_app/settings/app_settings.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:rxdart/rxdart.dart';
+import 'dart:async';
+
 import 'package:booru_app/models/rx/booru_api.dart';
 import 'package:booru_app/models/rx/post_state.dart';
 import 'package:booru_app/models/rx/update_args.dart';
 import 'package:booru_app/models/yande/post.dart';
-import 'package:booru_app/extensions/list_extension.dart';
-import 'package:booru_app/pages/home_page.dart';
+import 'package:booru_app/settings/app_settings.dart';
+import 'package:rxdart/rxdart.dart';
 
 class BooruBloc {
-  // Subjects
-  /// Call to update posts type
-  final PublishSubject<UpdateArg> onUpdate;
+  BooruBloc();
 
-  /// Call to refresh current posts
-  final PublishSubject onRefresh;
+  final BehaviorSubject<PostState> _state = BehaviorSubject<PostState>.seeded(PostLoading());
 
-  /// Call to reset page
-  final PublishSubject<bool> onReset;
+  final List<Post> _cache = <Post>[];
 
-  /// Call to update page
-  final PublishSubject<PageNavigationType> onPage;
+  FetchType _fetchType = FetchType.Posts;
+  FetchArg? _lastArg;
+  int _page = 1;
+  bool _isFetching = false;
+  bool _hasMore = true;
 
-  /// Call when panel width changed
-  final PublishSubject<double> onPanelWidth;
+  Stream<PostState> get stream => _state.stream;
+  PostState get currentState => _state.value;
 
-  /// Call to change post datetime
-  final PublishSubject<DateTime Function(DateTime)> onDateTime;
-
-  // Streams
-  /// Stream of posts state
-  final Stream<PostState> state;
-
-  /// Stream of the post page state
-  // final Stream<int> pageState;
-
-  /// Stream of the date picker
-  final Stream<DateTime> postDate;
-
-  // Static members
-  static DateTime postDateTime = DateTime.now();
-  static int page = 1;
-  static List<Post> cache = List<Post>();
-  static List<List<Post>> evaluated = List<List<Post>>();
-
-  factory BooruBloc(BooruAPI booru, double panelWidth) {
-    final onUpdate = PublishSubject<UpdateArg>();
-    final onRefresh = PublishSubject();
-    final onReset = PublishSubject<bool>();
-    final onPage = PublishSubject<PageNavigationType>();
-    final onPanelWidth = PublishSubject<double>();
-    final onDateTime = PublishSubject<DateTime Function(DateTime)>();
-
-    UpdateArg last =
-        UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1));
-
-    // Call on refresh
-    var refresh = onRefresh
-        .throttleTime(Duration(milliseconds: 100))
-        .switchMap<PostState>((x) {
-      return _fetchState(last, booru);
-    });
-
-    //pageChange=onPage.throttleTime(Duration(milliseconds: 500)).;
-
-    onReset.asBroadcastStream().listen((x) {
-      page = 1;
-      cache.clear();
-      evaluated.clear();
-      refreshController.requestRefresh();
-    });
-
-    // Laoding stete
-    var updateLoading = onUpdate
-        .switchMap<PostState>((x) => Stream<PostState>.value(PostLoading()));
-
-    var pageLoading = onPage
-        .switchMap<PostState>((x) => Stream<PostState>.value(PostLoading()));
-
-    var resetLoading = onReset
-        .switchMap<PostState>((x) => Stream<PostState>.value(PostLoading()));
-
-    var loadingState = updateLoading.mergeWith([pageLoading, resetLoading]);
-
-    // Cache last update
-    onUpdate.asBroadcastStream().listen((x) {
-      last = x;
-      // refreshController.requestLoading();
-      // refreshController.footerMode.value = LoadStatus.loading;
-    });
-
-    // Fetch posts
-    var fetchingState = onUpdate
-        .switchMap<PostState>((UpdateArg x) => _fetchState(x, booru))
-        .startWith(PostLoading());
-
-    // Merge events
-    var _state =
-        loadingState.mergeWith([fetchingState, refresh]).asBroadcastStream();
-
-    _state.listen((x) {
-      if (x is PostSuccess) {
-        cache.addAll(List.from((x).result));
-      }
-    });
-
-    var panelWidthChanged =
-        onPanelWidth.distinct().switchMap<PostState>((x) async* {
-      panelWidth = x;
-      yield PostSuccess(cache);
-    });
-
-    var state = _state
-        .mergeWith([panelWidthChanged])
-        .startWith(PostSuccess(List<Post>()))
-        .switchMap<PostState>((x) async* {
-          if (x is PostSuccess)
-            yield PostSuccess(await (x).result.arrange());
-          else if (x is PostLoading) {
-            if (!(last.fetchType == FetchType.Posts ||
-                last.fetchType == FetchType.Search)) yield x;
-          } else
-            yield x;
-        })
-        .asBroadcastStream();
-
-    // var pagePrevious = onPage
-    //     .where((x) => BooruBloc.page > 1)
-    //     .where((x) => x == PageNavigationType.Previous)
-    //     .map<int>((x) => -1);
-
-    // var pageNext = onPage
-    //     .where((x) => BooruBloc.page >= 1)
-    //     .where((x) => x == PageNavigationType.Next)
-    //     .map<int>((x) => 1);
-
-    // Hold the page value
-    // var pageStateChanged = pagePrevious.mergeWith([pageNext]);
-
-    onPage.listen((x) {
-      page += 1;
-      if (last.fetchType == FetchType.Posts) {
-        onUpdate.add(
-            UpdateArg(fetchType: last.fetchType, arg: PostsArgs(page: page)));
-      } else if (last.fetchType == FetchType.Search) {
-        onUpdate.add(UpdateArg(
-            fetchType: last.fetchType,
-            arg: TaggedArgs(tags: (last.arg as TaggedArgs).tags, page: page)));
-      }
-    });
-
-    // var pageIndicator = pageChanged.mergeWith([pageReset]);
-
-    // Date time changed
-    var postDateChanged = onDateTime.switchMap<DateTime>((x) async* {
-      //  Clear posts
-      cache.clear();
-      evaluated.clear();
-
-      var date = x(postDateTime);
-      postDateTime = date;
-
-      if (last.fetchType == FetchType.PopularByDay) {
-        onUpdate.add(UpdateArg(
-            fetchType: last.fetchType,
-            arg: PopularByDayArgs(time: postDateTime)));
-      }
-      if (last.fetchType == FetchType.PopularByWeek) {
-        onUpdate.add(UpdateArg(
-            fetchType: last.fetchType,
-            arg: PopularByWeekArgs(time: postDateTime)));
-      }
-      if (last.fetchType == FetchType.PopularByMonth) {
-        onUpdate.add(UpdateArg(
-            fetchType: last.fetchType,
-            arg: PopularByMonthArgs(time: postDateTime)));
-      }
-
-      yield date;
-    }).startWith(DateTime.now());
-
-    // Date reset
-    var postDateReset = onReset.switchMap<DateTime>((x) async* {
-      postDateTime = DateTime.now();
-      yield postDateTime;
-    });
-
-    var postDate = postDateChanged.mergeWith([postDateReset]);
-
-    return BooruBloc._(onUpdate, onRefresh, onReset, onPage, onPanelWidth,
-        onDateTime, state, postDate);
+  Future<void> bootstrap({
+    FetchType fetchType = FetchType.Posts,
+    FetchArg? arg,
+  }) async {
+    _fetchType = fetchType;
+    _lastArg = arg;
+    _page = 1;
+    _hasMore = true;
+    _cache.clear();
+    _state.add(PostLoading());
+    await _fetch(append: false);
   }
 
-  static Stream<PostState> _fetchState(UpdateArg arg, BooruAPI booru) async* {
-    switch (arg.fetchType) {
-      case FetchType.Posts:
-        yield await _emptyCheck(BooruAPI.fetchPosts(args: arg.arg));
-        break;
-      case FetchType.PopularRecent:
-        yield await _emptyCheck((BooruAPI.fetchPopularRecent(args: arg.arg)));
-        break;
+  Future<void> setFetchType(FetchType type, {FetchArg? arg}) async {
+    _fetchType = type;
+    _lastArg = arg;
+    await bootstrap(fetchType: type, arg: arg);
+  }
+
+  Future<void> refresh() async {
+    _page = 1;
+    _hasMore = true;
+    _cache.clear();
+
+    switch (_fetchType) {
       case FetchType.PopularByDay:
-        yield await _emptyCheck((BooruAPI.fetchPopularByDay(args: arg.arg)));
+        _lastArg = PopularByDayArgs(time: DateTime.now());
         break;
       case FetchType.PopularByWeek:
-        yield await _emptyCheck((BooruAPI.fetchPopularByWeek(args: arg.arg)));
+        _lastArg = PopularByWeekArgs(time: DateTime.now());
         break;
       case FetchType.PopularByMonth:
-        yield await _emptyCheck((BooruAPI.fetchPopularByMonth(args: arg.arg)));
-        break;
-      case FetchType.Search:
-        yield await _emptyCheck((BooruAPI.fetchTagged(args: arg.arg)));
+        _lastArg = PopularByMonthArgs(time: DateTime.now());
         break;
       default:
+        break;
+    }
+
+    _state.add(PostLoading());
+    await _fetch(append: false);
+  }
+
+  Future<void> loadMore() async {
+    if (_state.value is PostLoading) return;
+    if (_isFetching) return;
+    if (!_hasMore) return;
+
+    // Paged endpoints:
+    // - Posts/Search: page++
+    // - PopularByDay/Week/Month: move the time window backward
+    if (_fetchType == FetchType.Posts || _fetchType == FetchType.Search) {
+      _page += 1;
+      await _fetch(append: true);
+      return;
+    }
+
+    if (_fetchType == FetchType.PopularByDay || _fetchType == FetchType.PopularByWeek || _fetchType == FetchType.PopularByMonth) {
+      // Some days/weeks/months can legitimately return empty. Try a few steps back
+      // so scrolling doesn't get stuck immediately.
+      const int maxAttempts = 8;
+
+      DateTime current = switch (_fetchType) {
+        FetchType.PopularByDay => (_lastArg as PopularByDayArgs?)?.time ?? DateTime.now(),
+        FetchType.PopularByWeek => (_lastArg as PopularByWeekArgs?)?.time ?? DateTime.now(),
+        FetchType.PopularByMonth => (_lastArg as PopularByMonthArgs?)?.time ?? DateTime.now(),
+        _ => DateTime.now(),
+      };
+
+      for (var attempt = 0; attempt < maxAttempts; attempt++) {
+        current = _shiftPopularTimeBack(_fetchType, current);
+        _lastArg = switch (_fetchType) {
+          FetchType.PopularByDay => PopularByDayArgs(time: current),
+          FetchType.PopularByWeek => PopularByWeekArgs(time: current),
+          FetchType.PopularByMonth => PopularByMonthArgs(time: current),
+          _ => _lastArg,
+        };
+
+        // Call API directly so we can decide whether to retry on empty.
+        if (_isFetching) return;
+        _isFetching = true;
+        try {
+          final List<Post> result = await _callApi();
+          final filtered = AppSettings.safeMode ? result.where((post) => post.rating == Rating.safe).toList() : result;
+
+          if (filtered.isEmpty) {
+            // keep trying an earlier window
+            continue;
+          }
+
+          _cache.addAll(filtered);
+          _state.add(PostSuccess(List<Post>.unmodifiable(_cache)));
+          return;
+        } catch (error) {
+          _state.add(PostError(error: error));
+          return;
+        } finally {
+          _isFetching = false;
+        }
+      }
+
+      // Tried several earlier windows and still got nothing.
+      _hasMore = false;
+      if (_state.value is PostSuccess) {
+        _state.add(PostSuccess(List<Post>.unmodifiable(_cache)));
+      }
+      return;
     }
   }
 
-  static Future<PostState> _emptyCheck(Future<List<Post>> future) async {
+  DateTime _shiftPopularTimeBack(FetchType type, DateTime time) {
+    switch (type) {
+      case FetchType.PopularByDay:
+        return time.subtract(const Duration(days: 1));
+      case FetchType.PopularByWeek:
+        return time.subtract(const Duration(days: 7));
+      case FetchType.PopularByMonth:
+        var year = time.year;
+        var month = time.month - 1;
+        if (month <= 0) {
+          month += 12;
+          year -= 1;
+        }
+        // Month endpoint only uses month/year, day isn't relevant.
+        return DateTime(year, month, 1);
+      default:
+        return time;
+    }
+  }
+
+  Future<void> _fetch({required bool append}) async {
+    if (_isFetching) return;
+    _isFetching = true;
     try {
-      var res = await future;
-      if (AppSettings.safeMode)
-        res = res.where((element) => element.rating == Rating.safe).toList();
-      if (res.isEmpty) {
-        refreshController.refreshCompleted();
-        refreshController.loadComplete();
-        return PostEmpty();
-      } else {
-        refreshController.refreshCompleted();
-        refreshController.loadComplete();
-        return PostSuccess(res);
+      final List<Post> result = await _callApi();
+
+      // If the API returns no results for a paged endpoint, stop requesting more pages.
+      if (append && result.isEmpty && (_fetchType == FetchType.Posts || _fetchType == FetchType.Search)) {
+        _hasMore = false;
+        _page = (_page - 1).clamp(1, 1 << 30);
+        _state.add(PostSuccess(List<Post>.unmodifiable(_cache)));
+        return;
       }
-    } catch (e) {
-      refreshController.refreshCompleted();
-      refreshController.loadComplete();
-      return PostError(error: e);
+
+      final filtered = AppSettings.safeMode ? result.where((post) => post.rating == Rating.safe).toList() : result;
+
+      if (!append) {
+        _cache.clear();
+      }
+      _cache.addAll(filtered);
+
+      _state.add(PostSuccess(List<Post>.unmodifiable(_cache)));
+    } catch (error) {
+      _state.add(PostError(error: error));
+    } finally {
+      _isFetching = false;
+    }
+  }
+
+  Future<List<Post>> _callApi() async {
+    switch (_fetchType) {
+      case FetchType.Posts:
+        return BooruAPI.fetchPosts(args: PostsArgs(page: _page));
+      case FetchType.PopularRecent:
+        return BooruAPI.fetchPopularRecent(args: (_lastArg as PopularRecentArgs?) ?? PopularRecentArgs(period: Period.None));
+      case FetchType.PopularByDay:
+        return BooruAPI.fetchPopularByDay(args: (_lastArg as PopularByDayArgs?) ?? PopularByDayArgs(time: DateTime.now()));
+      case FetchType.PopularByWeek:
+        return BooruAPI.fetchPopularByWeek(args: (_lastArg as PopularByWeekArgs?) ?? PopularByWeekArgs(time: DateTime.now()));
+      case FetchType.PopularByMonth:
+        return BooruAPI.fetchPopularByMonth(args: (_lastArg as PopularByMonthArgs?) ?? PopularByMonthArgs(time: DateTime.now()));
+      case FetchType.Search:
+        final args = (_lastArg as TaggedArgs?) ?? TaggedArgs(tags: "", page: _page);
+        return BooruAPI.fetchTagged(args: TaggedArgs(tags: args.tags, page: _page));
     }
   }
 
   void dispose() {
-    onUpdate.close();
-    onRefresh.close();
-    onReset.close();
-    onPage.close();
-    onPanelWidth.close();
-    onDateTime.close();
+    _state.close();
   }
-
-  BooruBloc._(
-      this.onUpdate,
-      this.onRefresh,
-      this.onReset,
-      this.onPage,
-      this.onPanelWidth,
-      this.onDateTime,
-      this.state,
-      // this.pageState,
-      this.postDate);
 }
 
 enum PageNavigationType { Previous, Next }

@@ -1,0 +1,9 @@
+analyzer:
+  exclude:
+    - back/**
+    - build/**
+    - .dart_tool/**
+
+# Add lint rules here if needed.
+linter:
+  rules: []

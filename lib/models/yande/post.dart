@@ -4,45 +4,75 @@ import 'package:booru_app/models/rx/task_bloc.dart';
 class Post implements Downloadable {
   int id;
   String previewUrl;
-  String jpegUrl;
-  String fileUrl;
-  String sampleUrl;
+  String? jpegUrl;
+  String? fileUrl;
+  String? sampleUrl;
   int width;
   int height;
-  String _rating;
-  String tags;
-  int creatorId;
-  bool hasChildren;
-  int score;
-  String author;
-  int fileSize;
+  String? _rating;
+  String? tags;
+  int creatorId = 0;
+  bool hasChildren = false;
+  int score = 0;
+  String? author;
+  int fileSize = 0;
   bool evaluated = false;
 
   /// Source url
-  String sourceUrl;
+  String? sourceUrl;
 
   @override
   // Get download url
-  String get url => fileUrl;
+  String get url => fileUrl ?? "";
 
   Post(this.id, this.previewUrl, this.height, this.width);
 
+  static int _asInt(dynamic value, {int defaultValue = 0}) {
+    if (value == null) return defaultValue;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? defaultValue;
+    return defaultValue;
+  }
+
+  static bool _asBool(dynamic value, {bool defaultValue = false}) {
+    if (value == null) return defaultValue;
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final v = value.trim().toLowerCase();
+      if (v == 'true' || v == '1' || v == 'yes') return true;
+      if (v == 'false' || v == '0' || v == 'no') return false;
+    }
+    return defaultValue;
+  }
+
+  static String? _asStringOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is String) return value;
+    return value.toString();
+  }
+
+  static String _asString(dynamic value, {String defaultValue = ''}) {
+    return _asStringOrNull(value) ?? defaultValue;
+  }
+
   Post.fromJson(Map<String, dynamic> json)
-      : id = json['id'],
-        creatorId = json['creator_id'],
-        sourceUrl = json['source'],
-        score = json['score'],
-        author = json['author'],
-        tags = json['tags'],
-        hasChildren = json['has_children'],
-        _rating = json['rating'],
-        previewUrl = json['preview_url'],
-        sampleUrl = json['sample_url'],
-        jpegUrl = json['jpeg_url'],
-        fileUrl = json['file_url'],
-        width = json['width'],
-        height = json['height'],
-        fileSize = json['file_size'];
+      : id = _asInt(json['id'], defaultValue: 0),
+        creatorId = _asInt(json['creator_id'], defaultValue: 0),
+        sourceUrl = _asStringOrNull(json['source']),
+        score = _asInt(json['score'], defaultValue: 0),
+        author = _asStringOrNull(json['author']),
+        tags = _asStringOrNull(json['tags']),
+        hasChildren = _asBool(json['has_children'], defaultValue: false),
+        _rating = _asStringOrNull(json['rating']),
+        previewUrl = _asString(json['preview_url'], defaultValue: ''),
+        sampleUrl = _asStringOrNull(json['sample_url']),
+        jpegUrl = _asStringOrNull(json['jpeg_url']),
+        fileUrl = _asStringOrNull(json['file_url']),
+        width = _asInt(json['width'], defaultValue: 0),
+        height = _asInt(json['height'], defaultValue: 1),
+        fileSize = _asInt(json['file_size'], defaultValue: 0);
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
@@ -70,16 +100,12 @@ class Post implements Downloadable {
     switch (_rating) {
       case 's':
         return Rating.safe;
-        break;
       case 'q':
         return Rating.questionable;
-        break;
       case 'e':
         return Rating.explicit;
-        break;
       default:
         return Rating.safe;
-        break;
     }
   }
 
@@ -91,8 +117,7 @@ class Post implements Downloadable {
 
   double get preferredWidth => ratio * AppSettings.fixedPostHeight;
 
-  double get widthInPanel =>
-      _widthInPanel == 0 ? preferredWidth : _widthInPanel;
+  double get widthInPanel => _widthInPanel == 0 ? preferredWidth : _widthInPanel;
 
   set widthInPanel(double value) => _widthInPanel = value;
 }

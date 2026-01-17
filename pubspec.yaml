@@ -4,84 +4,69 @@ description: App for yande and konachan
 version: 0.2.6+10
 
 environment:
-  sdk: ">=2.8.0 <3.0.0"
+  sdk: ">=3.3.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  http: ^0.12.0+2
-  dio: ^3.0.8
-  shared_preferences: ">=0.5.8 <2.0.0"
-  rxdart: ^0.24.1
-  esys_flutter_share: ^1.0.2
-  floating_search_bar: ^0.2.0
-  photo_view: ^0.10.2
-  sliding_up_panel: ^1.0.2
-  devicelocale: ^0.3.2
-  pull_to_refresh: ^1.5.8
-  enum_to_string: ^1.0.9
-  expandable: ^4.1.4
-  cached_network_image: ^2.3.0
-  path_provider:
+  adaptive_aura: ^0.0.5
+  app_links: ^7.0.0
+  auto_route: ^11.1.0
+  cached_network_image: ^3.4.1
+  crypto: ^3.0.7
+  cupertino_icons: ^1.0.8
+  darq: ^2.0.0
+  devicelocale: ^0.8.2
+  dio: ^5.9.0
+  enum_to_string: ^2.2.1
+  expandable: ^5.0.1
+  flutter_cache_manager: ^3.4.1
+  flutter_local_notifications: ^19.5.0
+  flutter_snake_navigationbar: ^0.6.1
+  flutter_staggered_grid_view: ^0.7.0
+  http: ^1.2.2
+  image_gallery_saver: ^2.0.3
+  masonry_grid: ^1.0.0
   open_file: ^3.0.1
-  crypto: ^2.1.3 # Sha1
-  # Notification usage
-  flutter_local_notifications: ^2.0.0
-  overlay_support: ^1.0.2
-  # Transition
-  flutter_page_transition: ^0.1.6
-  animated_stream_list: ^1.1.0
-  # File path combiner
+  overlay_support: ^2.1.0
+  package_info: ^2.0.2
+  path_provider:
   path: ^1.7.0
-  # Use the navigation bar as a switcher
-  flutter_snake_navigationbar: ^0.3.0
-  filesystem_picker: ^1.0.2
-  uni_links: ^0.4.0
-  auto_route: ^0.6.7
-  flutter_cache_manager: ^1.4.2
-  package_info: '>=0.4.3 <2.0.0'
-  permission_handler: ^5.0.1+1
-  masonry_grid: ^0.3.1+2
-  darq: ^0.4.0+1  #LinQ like operators
-  image_gallery_saver: ^1.6.0
-
-  # Windows usage
-  file_chooser:
-    git:
-      url: git://github.com/google/flutter-desktop-embedding.git
-      path: plugins/file_chooser
-  
-  # flutter_native_splash: ^0.1.9
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^0.1.2
-  url_launcher: ^5.5.0
-  # url_launcher_fde:
-  #   git:
-  #     url: git://github.com/google/flutter-desktop-embedding.git
-  #     path: plugins/flutter_plugins/url_launcher_fde
-
-# flutter pub pub run flutter_native_splash:create
-# flutter_native_splash:
-#   color: "e91e63"
+  permission_handler: ^12.0.1
+  photo_view: ^0.15.0
+  pull_to_refresh: ^2.0.0
+  rxdart: ^0.28.0
+  settings_ui: ^2.0.2
+  shadcn_ui: ^0.43.3
+  shared_preferences: ^2.5.4
+  sliding_up_panel: ^2.0.0+1
+  url_launcher: ^6.3.2
+  flutter_launcher_icons: ^0.14.4
+  font_awesome_flutter: ^10.12.0
+  filepicker_windows: ^2.1.4
 
 dev_dependencies:
   build_runner:
   flutter_test:
     sdk: flutter
-    
-  auto_route_generator: ^0.6.8
 
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
+  auto_route_generator:
+  # for watching files and rebuilding on changes
+  # dart run lean_builder watch
+  lean_builder:
 
-# The following section is specific to Flutter.
+dependency_overrides:
+  flutter_local_notifications_windows:
+    path: packages/flutter_local_notifications_windows
+
 flutter:
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
   uses-material-design: true
-  
   assets:
     - resources/images/app_icon.png
+
+# dart run flutter_launcher_icons:generate
+lutter_launcher_icons:
+  windows:
+    generate: true
+    image_path: "resources/images/app_icon.png"
+    icon_size: 48 # min:48, max:256, default: 48

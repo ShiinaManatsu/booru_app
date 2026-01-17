@@ -1,109 +1,59 @@
-import 'dart:io';
 import 'package:booru_app/models/yande/post.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:path/path.dart' as p;
+import 'dart:async';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
-import 'package:overlay_support/overlay_support.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:booru_app/main.dart';
-import 'package:booru_app/models/rx/booru_api.dart';
-import 'package:booru_app/pages/home_page.dart';
-import 'package:booru_app/pages/widgets/task_overlay.dart';
-import 'package:booru_app/settings/app_settings.dart';
+import '../../utils/platform.dart';
+import 'download_fs_stub.dart' if (dart.library.io) 'download_fs_io.dart';
 
+/// Lightweight download manager for posts.
 class TaskBloc {
-  /// Add new download task
-  final PublishSubject<Post> addDownload;
+  TaskBloc();
 
-  /// Fire when download progress changed
-  final PublishSubject progressUpdate;
+  final PublishSubject<Post> addDownload = PublishSubject<Post>();
+  final PublishSubject progressUpdate = PublishSubject();
+  final PublishSubject progressCompleteUpdate = PublishSubject();
+  final PublishSubject<DownloadTask> removeTask = PublishSubject();
+  final PublishSubject<DownloadTask> cancelTask = PublishSubject();
 
-  /// Fire when download completed
-  final PublishSubject progressCompleteUpdate;
+  final List<DownloadTask> tasksList = <DownloadTask>[];
+  final Map<int, CancelToken> cancelTokens = <int, CancelToken>{};
 
-  /// Raise a event that going to remove a task
-  final PublishSubject<DownloadTask> removeTask;
+  Stream<List<DownloadTask>> get tasks => _tasksStream;
 
-  final PublishSubject<DownloadTask> cancelTask;
+  late final Stream<List<DownloadTask>> _tasksStream = _buildStreams();
 
-  /// First time this start
-  //final PublishSubject startUp;
-
-  /// Access the all task list
-  final Stream<List<DownloadTask>> tasks;
-
-  static List<DownloadTask> tasksList = List<DownloadTask>();
-
-  static Map<int, CancelToken> cancelTokens = Map<int, CancelToken>();
-
-  factory TaskBloc() {
-    final addDownload = PublishSubject<Post>();
-    final progressUpdate = PublishSubject();
-    final progressCompleteUpdate = PublishSubject();
-    final removeTask = PublishSubject<DownloadTask>();
-    final cancelTask = PublishSubject<DownloadTask>();
-    // final startUp=Observable.empty();  // Currently this has nothing to do, TODO: need implements
-
-    var downloadTask = addDownload.distinct().map<DownloadTask>((x) {
-      var task = DownloadTask.fromDownload(x);
+  Stream<List<DownloadTask>> _buildStreams() {
+    final downloadTask = addDownload.distinct().map<DownloadTask>((post) {
+      final task = DownloadTask.fromDownload(post, owner: this);
       tasksList.add(task);
-      cancelTokens[x.id] = CancelToken();
+      cancelTokens[post.id] = CancelToken();
       return task;
-    }).switchMap<List<DownloadTask>>((x) async* {
+    }).switchMap<List<DownloadTask>>((_) async* {
       yield tasksList;
-    }).startWith(List<DownloadTask>());
+    }).startWith(<DownloadTask>[]);
 
-    var updateThrottled =
-        progressUpdate.throttleTime(Duration(milliseconds: 500));
-    var update = updateThrottled.mergeWith(
-        [progressCompleteUpdate]).switchMap<List<DownloadTask>>((x) async* {
+    final updateThrottled = progressUpdate.throttleTime(const Duration(milliseconds: 500));
+    final update = updateThrottled.mergeWith([progressCompleteUpdate]).switchMap<List<DownloadTask>>((_) async* {
       yield tasksList;
-    }).startWith(List<DownloadTask>());
+    }).startWith(<DownloadTask>[]);
 
-    var remove = removeTask
-        .distinct()
-        .asBroadcastStream()
-        .interval(Duration(seconds: 3))
-        .switchMap<List<DownloadTask>>((x) async* {
-      tasksList.remove(x);
-      cancelTokens.remove(x.post);
+    final remove = removeTask.distinct().asBroadcastStream().interval(const Duration(seconds: 3)).switchMap<List<DownloadTask>>((task) async* {
+      tasksList.remove(task);
+      cancelTokens.remove(task.post.id);
       yield tasksList;
-    }).startWith(List<DownloadTask>());
+    }).startWith(<DownloadTask>[]);
 
-    var cancel = cancelTask
-        .asBroadcastStream()
-        .switchMap<List<DownloadTask>>((x) async* {
-      print("Canceled");
-      cancelTokens[x.post.id].cancel();
-      cancelTokens.remove(x.post.id);
-      x.cancel();
-      taskBloc.removeTask.add(x);
-      taskBloc.progressCompleteUpdate.add(null);
+    final cancel = cancelTask.asBroadcastStream().switchMap<List<DownloadTask>>((task) async* {
+      cancelTokens[task.post.id]?.cancel();
+      cancelTokens.remove(task.post.id);
+      task.cancel();
+      removeTask.add(task);
+      progressCompleteUpdate.add(null);
       yield tasksList;
-    }).startWith(List<DownloadTask>());
+    }).startWith(<DownloadTask>[]);
 
-    var tasks =
-        downloadTask.mergeWith([update, remove, cancel]).asBroadcastStream();
-
-    Rx.timer(null, Duration(seconds: 1)).listen((_) {
-      if (Platform.isWindows) {
-        showOverlay((context, t) {
-          return AnimatedOverlay(value: t);
-        }, key: ValueKey('hello'), curve: Curves.ease, duration: Duration.zero);
-      }
-    });
-
-    return TaskBloc._(
-        addDownload: addDownload,
-        cancelTask: cancelTask,
-        progressCompleteUpdate: progressCompleteUpdate,
-        progressUpdate: progressUpdate,
-        removeTask: removeTask,
-        tasks: tasks);
+    return downloadTask.mergeWith([update, remove, cancel]).asBroadcastStream();
   }
 
   void dispose() {
@@ -112,143 +62,134 @@ class TaskBloc {
     progressCompleteUpdate.close();
     removeTask.close();
     cancelTask.close();
-    //startUp.close();
   }
 
-  TaskBloc._({
-    this.addDownload,
-    this.progressUpdate,
-    this.progressCompleteUpdate,
-    this.removeTask,
-    this.cancelTask,
-    this.tasks,
-  });
+  /// Starts a download and resolves with the saved file path.
+  ///
+  /// Returns `null` if cancelled or failed.
+  Future<String?> downloadNow(Post post) async {
+    if (cancelTokens.containsKey(post.id)) {
+      // Already downloading (or queued). Don't duplicate.
+      return null;
+    }
+
+    final task = DownloadTask.fromDownload(post, owner: this);
+    tasksList.add(task);
+    cancelTokens[post.id] = CancelToken();
+    progressCompleteUpdate.add(null);
+    progressUpdate.add(null);
+
+    final result = await task.done;
+    return result;
+  }
 }
 
 class DownloadTask {
-  /// [post] is the file url.
-  final Post post;
-
-  /// [totalLength] is the request body length.
-  /// [totalLength] will be -1 if the size of the response body is not known.
-  int totalLength = 1;
-
-  /// [downloadedLength] is the length of the bytes have been sent/received.
-  int downloadedLength = 0;
-
-  /// [filePath] path where this file locate
-  String filePath;
-
-  double get progress {
-    if (isDownloaded) {
-      return 1;
-    } else if (totalLength == -1) {
-      return null;
-    } else {
-      return downloadedLength / totalLength;
-    }
-  }
-
-  /// Is file already downloaded
-  bool isDownloaded = false;
-
-  bool canceled = false;
-
-  cancel() {
-    canceled = true;
-  }
-
-  // static const String _locationSuffix = "downloads/";
-
-  /// Download this file.
-  _download(Downloadable task) async {
-    // Factory the name and the state add to state list
-    var fileName = Uri.decodeFull(task.url).split('/').last;
-
-    if (Platform.isWindows) {
-      // if (!await Directory(p.join(await AppSettings.savePath, _locationSuffix))
-      if (!await Directory(p.join(await AppSettings.savePath)).exists()) {
-        // await Directory(p.join(await AppSettings.savePath, _locationSuffix))
-        await Directory(p.join(await AppSettings.savePath)).create();
-      }
-      filePath = p.join(await AppSettings.savePath, fileName);
-    } else if (Platform.isAndroid) {
-      var dir =
-          (await getExternalStorageDirectories(type: StorageDirectory.pictures))
-              .first
-              .path;
-      dir = await AppSettings.savePath;
-      filePath = p.join("$dir/", fileName);
-    }
-
-    FileInfo file;
-    if (!Platform.isWindows)
-      file = await DefaultCacheManager().getFileFromCache(task.url);
-
-    //  TODO:Check if file downloaded
-
-    if (file != null) {
-      if (!await Directory(await AppSettings.savePath).exists()) {
-        await Directory(await AppSettings.savePath).create();
-      }
-      totalLength = -1;
-      taskBloc.progressUpdate.add(null);
-      DefaultCacheManager().getSingleFile(task.url).then((value) async {
-        File(filePath).writeAsBytes(await file.file.readAsBytes()).then((_) {
-          isDownloaded = true;
-          _showNotification(post.id, post.id.toString(), filePath);
-          taskBloc.removeTask.add(this);
-          taskBloc.progressCompleteUpdate.add(null);
-        });
-      });
-    } else {
-      Dio().download(task.url, filePath,
-          cancelToken: TaskBloc.cancelTokens[post.id],
-          onReceiveProgress: (int download, int total) {
-        downloadedLength = download;
-        totalLength = total;
-        taskBloc.progressUpdate.add(null);
-      }).then((_) {
-        isDownloaded = true;
-        _showNotification(post.id, post.id.toString(), filePath);
-        taskBloc.removeTask.add(this);
-        taskBloc.progressCompleteUpdate.add(null);
-        // if(Platform.isAndroid||Platform.isIOS)
-        // ImageGallerySaver.saveFile(filePath);
-      }).catchError((x) => taskBloc.removeTask.add(this));
-    }
-  }
-
-  /// Show a notification when download finished
-  void _showNotification(int id, String text, String photoPath) {
-    if (Platform.isAndroid) {
-      notifier.sendNotificationWithBitmap(
-          id,
-          '${language.content.finishedDownload}',
-          'Post $text ${language.content.downloaded}',
-          photoPath);
-    }
-  }
-
-  factory DownloadTask.fromID(String id) {
-    var post;
-    BooruAPI.fetchSpecficPost(id: id).then((x) => post = x);
-    return DownloadTask._fromID(post);
-  }
-
-  DownloadTask.fromDownload(
-    this.post,
-  ) {
+  DownloadTask.fromDownload(this.post, {required this.owner}) {
     _download(post);
   }
 
-  DownloadTask._fromID(
-    this.post,
-  ) : isDownloaded = true;
+  final TaskBloc owner;
+  final Post post;
+
+  int totalLength = 1;
+  int downloadedLength = 0;
+  String? filePath;
+
+  final Completer<String?> _completer = Completer<String?>();
+  Future<String?> get done => _completer.future;
+
+  double? get progress => isDownloaded
+      ? 1
+      : totalLength == -1
+          ? null
+          : downloadedLength / totalLength;
+
+  bool isDownloaded = false;
+  bool canceled = false;
+
+  void cancel() {
+    canceled = true;
+    if (!_completer.isCompleted) {
+      _completer.complete(null);
+    }
+  }
+
+  Future<void> _download(Downloadable task) async {
+    if (task.url.trim().isEmpty) {
+      owner.removeTask.add(this);
+      owner.progressCompleteUpdate.add(null);
+      if (!_completer.isCompleted) _completer.complete(null);
+      return;
+    }
+
+    String fileName;
+    try {
+      final uri = Uri.parse(task.url);
+      fileName = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : 'post_${post.id}';
+    } catch (_) {
+      fileName = Uri.decodeFull(task.url).split('/').last;
+    }
+    final targetPath = await prepareTargetPath(post, fileName, skipIfExists: true);
+    if (targetPath == null) {
+      // Web: skip download; not supported here.
+      owner.removeTask.add(this);
+      owner.progressCompleteUpdate.add(null);
+      if (!_completer.isCompleted) _completer.complete(null);
+      return;
+    }
+
+    filePath = targetPath;
+
+    // If the file already exists in the target folder, treat this as done.
+    if (await fileExists(targetPath)) {
+      isDownloaded = true;
+      owner.removeTask.add(this);
+      owner.progressCompleteUpdate.add(null);
+      if (!_completer.isCompleted) _completer.complete(targetPath);
+      return;
+    }
+
+    FileInfo? cached = await loadCached(task.url);
+
+    if (cached != null) {
+      totalLength = -1;
+      owner.progressUpdate.add(null);
+      final bytes = await cached.file.readAsBytes();
+      await saveBytes(targetPath, bytes);
+      isDownloaded = true;
+      owner.removeTask.add(this);
+      owner.progressCompleteUpdate.add(null);
+      _maybeNotify();
+      if (!_completer.isCompleted) _completer.complete(targetPath);
+      return;
+    }
+
+    try {
+      await Dio().download(task.url, targetPath, cancelToken: owner.cancelTokens[post.id], onReceiveProgress: (download, total) {
+        downloadedLength = download;
+        totalLength = total;
+        owner.progressUpdate.add(null);
+      });
+      isDownloaded = true;
+      owner.removeTask.add(this);
+      owner.progressCompleteUpdate.add(null);
+      _maybeNotify();
+      if (!_completer.isCompleted) _completer.complete(targetPath);
+    } catch (_) {
+      owner.removeTask.add(this);
+      owner.progressCompleteUpdate.add(null);
+      if (!_completer.isCompleted) _completer.complete(null);
+    }
+  }
+
+  void _maybeNotify() {
+    if (!isAndroid || filePath == null) return;
+    // Notification bridge was Android-only in the legacy app; omitted here to avoid platform channel complexity.
+  }
 }
 
-/// Downloadable object
 class Downloadable {
-  final String url;
   Downloadable(this.url);
+  final String url;
 }

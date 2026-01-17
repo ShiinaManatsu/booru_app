@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:devicelocale/devicelocale.dart';
 import 'package:flutter/foundation.dart';
+import '../utils/platform.dart';
 
 class Language {
   LanguageCodes language = LanguageCodes.en_uk;
@@ -10,26 +9,25 @@ class Language {
     switch (language) {
       case LanguageCodes.zh_cn:
         return ZhCN();
-        break;
       case LanguageCodes.zh_hk:
         return ZhHk();
-        break;
       default:
         return EN();
-        break;
     }
   }
 
   getLanguage() {
-    if (!kIsWeb && Platform.isWindows) return;
+    if (!kIsWeb && isWindows) return;
 
     Devicelocale.currentLocale.then((locale) {
-      if (locale.contains(LanguageMap[LanguageCodes.zh_cn])) {
-        language = LanguageCodes.zh_cn;
-      } else if (locale.contains(LanguageMap[LanguageCodes.zh_hk])) {
-        language = LanguageCodes.zh_hk;
-      } else {
-        language = LanguageCodes.en_uk;
+      if (locale != null) {
+        if (locale.contains(LanguageMap[LanguageCodes.zh_cn]!)) {
+          language = LanguageCodes.zh_cn;
+        } else if (locale.contains(LanguageMap[LanguageCodes.zh_hk]!)) {
+          language = LanguageCodes.zh_hk;
+        } else {
+          language = LanguageCodes.en_uk;
+        }
       }
     });
   }
@@ -38,6 +36,8 @@ class Language {
     getLanguage();
   }
 }
+
+final language = Language();
 
 /// Language string definitions
 abstract class Content {
@@ -440,10 +440,6 @@ class EN implements Content {
   String get mode => "Mode";
 }
 
-const Map<LanguageCodes, String> LanguageMap = {
-  LanguageCodes.zh_cn: "zh_CN",
-  LanguageCodes.zh_hk: "zh_HK",
-  LanguageCodes.en_uk: "en"
-};
+const Map<LanguageCodes, String> LanguageMap = {LanguageCodes.zh_cn: "zh_CN", LanguageCodes.zh_hk: "zh_HK", LanguageCodes.en_uk: "en"};
 
 enum LanguageCodes { zh_cn, zh_hk, en_uk }
