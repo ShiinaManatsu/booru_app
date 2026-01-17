@@ -40,85 +40,86 @@ class _PostViewerState extends State<PostViewer> {
   @override
   Widget build(BuildContext context) {
     final heroThumbUrl = _heroThumbUrl(widget.post);
-    return AdaptiveAuraContainer(
-      image: CachedNetworkImageProvider(
-        heroThumbUrl,
-      ),
-      auraStyle: AuraStyle.gradient,
-      variety: 0.7,
-      colorIntensity: 0.8,
-      blurStrength: 15.0,
-      animationValue: 0.4,
-      animationDuration: Duration(milliseconds: 800),
-      colorTransitionDuration: Duration(milliseconds: 300),
-      child: Listener(
-        behavior: HitTestBehavior.translucent,
-        onPointerDown: (event) {
-          if ((event.buttons & kBackMouseButton) != 0) {
-            Navigator.of(context).maybePop();
-          }
-        },
-        child: Stack(
-          children: [
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.0, end: 1.0),
-              duration: Duration(milliseconds: 800),
-              builder: (context, value, child) => Positioned.fill(
-                child: PhotoView.customChild(
-                  backgroundDecoration: BoxDecoration(color: Color.lerp(Colors.black, Colors.transparent, value)),
-                  child: Hero(
-                    tag: 'post-${widget.post.id}',
-                    child: CachedNetworkImage(
-                      fit: BoxFit.cover,
-                      imageUrl: widget.post.jpegUrl ?? widget.post.fileUrl ?? widget.post.sampleUrl ?? heroThumbUrl,
-                      progressIndicatorBuilder: (context, url, progress) => CachedNetworkImage(
-                        fit: BoxFit.cover,
-                        imageUrl: heroThumbUrl,
-                      ),
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (event) {
+        if ((event.buttons & kBackMouseButton) != 0) {
+          Navigator.of(context).maybePop();
+        }
+      },
+      child: Stack(
+        children: [
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: Duration(milliseconds: 800),
+            builder: (context, value, child) => Positioned.fill(
+              child: PhotoView.customChild(
+                backgroundDecoration: BoxDecoration(color: Color.lerp(Colors.black, Colors.transparent, value)),
+                child: Hero(
+                  tag: 'post-${widget.post.id}',
+                  child: CachedNetworkImage(
+                    fit: BoxFit.cover,
+                    imageUrl: widget.post.jpegUrl ?? widget.post.fileUrl ?? widget.post.sampleUrl ?? heroThumbUrl,
+                    progressIndicatorBuilder: (context, url, progress) => Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        CachedNetworkImage(
+                          fit: BoxFit.contain,
+                          imageUrl: heroThumbUrl,
+                        ),
+                        Center(
+                            child: SizedBox(
+                          height: 40,
+                          width: 40,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3.5,
+                          ),
+                        )),
+                      ],
                     ),
                   ),
-                  childSize: Size(widget.post.width.toDouble(), widget.post.height.toDouble()),
                 ),
+                childSize: Size(widget.post.width.toDouble(), widget.post.height.toDouble()),
               ),
             ),
-            Positioned(
-              top: 16,
-              left: 16,
-              child: _GlassButton(
-                icon: FontAwesomeIcons.arrowLeft,
-                onTap: () => Navigator.of(context).pop(),
-              ),
+          ),
+          Positioned(
+            top: 16,
+            left: 16,
+            child: _GlassButton(
+              icon: FontAwesomeIcons.arrowLeft,
+              onTap: () => Navigator.of(context).pop(),
             ),
-            Positioned(
-              top: 16,
-              right: 16,
-              child: Column(
-                children: [
-                  _GlassButton(
-                    icon: FontAwesomeIcons.download,
-                    onTap: _downloading
-                        ? () {}
-                        : () async {
-                            setState(() => _downloading = true);
-                            await taskBloc.downloadNow(widget.post);
-                            if (!mounted) return;
-                            setState(() => _downloading = false);
-                          },
+          ),
+          Positioned(
+            top: 16,
+            right: 16,
+            child: Column(
+              children: [
+                _GlassButton(
+                  icon: FontAwesomeIcons.download,
+                  onTap: _downloading
+                      ? () {}
+                      : () async {
+                          setState(() => _downloading = true);
+                          await taskBloc.downloadNow(widget.post);
+                          if (!mounted) return;
+                          setState(() => _downloading = false);
+                        },
+                ),
+                const SizedBox(height: 12),
+                _GlassButton(
+                  icon: FontAwesomeIcons.heart,
+                  onTap: () => BooruAPI.votePost(
+                    postID: widget.post.id,
+                    type: VoteType.Favorite,
                   ),
-                  const SizedBox(height: 12),
-                  _GlassButton(
-                    icon: FontAwesomeIcons.heart,
-                    onTap: () => BooruAPI.votePost(
-                      postID: widget.post.id,
-                      type: VoteType.Favorite,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-              ),
+                ),
+                const SizedBox(height: 12),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

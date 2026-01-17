@@ -18,7 +18,8 @@ class Win11TitleBar extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final brightness = Theme.of(context).brightness;
+    // Force white caption icons for better contrast.
+    final brightness = Brightness.dark;
 
     return SizedBox(
       height: height,
@@ -26,57 +27,71 @@ class Win11TitleBar extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
           child: Material(
-            color: Colors.black.withValues(alpha: 0.22),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  right: _captionWidth,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onPanStart: (_) {
-                      // Drag the native window.
-                      windowManager.startDragging();
-                    },
-                    onDoubleTap: () async {
-                      // Standard Windows behavior.
-                      if (await windowManager.isMaximized()) {
-                        await windowManager.unmaximize();
-                      } else {
-                        await windowManager.maximize();
-                      }
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: DefaultTextStyle(
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontSize: 13,
-                          ),
-                          child: Text(
-                            title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+            color: Colors.transparent,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.32),
+                    Colors.black.withValues(alpha: 0.20),
+                    Colors.black.withValues(alpha: 0.0),
+                  ],
+                  stops: const [0.0, 0.65, 1.0],
+                ),
+              ),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    right: _captionWidth,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onPanStart: (_) {
+                        // Drag the native window.
+                        windowManager.startDragging();
+                      },
+                      onDoubleTap: () async {
+                        // Standard Windows behavior.
+                        if (await windowManager.isMaximized()) {
+                          await windowManager.unmaximize();
+                        } else {
+                          await windowManager.maximize();
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: DefaultTextStyle(
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.9),
+                              fontSize: 13,
+                            ),
+                            child: Text(
+                              title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: SizedBox(
-                    width: _captionWidth,
-                    child: WindowCaption(
-                      brightness: brightness,
-                      backgroundColor: Colors.transparent,
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: SizedBox(
+                      width: _captionWidth,
+                      child: WindowCaption(
+                        brightness: brightness,
+                        backgroundColor: Colors.transparent,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
