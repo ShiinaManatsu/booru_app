@@ -36,7 +36,10 @@ class PostFeed extends StatefulWidget {
 
 class _PostFeedState extends State<PostFeed> {
   late final BooruBloc bloc;
-  final ScrollController _controller = ScrollController();
+  final _DampedScrollController _controller = _DampedScrollController(
+    wheelDamping: 1.25,
+    wheelAnimDuration: const Duration(milliseconds: 300),
+  );
 
   String? _auraUrlApplied;
   bool _loadingMore = false;
@@ -181,7 +184,9 @@ class _PostFeedState extends State<PostFeed> {
             },
             child: CustomScrollView(
               controller: _controller,
-              physics: const AlwaysScrollableScrollPhysics(),
+              physics: const _DampedScrollPhysics(
+                parent: ClampingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+              ),
               slivers: [
                 SliverPadding(
                   padding: widget.gridPadding ?? const EdgeInsets.fromLTRB(12, 12, 12, 100),
@@ -223,5 +228,91 @@ class _PostFeedState extends State<PostFeed> {
   int _columnsForWidth(double width) {
     final target = width ~/ 280;
     return target.clamp(2, 6);
+  }
+}
+
+class _DampedScrollPhysics extends ScrollPhysics {
+  const _DampedScrollPhysics({super.parent, this.dragDamping = 0.78, this.velocityDamping = 0.88});
+
+  final double dragDamping;
+  final double velocityDamping;
+
+  @override
+  _DampedScrollPhysics applyTo(ScrollPhysics? ancestor) {
+    return _DampedScrollPhysics(
+      parent: buildParent(ancestor),
+      dragDamping: dragDamping,
+      velocityDamping: velocityDamping,
+    );
+  }
+
+  @override
+  double applyPhysicsToUserOffset(ScrollMetrics position, double offset) {
+    final base = super.applyPhysicsToUserOffset(position, offset);
+    return base * dragDamping;
+  }
+
+  @override
+  Simulation? createBallisticSimulation(ScrollMetrics position, double velocity) {
+    return super.createBallisticSimulation(position, velocity * velocityDamping);
+  }
+}
+
+class _DampedScrollController extends ScrollController {
+  _DampedScrollController({
+    this.wheelDamping = 0.55,
+    this.wheelAnimDuration = const Duration(milliseconds: 120),
+  });
+
+  final double wheelDamping;
+  final Duration wheelAnimDuration;
+
+  @override
+  ScrollPosition createScrollPosition(ScrollPhysics physics, ScrollContext context, ScrollPosition? oldPosition) {
+    return _DampedScrollPosition(
+      physics: physics,
+      context: context,
+      oldPosition: oldPosition,
+      wheelDamping: wheelDamping,
+      wheelAnimDuration: wheelAnimDuration,
+    );
+  }
+}
+
+class _DampedScrollPosition extends ScrollPositionWithSingleContext {
+  _DampedScrollPosition({
+    required super.physics,
+    required super.context,
+    super.oldPosition,
+    required this.wheelDamping,
+    required this.wheelAnimDuration,
+  });
+
+  final double wheelDamping;
+  final Duration wheelAnimDuration;
+
+  double? _wheelTarget;
+  int _wheelSeq = 0;
+
+  @override
+  void pointerScroll(double delta) {
+    if (delta == 0) return;
+
+    final base = _wheelTarget ?? pixels;
+    final target = (base + delta * wheelDamping).clamp(minScrollExtent, maxScrollExtent);
+    _wheelTarget = target;
+
+    final seq = ++_wheelSeq;
+    unawaited(
+      animateTo(
+        _wheelTarget!,
+        duration: wheelAnimDuration,
+        curve: Curves.easeOutCubic,
+      ).catchError((_) {}).whenComplete(() {
+        if (seq == _wheelSeq) {
+          _wheelTarget = null;
+        }
+      }),
+    );
   }
 }

@@ -8,13 +8,14 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:booru_app/main.dart';
-import 'package:booru_app/pages/home/home_shell.dart';
+import 'package:booru_app/widgets/download_overlay.dart';
 
 void main() {
   testWidgets('App builds', (WidgetTester tester) async {
     await tester.pumpWidget(const BooruApp());
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(find.byType(HomeShell), findsOneWidget);
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(DownloadOverlay), findsOneWidget);
   });
 }

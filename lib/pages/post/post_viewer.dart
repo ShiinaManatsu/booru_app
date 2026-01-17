@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'package:adaptive_aura/adaptive_aura.dart';
 import 'package:booru_app/main.dart';
 import 'package:booru_app/models/rx/booru_api.dart';
 import 'package:booru_app/models/yande/post.dart';
@@ -52,29 +51,36 @@ class _PostViewerState extends State<PostViewer> {
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0.0, end: 1.0),
             duration: Duration(milliseconds: 800),
-            builder: (context, value, child) => Positioned.fill(
+            builder: (context, time, child) => Positioned.fill(
               child: PhotoView.customChild(
-                backgroundDecoration: BoxDecoration(color: Color.lerp(Colors.black, Colors.transparent, value)),
+                backgroundDecoration: BoxDecoration(color: Color.lerp(Colors.black, Colors.transparent, time)),
                 child: Hero(
-                  tag: 'post-${widget.post.id}',
+                  // tag: 'post-${widget.post.id}',
+                  tag: widget.post,
                   child: CachedNetworkImage(
                     fit: BoxFit.cover,
                     imageUrl: widget.post.jpegUrl ?? widget.post.fileUrl ?? widget.post.sampleUrl ?? heroThumbUrl,
                     progressIndicatorBuilder: (context, url, progress) => Stack(
                       fit: StackFit.expand,
                       children: [
-                        CachedNetworkImage(
-                          fit: BoxFit.contain,
-                          imageUrl: heroThumbUrl,
+                        ImageFiltered(
+                          imageFilter: ImageFilter.blur(sigmaX: 12.0 * time, sigmaY: 12.0 * time),
+                          child: CachedNetworkImage(
+                            fit: BoxFit.contain,
+                            imageUrl: heroThumbUrl,
+                            width: widget.post.width.toDouble(),
+                            height: widget.post.height.toDouble(),
+                          ),
                         ),
                         Center(
-                            child: SizedBox(
-                          height: 40,
-                          width: 40,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 3.5,
+                          child: SizedBox(
+                            height: 160,
+                            width: 160,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 12,
+                            ),
                           ),
-                        )),
+                        ),
                       ],
                     ),
                   ),

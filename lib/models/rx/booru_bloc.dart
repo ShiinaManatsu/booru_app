@@ -13,6 +13,7 @@ class BooruBloc {
   final BehaviorSubject<PostState> _state = BehaviorSubject<PostState>.seeded(PostLoading());
 
   final List<Post> _cache = <Post>[];
+  final Set<int> _seenPostIds = <int>{};
 
   FetchType _fetchType = FetchType.Posts;
   FetchArg? _lastArg;
@@ -32,6 +33,7 @@ class BooruBloc {
     _page = 1;
     _hasMore = true;
     _cache.clear();
+    _seenPostIds.clear();
     _state.add(PostLoading());
     await _fetch(append: false);
   }
@@ -46,6 +48,7 @@ class BooruBloc {
     _page = 1;
     _hasMore = true;
     _cache.clear();
+    _seenPostIds.clear();
 
     switch (_fetchType) {
       case FetchType.PopularByDay:
@@ -112,7 +115,11 @@ class BooruBloc {
             continue;
           }
 
-          _cache.addAll(filtered);
+          final added = _mergeDistinct(filtered);
+          if (added == 0) {
+            // All duplicates; try an earlier window.
+            continue;
+          }
           _state.add(PostSuccess(List<Post>.unmodifiable(_cache)));
           return;
         } catch (error) {
@@ -170,8 +177,16 @@ class BooruBloc {
 
       if (!append) {
         _cache.clear();
+        _seenPostIds.clear();
       }
-      _cache.addAll(filtered);
+
+      final added = _mergeDistinct(filtered);
+
+      // If we requested a new page but got no new items, stop paging to avoid
+      // infinite requests and also prevent duplicate Hero tags.
+      if (append && added == 0 && (_fetchType == FetchType.Posts || _fetchType == FetchType.Search)) {
+        _hasMore = false;
+      }
 
       _state.add(PostSuccess(List<Post>.unmodifiable(_cache)));
     } catch (error) {
@@ -179,6 +194,18 @@ class BooruBloc {
     } finally {
       _isFetching = false;
     }
+  }
+
+  int _mergeDistinct(List<Post> incoming) {
+    var added = 0;
+    for (final post in incoming) {
+      final id = post.id;
+      if (_seenPostIds.add(id)) {
+        _cache.add(post);
+        added += 1;
+      }
+    }
+    return added;
   }
 
   Future<List<Post>> _callApi() async {

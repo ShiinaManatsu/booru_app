@@ -39,7 +39,8 @@ class _PostTileState extends State<PostTile> {
               );
             },
             child: Hero(
-              tag: 'post-${widget.post.id}',
+              // tag: 'post-${widget.post.id}',
+              tag: widget.post,
               flightShuttleBuilder: (flightContext, animation, flightDirection, fromHeroContext, toHeroContext) {
                 // During pop, the destination grid tile may briefly rebuild into its
                 // placeholder while the image provider resolves again. Avoid showing
@@ -48,10 +49,9 @@ class _PostTileState extends State<PostTile> {
                   return Center(
                     child: AspectRatio(
                       aspectRatio: ratio,
-                      child: Image(
-                        image: CachedNetworkImageProvider(url),
+                      child: CachedNetworkImage(
+                        imageUrl: url,
                         fit: BoxFit.cover,
-                        filterQuality: FilterQuality.low,
                       ),
                     ),
                   );
