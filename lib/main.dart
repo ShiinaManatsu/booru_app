@@ -3,12 +3,15 @@ import 'dart:async';
 import 'package:adaptive_aura/adaptive_aura.dart';
 import 'package:booru_app/extensions/shared_preferences_extension.dart';
 import 'package:booru_app/models/rx/booru_api.dart';
+import 'package:booru_app/models/rx/tag_index.dart';
 import 'package:booru_app/models/rx/task_bloc.dart';
 import 'package:booru_app/pages/home/home_shell.dart';
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:booru_app/widgets/win11_title_bar.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:booru_app/utils/aura_controller.dart';
 import 'package:booru_app/widgets/download_overlay.dart';
@@ -18,6 +21,8 @@ import 'utils/platform.dart';
 final BooruAPI booruApi = BooruAPI();
 final TaskBloc taskBloc = TaskBloc();
 
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -25,6 +30,7 @@ Future<void> main() async {
     SharedPreferencesExtension.windows();
   }
   await AppSettings.ensureInitialized();
+  unawaited(TagIndexService.instance.ensureLoaded());
 
   if (_useWin11TitleBar) {
     await _initWindowsTitleBar();
@@ -69,15 +75,18 @@ class BooruApp extends StatelessWidget {
                       child: ShadApp(
                         backgroundColor: Colors.transparent,
                         debugShowCheckedModeBanner: false,
+                        navigatorKey: _rootNavigatorKey,
                         theme: ShadThemeData(
                           brightness: Brightness.dark,
                           colorScheme: ShadSlateColorScheme.dark(),
                         ),
                         builder: (context, child) {
                           if (child == null) return const SizedBox.shrink();
-                          return Padding(
-                            padding: EdgeInsets.only(top: topPadding),
-                            child: child,
+                          return _GlobalBackHandler(
+                            child: Padding(
+                              padding: EdgeInsets.only(top: topPadding),
+                              child: child,
+                            ),
                           );
                         },
                         home: const HomeShell(),
@@ -97,6 +106,40 @@ class BooruApp extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _GlobalBackHandler extends StatelessWidget {
+  const _GlobalBackHandler({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Focus(
+      autofocus: true,
+      onKeyEvent: (node, event) {
+        if (event is! KeyDownEvent) return KeyEventResult.ignored;
+        if (event.logicalKey != LogicalKeyboardKey.escape) return KeyEventResult.ignored;
+
+        final nav = _rootNavigatorKey.currentState;
+        if (nav == null || !nav.canPop()) return KeyEventResult.ignored;
+        unawaited(nav.maybePop());
+        return KeyEventResult.handled;
+      },
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (event) {
+          if ((event.buttons & kBackMouseButton) != 0) {
+            final nav = _rootNavigatorKey.currentState;
+            if (nav != null && nav.canPop()) {
+              unawaited(nav.maybePop());
+            }
+          }
+        },
+        child: child,
       ),
     );
   }

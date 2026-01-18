@@ -20,8 +20,18 @@ class TagDataBase {
 
   /// Search for tag suggestion
   static Future<List<Tag>> searchTags(String tag) async {
-    var url = "${AppSettings.currentBaseUrl}/tag.json?order=count&limit=10&name=$tag";
-    http.Response response = await http.get(Uri.parse(url));
+    var url = "${AppSettings.currentBaseUrl}/tag.json?order=count&limit=10&name_pattern=$tag";
+    final uri = Uri.parse(url);
+    final response = await http.get(uri, headers: AppSettings.booruHeaders());
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('HTTP ${response.statusCode} from $uri');
+    }
+    final ct = response.headers['content-type']?.toLowerCase() ?? '';
+    final trimmed = response.body.trimLeft();
+    if (ct.contains('text/html') || trimmed.startsWith('<')) {
+      final snippet = trimmed.length > 160 ? '${trimmed.substring(0, 160)}…' : trimmed;
+      throw Exception('Site returned HTML (likely Cloudflare/anti-bot challenge) instead of JSON. snippet=${snippet.replaceAll("\n", " ")}');
+    }
     List decodedjson = json.decode(response.body);
     return decodedjson.map((j) {
       var x = j as Map<dynamic, dynamic>;
@@ -33,6 +43,35 @@ class TagDataBase {
       );
     }).toList();
   }
+}
+
+class TagEntry {
+  const TagEntry({required this.id, required this.name, required this.count, required this.type, required this.ambiguous});
+
+  final int id;
+  final String name;
+  final int count;
+  final TagType type;
+  final bool ambiguous;
+
+  factory TagEntry.fromJson(Map<String, dynamic> json) {
+    final id = json['id'];
+    final count = json['count'];
+    final type = json['type'];
+    return TagEntry(
+      id: id is int ? id : int.tryParse(id?.toString() ?? '') ?? 0,
+      name: json['name']?.toString() ?? '',
+      count: count is int ? count : int.tryParse(count?.toString() ?? '') ?? 0,
+      type: TagDataBase._tagTypeFrom(type),
+      ambiguous: json['ambiguous'] == true,
+    );
+  }
+}
+
+class RelatedTagEntry {
+  const RelatedTagEntry({required this.name, required this.count});
+  final String name;
+  final int count;
 }
 
 class Tag {

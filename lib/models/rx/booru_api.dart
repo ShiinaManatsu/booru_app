@@ -1,12 +1,14 @@
-import 'package:booru_app/models/yande/User.dart';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'package:booru_app/models/rx/update_args.dart';
-import 'package:booru_app/models/yande/comment.dart';
 import 'dart:convert';
 import 'package:booru_app/models/yande/post.dart';
+import 'package:booru_app/models/yande/pool.dart';
+import 'package:booru_app/models/yande/tags.dart';
+import 'package:booru_app/models/yande/artist.dart';
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:flutter/foundation.dart';
+import 'package:xml/xml.dart';
 
 /*  Provide base link
     Create post
@@ -24,29 +26,57 @@ import 'package:flutter/foundation.dart';
 */
 
 class BooruAPI {
+  static void _throwIfHtmlResponse(http.Response response, Uri uri) {
+    final ct = response.headers['content-type']?.toLowerCase() ?? '';
+    final body = response.body;
+    final trimmed = body.trimLeft();
+
+    final looksHtml = ct.contains('text/html') || trimmed.startsWith('<!doctype') || trimmed.startsWith('<html') || trimmed.startsWith('<');
+    if (!looksHtml) return;
+
+    final snippet = trimmed.length > 160 ? '${trimmed.substring(0, 160)}…' : trimmed;
+    throw Exception(
+      'Site returned HTML (likely Cloudflare/anti-bot challenge) instead of JSON. '
+      'url=$uri status=${response.statusCode} snippet=${snippet.replaceAll("\n", " ")}',
+    );
+  }
+
+  static void _throwIfBadStatus(http.Response response, Uri uri) {
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+    final body = response.body.trimLeft();
+    final snippet = body.length > 160 ? '${body.substring(0, 160)}…' : body;
+    throw Exception('HTTP ${response.statusCode} from $uri: ${snippet.replaceAll("\n", " ")}');
+  }
+
   /// Base http call for fetch any url
   static Future<List<Post>> _httpGet(String url) async {
     if (kDebugMode) {
       debugPrint('[BooruAPI] GET $url');
     }
-    http.Response response = await http.get(Uri.parse(url));
-    List responseJson = json.decode(response.body);
+    final uri = Uri.parse(url);
+    final response = await http.get(uri, headers: AppSettings.booruHeaders());
+    _throwIfBadStatus(response, uri);
+    _throwIfHtmlResponse(response, uri);
+    final responseJson = json.decode(response.body) as List;
     return responseJson.map((m) => Post.fromJson(Map<String, dynamic>.from(m as Map))).toList();
+  }
+
+  static Future<Map<String, dynamic>> _httpGetObject(String url) async {
+    if (kDebugMode) {
+      debugPrint('[BooruAPI] GET $url');
+    }
+    final uri = Uri.parse(url);
+    final response = await http.get(uri, headers: AppSettings.booruHeaders());
+    _throwIfBadStatus(response, uri);
+    _throwIfHtmlResponse(response, uri);
+    final decoded = json.decode(response.body);
+    return Map<String, dynamic>.from(decoded as Map);
   }
 
   /// Password
   /// Get the hashed string by the given string
   static String getSha1Password(String password) {
     return sha1.convert(utf8.encode("choujin-steiner--$password--")).toString();
-  }
-
-  /// Search user
-  /// Get user info by id or name
-  static Future<List<User>> getUsers({int? id, String? name}) async {
-    var url = "${AppSettings.currentBaseUrl}/user.json?${id == null ? "" : "id=$id"}${name == null ? "" : "name=$name"}";
-    http.Response response = await http.post(Uri.parse(url));
-    List decodedJson = json.decode(response.body);
-    return decodedJson.map((m) => User.fromJson(m)).toList();
   }
 
   /// Posts
@@ -75,6 +105,74 @@ class BooruAPI {
     return await _httpGet(url);
   }
 
+  /// Fetch a single post by id.
+  ///
+  /// Uses the JSON endpoint which is confirmed to work on yande/konachan:
+  /// `/post.json?tags=id:<id>`
+  static Future<Post> fetchPostById({required int id}) async {
+    final list = await fetchSpecficPost(id: id.toString());
+    if (list.isEmpty) {
+      throw Exception('Post not found: id=$id');
+    }
+    return list.first;
+  }
+
+  /// Update a post (or fetch post data by id).
+  ///
+  /// Endpoint: /post/update.xml
+  ///
+  /// Notes:
+  /// - Only [id] is required; passing only [id] can be used to retrieve post info.
+  /// - Other parameters are optional; omit them if you don't want to change them.
+  /// - Authentication may be required by the server for updates.
+  static Future<Post> updatePost({
+    required int id,
+    String? tags,
+    Rating? rating,
+    String? source,
+    bool? isRatingLocked,
+    bool? isNoteLocked,
+    int? parentId,
+  }) async {
+    // If the caller only wants to query post info, prefer the JSON endpoint.
+    // Some servers return 404 for /post/update.xml.
+    final wantsUpdate = tags != null || rating != null || source != null || isRatingLocked != null || isNoteLocked != null || parentId != null;
+    if (!wantsUpdate) {
+      return fetchPostById(id: id);
+    }
+
+    final url = '${AppSettings.currentBaseUrl}/post/update.xml?${AppSettings.token}&id=$id';
+
+    final body = <String, String>{
+      if (tags != null) 'post[tags]': tags,
+      if (rating != null) 'post[rating]': rating.name,
+      if (source != null) 'post[source]': source,
+      if (isRatingLocked != null) 'post[is_rating_locked]': isRatingLocked ? 'true' : 'false',
+      if (isNoteLocked != null) 'post[is_note_locked]': isNoteLocked ? 'true' : 'false',
+      if (parentId != null) 'post[parent_id]': '$parentId',
+    };
+
+    if (kDebugMode) {
+      debugPrint('[BooruAPI] POST $url');
+    }
+
+    final uri = Uri.parse(url);
+    final response = await http.post(uri, headers: AppSettings.booruHeaders(), body: body);
+    _throwIfBadStatus(response, uri);
+    _throwIfHtmlResponse(response, uri);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Failed to update post (HTTP ${response.statusCode}). This server may not support /post/update.xml.');
+    }
+
+    // The API returns XML; parse the first <post .../> element.
+    final doc = XmlDocument.parse(response.body);
+    final postEl = doc.findAllElements('post').first;
+    final attrs = <String, dynamic>{
+      for (final a in postEl.attributes) a.name.local: a.value,
+    };
+    return Post.fromJson(attrs);
+  }
+
   /// Fetch popular posts by recent
   static Future<List<Post>> fetchPopularRecent({required PopularRecentArgs args}) async {
     var url = "${AppSettings.currentBaseUrl}/post/popular_recent.json?period=${periodMap[args.period]}";
@@ -100,33 +198,134 @@ class BooruAPI {
   }
 
   /// Vote
-  /// Fetch post comment
   static Future<bool> votePost({required int postID, required VoteType type}) async {
     var url = "${AppSettings.currentBaseUrl}/post/vote.json?${AppSettings.token}&id=$postID&score=${type.index - 1}";
-    http.Response response = await http.post(Uri.parse(url));
+    final uri = Uri.parse(url);
+    final response = await http.post(uri, headers: AppSettings.booruHeaders());
+    _throwIfBadStatus(response, uri);
+    _throwIfHtmlResponse(response, uri);
     Map decodedJson = json.decode(response.body);
     return decodedJson["success"];
   }
 
-  /// Posts
+  /// Tags
 
-  /// Comnents
-  /// Fetch post comment
-  static Future<List<Comment>> fetchPostsComments({required int postID}) async {
-    var url = "${AppSettings.currentBaseUrl}/comment.json?post_id=$postID";
-    http.Response response = await http.get(Uri.parse(url));
-    List responseJson = json.decode(response.body);
-    return responseJson.map((m) => Comment.fromJson(m)).toList();
+  /// Fetch tags list (search/suggest).
+  ///
+  /// Docs: /tag.json
+  static Future<List<TagEntry>> fetchTags({
+    int? limit,
+    int? page,
+    TagOrder? order,
+    int? id,
+    int? afterId,
+    String? name,
+    String? namePattern,
+  }) async {
+    final uri = Uri.parse(AppSettings.currentBaseUrl).resolve('/tag.json').replace(
+      queryParameters: <String, String>{
+        if (limit != null) 'limit': '$limit',
+        if (page != null) 'page': '$page',
+        if (order != null) 'order': order.name,
+        if (id != null) 'id': '$id',
+        if (afterId != null) 'after_id': '$afterId',
+        if (name != null && name.isNotEmpty) 'name': name,
+        if (namePattern != null && namePattern.isNotEmpty) 'name_pattern': namePattern,
+      },
+    );
+
+    if (kDebugMode) {
+      debugPrint('[BooruAPI] GET $uri');
+    }
+    final response = await http.get(uri, headers: AppSettings.booruHeaders());
+    _throwIfBadStatus(response, uri);
+    _throwIfHtmlResponse(response, uri);
+    final decoded = json.decode(response.body) as List;
+    return decoded.map((m) => TagEntry.fromJson(Map<String, dynamic>.from(m as Map))).toList();
   }
 
-  /// Leave comment
-  static Future<bool> leaveComment({required int postID, required String content, bool anonymous = false}) async {
-    var url = "${AppSettings.currentBaseUrl}/comment/create.json?comment[post_id]=$postID&comment[body]=$content&${AppSettings.token}";
-    http.Response response = await http.get(Uri.parse(url));
-    List decodedJson = json.decode(response.body);
-    return decodedJson.map((f) {
-      return (f as Map<dynamic, dynamic>)["success"] as bool;
-    }).first;
+  /// Fetch related tags.
+  ///
+  /// Docs: /tag/related.json (returns map: inputTag -> [[name, count], ...]).
+  static Future<Map<String, List<RelatedTagEntry>>> fetchRelatedTags({required String tags, TagRelatedType? type}) async {
+    final uri = Uri.parse(AppSettings.currentBaseUrl).resolve('/tag/related.json').replace(
+      queryParameters: <String, String>{
+        'tags': tags,
+        if (type != null) 'type': type.name,
+      },
+    );
+
+    if (kDebugMode) {
+      debugPrint('[BooruAPI] GET $uri');
+    }
+    final response = await http.get(uri, headers: AppSettings.booruHeaders());
+    _throwIfBadStatus(response, uri);
+    _throwIfHtmlResponse(response, uri);
+    final decoded = json.decode(response.body);
+    final obj = Map<String, dynamic>.from(decoded as Map);
+    return obj.map((key, value) {
+      final list = (value as List).cast<List>();
+      final entries = list.map((pair) {
+        final name = pair.isNotEmpty ? pair[0].toString() : '';
+        final count = pair.length > 1 ? int.tryParse(pair[1].toString()) ?? 0 : 0;
+        return RelatedTagEntry(name: name, count: count);
+      }).toList();
+      return MapEntry(key, entries);
+    });
+  }
+
+  /// Artists (read-only)
+
+  /// Docs: /artist.json
+  static Future<List<Artist>> fetchArtists({String? name, ArtistOrder? order, int? page}) async {
+    final uri = Uri.parse(AppSettings.currentBaseUrl).resolve('/artist.json').replace(
+      queryParameters: <String, String>{
+        if (name != null && name.isNotEmpty) 'name': name,
+        if (order != null) 'order': order.name,
+        if (page != null) 'page': '$page',
+      },
+    );
+
+    if (kDebugMode) {
+      debugPrint('[BooruAPI] GET $uri');
+    }
+    final response = await http.get(uri, headers: AppSettings.booruHeaders());
+    _throwIfBadStatus(response, uri);
+    _throwIfHtmlResponse(response, uri);
+    final decoded = json.decode(response.body) as List;
+    return decoded.map((m) => Artist.fromJson(Map<String, dynamic>.from(m as Map))).toList();
+  }
+
+  /// Pools (read-only)
+
+  /// Docs: /pool.json
+  static Future<List<Pool>> fetchPools({String? query, int? page}) async {
+    final uri = Uri.parse(AppSettings.currentBaseUrl).resolve('/pool.json').replace(
+      queryParameters: <String, String>{
+        if (query != null && query.isNotEmpty) 'query': query,
+        if (page != null) 'page': '$page',
+      },
+    );
+    if (kDebugMode) {
+      debugPrint('[BooruAPI] GET $uri');
+    }
+    final response = await http.get(uri, headers: AppSettings.booruHeaders());
+    _throwIfBadStatus(response, uri);
+    _throwIfHtmlResponse(response, uri);
+    final decoded = json.decode(response.body) as List;
+    return decoded.map((m) => Pool.fromJson(Map<String, dynamic>.from(m as Map))).toList();
+  }
+
+  /// Docs: /pool/show.json
+  static Future<Pool> fetchPoolShow({required int id, int? page}) async {
+    final uri = Uri.parse(AppSettings.currentBaseUrl).resolve('/pool/show.json').replace(
+      queryParameters: <String, String>{
+        'id': '$id',
+        if (page != null) 'page': '$page',
+      },
+    );
+    final obj = await _httpGetObject(uri.toString());
+    return Pool.fromJson(obj);
   }
 
   // 125*125
@@ -169,6 +368,12 @@ enum Period {
 ///     Great = 2,
 ///     Favorite = 3
 enum VoteType { Bad, None, Good, Great, Favorite }
+
+enum TagOrder { date, count, name }
+
+enum TagRelatedType { general, artist, copyright, character }
+
+enum ArtistOrder { date, name }
 
 Map<Period, String> periodMap = {
   Period.None: "1d",

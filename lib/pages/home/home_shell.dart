@@ -1,9 +1,11 @@
 import 'dart:ui';
+import 'dart:async';
 
 import 'package:booru_app/models/rx/booru_api.dart';
 import 'package:booru_app/pages/home/post_feed.dart';
 import 'package:booru_app/pages/search/search_page.dart';
 import 'package:booru_app/pages/settings/settings_screen.dart';
+import 'package:booru_app/settings/app_settings.dart';
 import 'package:booru_app/settings/language.dart';
 import 'package:booru_app/main.dart';
 import 'package:flutter/material.dart';
@@ -20,17 +22,33 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
 
-  late final Widget _postsTab = PostFeed(
-    key: const PageStorageKey('tab_posts'),
-    title: 'posts',
-    initialFetchType: FetchType.Posts,
-    booruApi: booruApi,
-  );
+  bool _showSwitchOverlay = false;
+  Timer? _switchOverlayTimer;
+  late ClientType _overlayClient;
+  late final VoidCallback _clientListener;
 
-  late final Widget _popularTab = PopularFeed(
-    key: const PageStorageKey('tab_popular'),
-    booruApi: booruApi,
-  );
+  @override
+  void initState() {
+    super.initState();
+
+    _overlayClient = AppSettings.currentClient;
+    _clientListener = _handleClientChanged;
+    AppSettings.currentClientListenable.addListener(_clientListener);
+  }
+
+  void _handleClientChanged() {
+    if (!mounted) return;
+    setState(() {
+      _overlayClient = AppSettings.currentClientListenable.value;
+      _showSwitchOverlay = true;
+    });
+
+    _switchOverlayTimer?.cancel();
+    _switchOverlayTimer = Timer(const Duration(milliseconds: 420), () {
+      if (!mounted) return;
+      setState(() => _showSwitchOverlay = false);
+    });
+  }
 
   late final Widget _searchTab = SearchPage(
     key: const PageStorageKey('tab_search'),
@@ -47,12 +65,49 @@ class _HomeShellState extends State<HomeShell> {
       _TabSpec(
         label: language.content.posts,
         icon: FontAwesomeIcons.images,
-        child: _postsTab,
+        child: ValueListenableBuilder<ClientType>(
+          valueListenable: AppSettings.currentClientListenable,
+          builder: (context, client, _) {
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: ScaleTransition(scale: Tween(begin: 0.995, end: 1.0).animate(anim), child: child),
+              ),
+              child: PostFeed(
+                key: PageStorageKey('tab_posts_${client.name}'),
+                title: 'posts',
+                initialFetchType: FetchType.Posts,
+                booruApi: booruApi,
+              ),
+            );
+          },
+        ),
       ),
       _TabSpec(
         label: language.content.popularPosts,
         icon: FontAwesomeIcons.fireFlameCurved,
-        child: _popularTab,
+        child: ValueListenableBuilder<ClientType>(
+          valueListenable: AppSettings.currentClientListenable,
+          builder: (context, client, _) {
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: ScaleTransition(scale: Tween(begin: 0.995, end: 1.0).animate(anim), child: child),
+              ),
+              child: PopularFeed(
+                key: ValueKey('tab_popular_${client.name}'),
+                booruApi: booruApi,
+                client: client,
+              ),
+            );
+          },
+        ),
       ),
       _TabSpec(
         label: language.content.search,
@@ -75,6 +130,26 @@ class _HomeShellState extends State<HomeShell> {
               index: _index,
               children: [for (final t in tabs) t.child],
             ),
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: !_showSwitchOverlay,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 140),
+                  opacity: _showSwitchOverlay ? 1 : 0,
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        color: Colors.black.withAlpha((0.18 * 255).round()),
+                        alignment: Alignment.topCenter,
+                        padding: const EdgeInsets.only(top: 14),
+                        child: _SwitchingPill(client: _overlayClient),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
             Positioned(
               left: 0,
               right: 0,
@@ -87,6 +162,58 @@ class _HomeShellState extends State<HomeShell> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _switchOverlayTimer?.cancel();
+    AppSettings.currentClientListenable.removeListener(_clientListener);
+    super.dispose();
+  }
+}
+
+class _SwitchingPill extends StatelessWidget {
+  const _SwitchingPill({required this.client});
+
+  final ClientType client;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = switch (client) {
+      ClientType.Yande => 'Switching to yande.re…',
+      ClientType.Konachan => 'Switching to konachan.com…',
+    };
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black.withAlpha((0.45 * 255).round()),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: Colors.white.withAlpha((0.12 * 255).round()),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            text,
+            style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+        ],
       ),
     );
   }
@@ -179,9 +306,10 @@ class _NavItem extends StatelessWidget {
 }
 
 class PopularFeed extends StatefulWidget {
-  const PopularFeed({super.key, required this.booruApi});
+  const PopularFeed({super.key, required this.booruApi, required this.client});
 
   final BooruAPI booruApi;
+  final ClientType client;
 
   @override
   State<PopularFeed> createState() => _PopularFeedState();
@@ -209,7 +337,7 @@ class _PopularFeedState extends State<PopularFeed> {
       children: [
         Positioned.fill(
           child: PostFeed(
-            key: ValueKey('popular_$type-$_period'),
+            key: ValueKey('popular_${widget.client.name}_$type-$_period'),
             title: language.content.popularPosts,
             initialFetchType: type,
             booruApi: widget.booruApi,

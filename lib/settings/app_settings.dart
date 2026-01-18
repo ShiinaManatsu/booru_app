@@ -18,6 +18,18 @@ class AppSettings {
   /// The current client
   static ClientType currentClient = ClientType.Yande;
 
+  /// Listen to current client changes (site switching).
+  ///
+  /// Useful for pages that are kept alive (e.g. tab views) and should react
+  /// to site changes without requiring a full rebuild.
+  static final ValueNotifier<ClientType> currentClientListenable = ValueNotifier<ClientType>(currentClient);
+
+  static Future<void> setCurrentClient(ClientType client) async {
+    currentClient = client;
+    currentClientListenable.value = client;
+    await SharedPreferencesExtension.setTyped<String>('currentClient', client.name);
+  }
+
   /// The height of post in the post list
   static double fixedPostHeight = !kIsWeb && isAndroid ? 256.0 : 384.0;
 
@@ -70,11 +82,45 @@ class AppSettings {
     }
   }
 
+  /// Default headers for booru endpoints.
+  ///
+  /// Some deployments (especially behind Cloudflare) may return an HTML
+  /// challenge when requests look like non-browser traffic. Using a
+  /// browser-like User-Agent improves compatibility.
+  static Map<String, String> booruHeaders({ClientType? client}) {
+    final target = client ?? currentClient;
+    final baseUrl = switch (target) {
+      ClientType.Yande => 'https://yande.re',
+      ClientType.Konachan => 'https://konachan.com',
+    };
+
+    return <String, String>{
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      'Accept': 'application/json, text/javascript, */*; q=0.1',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Referer': '$baseUrl/',
+      'DNT': '1',
+    };
+  }
+
   static Future<void> ensureInitialized() async {
+    await _initClientType();
     await _initPreviewQuality();
     await _initSafeMode();
     await _initMasonryGrid();
     await _initSavePaths();
+  }
+
+  static Future<void> _initClientType() async {
+    final cached = await SharedPreferencesExtension.getTyped<String>('currentClient');
+    if (cached == null) return;
+
+    currentClient = ClientType.values.firstWhere(
+      (e) => e.name == cached,
+      orElse: () => ClientType.Yande,
+    );
+
+    currentClientListenable.value = currentClient;
   }
 
   static String _saveKey(ClientType? client) {
@@ -154,20 +200,14 @@ class AppSettings {
 /// User object
 /// "password_hash=9b86532bf85edf67fbc5c96561c178edaefc6d37&login=yande_loli";
 class LocalUser {
-  int? id;
   ClientType clientType;
   String hashedPassword = "";
   String username = "";
   String get token => "login=$username&password_hash=$hashedPassword";
   List<String> blacklist = [];
 
-  String get avatarUrl => id == null ? "" : "${AppSettings.currentBaseUrl}/data/avatars/${id.toString()}.jpg";
-
   LocalUser(this.clientType, String username, String password) {
     this.username = username;
     hashedPassword = BooruAPI.getSha1Password(password);
-    BooruAPI.getUsers(name: username).then((x) {
-      if (x.isNotEmpty) id = x.first.id;
-    });
   }
 }

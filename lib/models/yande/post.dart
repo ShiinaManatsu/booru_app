@@ -9,6 +9,8 @@ class Post implements Downloadable {
   String? sampleUrl;
   int width;
   int height;
+  int? parentId;
+  bool hasParent = false;
   String? _rating;
   String? tags;
   int creatorId = 0;
@@ -60,6 +62,8 @@ class Post implements Downloadable {
   Post.fromJson(Map<String, dynamic> json)
       : id = _asInt(json['id'], defaultValue: 0),
         creatorId = _asInt(json['creator_id'], defaultValue: 0),
+        parentId = json['parent_id'] == null ? null : _asInt(json['parent_id'], defaultValue: 0),
+        hasParent = _asBool(json['has_parent'], defaultValue: false),
         sourceUrl = _asStringOrNull(json['source']),
         score = _asInt(json['score'], defaultValue: 0),
         author = _asStringOrNull(json['author']),
@@ -78,6 +82,8 @@ class Post implements Downloadable {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['id'] = id;
     data['creator_id'] = creatorId;
+    data['parent_id'] = parentId;
+    data['has_parent'] = hasParent;
     data['source'] = sourceUrl;
     data['score'] = score;
     data['author'] = author;

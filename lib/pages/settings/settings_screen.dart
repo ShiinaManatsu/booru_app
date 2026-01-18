@@ -45,11 +45,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SettingsSection(
           title: Text(language.content.settings),
           tiles: [
-            SettingsTile.navigation(
-              leading: const Icon(Icons.image),
-              title: Text('${language.content.preview} quality'),
-              value: Text(AppSettings.previewQuality.name),
-              onPressed: (_) => _pickPreviewQuality(),
+            CustomSettingsTile(
+              child: _SettingsRow(
+                leading: const Icon(Icons.public),
+                title: const Text('Site'),
+                trailing: _InlineToggle<ClientType>(
+                  value: AppSettings.currentClient,
+                  items: const [
+                    _InlineToggleItem(value: ClientType.Yande, label: 'yande.re'),
+                    _InlineToggleItem(value: ClientType.Konachan, label: 'konachan.com'),
+                  ],
+                  onChanged: (next) async {
+                    if (next == AppSettings.currentClient) return;
+                    await AppSettings.setCurrentClient(next);
+                    if (!mounted) return;
+                    setState(() {});
+                  },
+                ),
+              ),
             ),
             SettingsTile.switchTile(
               initialValue: AppSettings.safeMode,
@@ -71,6 +84,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: const Text('Konachan save path'),
               value: Text(_konachanPath.isEmpty ? 'Not set' : _konachanPath),
               onPressed: (_) => _pickFolder(ClientType.Konachan),
+            ),
+            CustomSettingsTile(
+              child: _SettingsRow(
+                leading: const Icon(Icons.image),
+                title: Text('${language.content.preview} quality'),
+                trailing: _InlineToggle<PreviewQuality>(
+                  value: AppSettings.previewQuality,
+                  items: const [
+                    _InlineToggleItem(value: PreviewQuality.Low, label: 'Low'),
+                    _InlineToggleItem(value: PreviewQuality.Medium, label: 'Medium'),
+                  ],
+                  onChanged: (next) async {
+                    if (next == AppSettings.previewQuality) return;
+                    setState(() => AppSettings.previewQuality = next);
+                    await SharedPreferencesExtension.setTyped('PreviewQuality', next.name);
+                  },
+                ),
+              ),
             ),
           ],
         ),
@@ -122,40 +153,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _pickPreviewQuality() async {
-    var temp = AppSettings.previewQuality;
-    final result = await showDialog<PreviewQuality>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('${language.content.preview} quality'),
-        content: StatefulBuilder(
-          builder: (context, setLocal) {
-            return DropdownButtonFormField<PreviewQuality>(
-              initialValue: temp,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
-              items: const [
-                DropdownMenuItem(value: PreviewQuality.Low, child: Text('Low (preview_url)')),
-                DropdownMenuItem(value: PreviewQuality.Medium, child: Text('Medium (sample_url)')),
-              ],
-              onChanged: (v) {
-                if (v == null) return;
-                setLocal(() => temp = v);
-              },
-            );
-          },
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, temp), child: const Text('Save')),
-        ],
-      ),
-    );
-
-    if (result == null) return;
-    setState(() => AppSettings.previewQuality = result);
-    await SharedPreferencesExtension.setTyped('PreviewQuality', result.name);
-  }
-
   Future<void> _pickFolder(ClientType client) async {
     final existing = await AppSettings.savePath(client: client);
 
@@ -192,6 +189,77 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           TextButton(onPressed: () => Navigator.pop(context, controller.text.trim()), child: const Text('Save')),
+        ],
+      ),
+    );
+  }
+}
+
+class _InlineToggleItem<T> {
+  final T value;
+  final String label;
+
+  const _InlineToggleItem({required this.value, required this.label});
+}
+
+class _InlineToggle<T> extends StatelessWidget {
+  const _InlineToggle({required this.value, required this.items, required this.onChanged});
+
+  final T value;
+  final List<_InlineToggleItem<T>> items;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = items.map((e) => e.value == value).toList(growable: false);
+    final colorScheme = Theme.of(context).colorScheme;
+    final textColor = Theme.of(context).textTheme.bodyMedium?.color;
+
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerRight,
+      child: ToggleButtons(
+        borderRadius: BorderRadius.circular(10),
+        constraints: const BoxConstraints(minHeight: 34),
+        isSelected: selected,
+        onPressed: (index) => onChanged(items[index].value),
+        fillColor: colorScheme.primary.withAlpha((0.18 * 255).round()),
+        selectedColor: colorScheme.primary,
+        color: textColor,
+        children: items
+            .map(
+              (e) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Text(e.label),
+              ),
+            )
+            .toList(growable: false),
+      ),
+    );
+  }
+}
+
+class _SettingsRow extends StatelessWidget {
+  const _SettingsRow({required this.leading, required this.title, required this.trailing});
+
+  final Widget leading;
+  final Widget title;
+  final Widget trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          IconTheme.merge(
+            data: IconThemeData(color: Theme.of(context).iconTheme.color),
+            child: leading,
+          ),
+          const SizedBox(width: 16),
+          Expanded(child: DefaultTextStyle.merge(style: const TextStyle(fontSize: 16), child: title)),
+          const SizedBox(width: 12),
+          trailing,
         ],
       ),
     );
