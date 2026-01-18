@@ -38,41 +38,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return SettingsList(
+      contentPadding: EdgeInsets.symmetric(horizontal: 12),
       platform: DevicePlatform.web,
-      lightTheme: const SettingsThemeData(settingsListBackground: Colors.transparent),
-      darkTheme: const SettingsThemeData(settingsListBackground: Colors.transparent),
+      lightTheme: const SettingsThemeData(
+        settingsListBackground: Colors.transparent,
+        settingsSectionBackground: Colors.black54,
+      ),
+      darkTheme: const SettingsThemeData(
+        settingsListBackground: Colors.transparent,
+        settingsSectionBackground: Colors.black54,
+      ),
       sections: [
         SettingsSection(
           title: Text(language.content.settings),
           tiles: [
-            CustomSettingsTile(
-              child: _SettingsRow(
-                leading: const Icon(Icons.public),
-                title: const Text('Site'),
-                trailing: _InlineToggle<ClientType>(
-                  value: AppSettings.currentClient,
-                  items: const [
-                    _InlineToggleItem(value: ClientType.Yande, label: 'yande.re'),
-                    _InlineToggleItem(value: ClientType.Konachan, label: 'konachan.com'),
-                  ],
-                  onChanged: (next) async {
-                    if (next == AppSettings.currentClient) return;
-                    await AppSettings.setCurrentClient(next);
-                    if (!mounted) return;
-                    setState(() {});
-                  },
-                ),
+            _buildSettingsItem(
+              leading: Icon(Icons.public),
+              title: Text('Site'),
+              child: _InlineToggle<ClientType>(
+                value: AppSettings.currentClient,
+                items: const [
+                  _InlineToggleItem(value: ClientType.Yande, label: 'yande.re'),
+                  _InlineToggleItem(value: ClientType.Konachan, label: 'konachan.com'),
+                ],
+                onChanged: (next) async {
+                  if (next == AppSettings.currentClient) return;
+                  await AppSettings.setCurrentClient(next);
+                  if (!mounted) return;
+                  setState(() {});
+                },
               ),
             ),
-            SettingsTile.switchTile(
-              initialValue: AppSettings.safeMode,
-              onToggle: (v) async {
-                await SharedPreferencesExtension.setTyped<bool>('safemode', v);
-                setState(() => AppSettings.safeMode = v);
-              },
-              leading: const Icon(Icons.shield_moon),
-              title: Text('${language.content.safe} ${language.content.mode}'),
+            _buildSettingsItem(
+              leading: const Icon(Icons.image),
+              title: Text('${language.content.preview} quality'),
+              child: _InlineToggle<PreviewQuality>(
+                value: AppSettings.previewQuality,
+                items: const [
+                  _InlineToggleItem(value: PreviewQuality.Low, label: 'Low'),
+                  _InlineToggleItem(value: PreviewQuality.Medium, label: 'Medium'),
+                ],
+                onChanged: (next) async {
+                  if (next == AppSettings.previewQuality) return;
+                  setState(() => AppSettings.previewQuality = next);
+                  await SharedPreferencesExtension.setTyped('PreviewQuality', next.name);
+                },
+              ),
             ),
+            _buildSettingsItem(
+                leading: const Icon(Icons.shield_moon),
+                title: Text('${language.content.safe} ${language.content.mode}'),
+                child: Switch.adaptive(
+                  value: AppSettings.safeMode,
+                  onChanged: (v) async {
+                    await SharedPreferencesExtension.setTyped<bool>('safemode', v);
+                    setState(() => AppSettings.safeMode = v);
+                  },
+                )),
             SettingsTile.navigation(
               leading: const Icon(Icons.folder),
               title: const Text('Yande save path'),
@@ -84,24 +106,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: const Text('Konachan save path'),
               value: Text(_konachanPath.isEmpty ? 'Not set' : _konachanPath),
               onPressed: (_) => _pickFolder(ClientType.Konachan),
-            ),
-            CustomSettingsTile(
-              child: _SettingsRow(
-                leading: const Icon(Icons.image),
-                title: Text('${language.content.preview} quality'),
-                trailing: _InlineToggle<PreviewQuality>(
-                  value: AppSettings.previewQuality,
-                  items: const [
-                    _InlineToggleItem(value: PreviewQuality.Low, label: 'Low'),
-                    _InlineToggleItem(value: PreviewQuality.Medium, label: 'Medium'),
-                  ],
-                  onChanged: (next) async {
-                    if (next == AppSettings.previewQuality) return;
-                    setState(() => AppSettings.previewQuality = next);
-                    await SharedPreferencesExtension.setTyped('PreviewQuality', next.name);
-                  },
-                ),
-              ),
             ),
           ],
         ),
@@ -116,6 +120,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
       ],
+    );
+  }
+
+  SettingsTile _buildSettingsItem({
+    required Widget leading,
+    required Widget title,
+    required Widget child,
+  }) {
+    return SettingsTile(
+      leading: leading,
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          title,
+          child,
+        ],
+      ),
     );
   }
 

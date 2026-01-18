@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:booru_app/models/rx/booru_api.dart';
 import 'package:booru_app/pages/home/post_feed.dart';
+import 'package:booru_app/pages/pool/pool_page.dart';
 import 'package:booru_app/pages/search/search_page.dart';
 import 'package:booru_app/pages/settings/settings_screen.dart';
 import 'package:booru_app/settings/app_settings.dart';
@@ -59,6 +60,11 @@ class _HomeShellState extends State<HomeShell> {
     key: PageStorageKey('tab_settings'),
   );
 
+  late final Widget _poolTab = PoolPage(
+    key: const PageStorageKey('tab_pool'),
+    booruApi: booruApi,
+  );
+
   @override
   Widget build(BuildContext context) {
     final tabs = [
@@ -108,6 +114,11 @@ class _HomeShellState extends State<HomeShell> {
             );
           },
         ),
+      ),
+      _TabSpec(
+        label: language.content.pools,
+        icon: FontAwesomeIcons.layerGroup,
+        child: _poolTab,
       ),
       _TabSpec(
         label: language.content.search,
@@ -246,17 +257,19 @@ class _BottomNav extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Container(
-            color: Colors.black.withAlpha((0.35 * 255).round()),
+            color: Colors.black54,
             padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 for (var i = 0; i < tabs.length; i++)
-                  _NavItem(
-                    label: tabs[i].label,
-                    icon: tabs[i].icon,
-                    selected: i == index,
-                    onTap: () => onChanged(i),
+                  Expanded(
+                    child: _NavItem(
+                      label: tabs[i].label,
+                      icon: tabs[i].icon,
+                      selected: i == index,
+                      onTap: () => onChanged(i),
+                    ),
                   ),
               ],
             ),
@@ -289,7 +302,7 @@ class _NavItem extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
-          color: selected ? Colors.white.withAlpha((0.08 * 255).round()) : Colors.transparent,
+          color: selected ? Colors.white.withValues(alpha: 0.08) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(

@@ -328,6 +328,12 @@ class BooruAPI {
     return Pool.fromJson(obj);
   }
 
+  /// Convenience: fetch just the posts in a pool page.
+  static Future<List<Post>> fetchPoolPosts({required int id, required int page}) async {
+    final pool = await fetchPoolShow(id: id, page: page);
+    return pool.posts ?? <Post>[];
+  }
+
   // 125*125
   static String get avatarUrl {
     switch (AppSettings.currentClient) {
@@ -383,7 +389,7 @@ Map<Period, String> periodMap = {
 };
 
 // Enum of the type we want fetch
-enum FetchType { Posts, PopularRecent, PopularByDay, PopularByWeek, PopularByMonth, Search }
+enum FetchType { Posts, PopularRecent, PopularByDay, PopularByWeek, PopularByMonth, Search, Pool }
 
 class VersionInfo {
   const VersionInfo({required this.tagName, required this.url, required this.publishDate});

@@ -13,6 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:booru_app/utils/aura_controller.dart';
+import 'package:booru_app/utils/clipboard_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PostViewer extends StatefulWidget {
@@ -27,6 +28,7 @@ class PostViewer extends StatefulWidget {
 class _PostViewerState extends State<PostViewer> {
   AuraHandle? _auraHandle;
   bool _downloading = false;
+  bool _copyingToClipboard = false;
 
   late Post _currentPost;
   bool _parentLoading = false;
@@ -59,24 +61,28 @@ class _PostViewerState extends State<PostViewer> {
           tween: Tween(begin: 0.0, end: 1.0),
           duration: Duration(milliseconds: 800),
           builder: (context, time, child) => Positioned.fill(
-            child: Listener(
-              onPointerSignal: (event) {
-                if (event is! PointerScrollEvent) return;
-                if (_parentGroup == null || _parentGroup!.isEmpty) return;
-                if (HardwareKeyboard.instance.isControlPressed) return;
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onSecondaryTapDown: (details) => _showContextMenu(details.globalPosition, post),
+              child: Listener(
+                onPointerSignal: (event) {
+                  if (event is! PointerScrollEvent) return;
+                  if (_parentGroup == null || _parentGroup!.isEmpty) return;
+                  if (HardwareKeyboard.instance.isControlPressed) return;
 
-                final dy = event.scrollDelta.dy;
-                if (dy == 0) return;
-                _stepInParentGroup(dy > 0 ? 1 : -1);
-              },
-              child: PhotoView.customChild(
-                backgroundDecoration: BoxDecoration(color: Color.lerp(Colors.black, Colors.transparent, time)),
-                child: _buildHeroAwareImage(
-                  time: time,
-                  heroThumbUrl: heroThumbUrl,
-                  post: post,
+                  final dy = event.scrollDelta.dy;
+                  if (dy == 0) return;
+                  _stepInParentGroup(dy > 0 ? 1 : -1);
+                },
+                child: PhotoView.customChild(
+                  backgroundDecoration: BoxDecoration(color: Color.lerp(Colors.black, Colors.transparent, time)),
+                  child: _buildHeroAwareImage(
+                    time: time,
+                    heroThumbUrl: heroThumbUrl,
+                    post: post,
+                  ),
+                  childSize: Size(post.width.toDouble(), post.height.toDouble()),
                 ),
-                childSize: Size(post.width.toDouble(), post.height.toDouble()),
               ),
             ),
           ),
@@ -139,6 +145,52 @@ class _PostViewerState extends State<PostViewer> {
           ),
       ],
     );
+  }
+
+  Future<void> _showContextMenu(Offset globalPosition, Post post) async {
+    if (!mounted) return;
+
+    final selected = await showDialog<_ViewerMenuAction>(
+      context: context,
+      barrierColor: Colors.transparent,
+      builder: (context) => _ViewerContextMenu(
+        anchor: globalPosition,
+        copying: _copyingToClipboard,
+      ),
+    );
+
+    if (selected == null) return;
+    switch (selected) {
+      case _ViewerMenuAction.copyImage:
+        await _copyImageToClipboard(post);
+        break;
+    }
+  }
+
+  String _imageUrlForClipboard(Post post, String heroThumbUrl) {
+    return post.fileUrl ?? post.jpegUrl ?? post.sampleUrl ?? post.previewUrl ?? heroThumbUrl;
+  }
+
+  Future<void> _copyImageToClipboard(Post post) async {
+    if (_copyingToClipboard) return;
+    final url = _imageUrlForClipboard(post, _heroThumbUrl(post));
+    if (url.trim().isEmpty) return;
+
+    setState(() => _copyingToClipboard = true);
+    try {
+      await ClipboardImage.copyNetworkImageAsPng(url);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Image copied to clipboard')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Copy failed: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _copyingToClipboard = false);
+    }
   }
 
   bool get _shouldShowParentStrip {
@@ -729,6 +781,95 @@ class _GlassButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+enum _ViewerMenuAction { copyImage }
+
+class _ViewerContextMenu extends StatelessWidget {
+  const _ViewerContextMenu({
+    required this.anchor,
+    required this.copying,
+  });
+
+  final Offset anchor;
+  final bool copying;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    const menuWidth = 220.0;
+    const menuHeight = 54.0;
+    const padding = 8.0;
+
+    final left = anchor.dx.clamp(padding, size.width - menuWidth - padding);
+    final top = anchor.dy.clamp(padding, size.height - menuHeight - padding);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => Navigator.of(context).pop(),
+      child: Stack(
+        children: [
+          Positioned(
+            left: left,
+            top: top,
+            width: menuWidth,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withAlpha((0.55 * 255).round()),
+                    border: Border.all(
+                      color: Colors.white.withAlpha((0.12 * 255).round()),
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: copying ? null : () => Navigator.of(context).pop(_ViewerMenuAction.copyImage),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        child: Row(
+                          children: [
+                            copying
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : const Icon(
+                                    FontAwesomeIcons.copy,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                copying ? 'Copying…' : 'Copy image',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

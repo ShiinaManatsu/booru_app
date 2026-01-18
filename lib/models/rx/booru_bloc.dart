@@ -75,8 +75,9 @@ class BooruBloc {
 
     // Paged endpoints:
     // - Posts/Search: page++
+    // - Pool: page++
     // - PopularByDay/Week/Month: move the time window backward
-    if (_fetchType == FetchType.Posts || _fetchType == FetchType.Search) {
+    if (_fetchType == FetchType.Posts || _fetchType == FetchType.Search || _fetchType == FetchType.Pool) {
       _page += 1;
       await _fetch(append: true);
       return;
@@ -166,7 +167,7 @@ class BooruBloc {
       final List<Post> result = await _callApi();
 
       // If the API returns no results for a paged endpoint, stop requesting more pages.
-      if (append && result.isEmpty && (_fetchType == FetchType.Posts || _fetchType == FetchType.Search)) {
+      if (append && result.isEmpty && (_fetchType == FetchType.Posts || _fetchType == FetchType.Search || _fetchType == FetchType.Pool)) {
         _hasMore = false;
         _page = (_page - 1).clamp(1, 1 << 30);
         _state.add(PostSuccess(List<Post>.unmodifiable(_cache)));
@@ -184,7 +185,7 @@ class BooruBloc {
 
       // If we requested a new page but got no new items, stop paging to avoid
       // infinite requests and also prevent duplicate Hero tags.
-      if (append && added == 0 && (_fetchType == FetchType.Posts || _fetchType == FetchType.Search)) {
+      if (append && added == 0 && (_fetchType == FetchType.Posts || _fetchType == FetchType.Search || _fetchType == FetchType.Pool)) {
         _hasMore = false;
       }
 
@@ -223,6 +224,10 @@ class BooruBloc {
       case FetchType.Search:
         final args = (_lastArg as TaggedArgs?) ?? TaggedArgs(tags: "", page: _page);
         return BooruAPI.fetchTagged(args: TaggedArgs(tags: args.tags, page: _page));
+      case FetchType.Pool:
+        final args = (_lastArg as PoolShowArgs?) ?? PoolShowArgs(id: 0, page: _page);
+        if (args.id <= 0) return <Post>[];
+        return BooruAPI.fetchPoolPosts(id: args.id, page: _page);
     }
   }
 

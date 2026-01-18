@@ -53,3 +53,11 @@ class PopularByMonthArgs extends FetchArg {
 
   final DateTime time;
 }
+
+/// Argument for pool/show.json paging
+class PoolShowArgs extends FetchArg {
+  const PoolShowArgs({required this.id, required this.page});
+
+  final int id;
+  final int page;
+}

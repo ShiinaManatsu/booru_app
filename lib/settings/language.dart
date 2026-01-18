@@ -58,6 +58,7 @@ abstract class Content {
   /// pages/home_page
   String get popularByWeek;
   String get posts;
+  String get pools;
   String get search;
   String get popularPosts;
   String get popularPostsByRecent;
@@ -132,6 +133,8 @@ class ZhCN implements Content {
   String get popularByWeek => "本周最瑟";
   @override
   String get posts => "图帖";
+  @override
+  String get pools => "图集";
   @override
   String get search => "搜索";
   @override
@@ -245,6 +248,8 @@ class ZhHk implements Content {
   @override
   String get posts => "";
   @override
+  String get pools => "";
+  @override
   String get search => "";
   @override
   String get popularPosts => "";
@@ -356,6 +361,8 @@ class EN implements Content {
   String get popularByWeek => "Popular By Week";
   @override
   String get posts => "Posts";
+  @override
+  String get pools => "Pools";
   @override
   String get search => "Search";
   @override

@@ -69,7 +69,6 @@ class _PostTileState extends State<PostTile> {
                   fit: BoxFit.cover,
                   placeholder: (context, url) => ColoredBox(
                     color: Colors.black.withValues(alpha: 0.18),
-                    child: const Center(child: Icon(Icons.image_outlined, color: Colors.white24)),
                   ),
                   errorWidget: (_, __, ___) => const Center(child: Icon(Icons.broken_image)),
                 ),

@@ -25,8 +25,7 @@ BooruBloc booruBloc;
 TaskBloc taskBloc;
 String searchTerm = "";
 double panelWidth = 1000;
-PublishSubject<FetchType> homePageFetchTypeChanged =
-    PublishSubject<FetchType>();
+PublishSubject<FetchType> homePageFetchTypeChanged = PublishSubject<FetchType>();
 RefreshController refreshController = RefreshController(initialRefresh: false);
 
 class HomePage extends StatefulWidget {
@@ -34,8 +33,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
+class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
   /// Private properties
   FetchType _type = FetchType.Posts; // Current browser type
   static const Key _searchPage = Key("searchPage");
@@ -55,8 +53,7 @@ class _HomePageState extends State<HomePage>
     taskBloc = TaskBloc();
 
     Rx.timer(() {}, Duration(milliseconds: 50)).listen((x) {
-      booruBloc.onUpdate
-          .add(UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
+      booruBloc.onUpdate.add(UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
       setState(() {});
     });
     _onPageChange.listen((x) {
@@ -81,14 +78,16 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
         statusBarColor: Theme.of(context).backgroundColor.withOpacity(0.95),
-        statusBarIconBrightness: Theme.of(context).primaryColorBrightness));
+        statusBarIconBrightness: Theme.of(context).primaryColorBrightness,
+      ),
+    );
     panelWidth = MediaQuery.of(context).size.width - 8; // Minus padding = 8
     if (kIsWeb || Platform.isWindows) booruBloc.onPanelWidth.add(panelWidth);
     return Scaffold(
-      bottomNavigationBar:
-          _type == FetchType.PopularRecent ? _buildPeroidChip() : null,
+      bottomNavigationBar: _type == FetchType.PopularRecent ? _buildPeroidChip() : null,
       drawer: _appDrawer(),
       drawerEdgeDragWidth: 100,
       body: Builder(
@@ -111,11 +110,9 @@ class _HomePageState extends State<HomePage>
             slivers: <Widget>[
               SliverFloatingBar(
                 automaticallyImplyLeading: false,
-                backgroundColor:
-                    Theme.of(context).backgroundColor.withOpacity(0.95),
+                backgroundColor: Theme.of(context).backgroundColor.withOpacity(0.95),
                 floating: true,
-                elevation:
-                    kIsWeb || Platform.isAndroid || Platform.isWindows ? 0 : 4,
+                elevation: kIsWeb || Platform.isAndroid || Platform.isWindows ? 0 : 4,
                 title: Container(
                   margin: EdgeInsets.only(bottom: 5), // Fix the displacement
                   child: Stack(
@@ -141,25 +138,21 @@ class _HomePageState extends State<HomePage>
                                   underline: Container(),
                                   items: [
                                     DropdownMenuItem(
-                                        child: Text("Yande.re",
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .button),
-                                        value: ClientType.Yande),
+                                      child: Text("Yande.re", style: Theme.of(context).textTheme.button),
+                                      value: ClientType.Yande,
+                                    ),
                                     DropdownMenuItem(
-                                        child: Text("Konachan",
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .button),
-                                        value: ClientType.Konachan)
+                                      child: Text("Konachan", style: Theme.of(context).textTheme.button),
+                                      value: ClientType.Konachan,
+                                    ),
                                   ],
                                   iconSize: 0,
                                   onChanged: onDropdownChanged,
                                   value: AppSettings.currentClient,
                                 ),
-                              )
+                              ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                       AnimatedSize(
@@ -171,23 +164,19 @@ class _HomePageState extends State<HomePage>
                           mainAxisSize: MainAxisSize.max,
                           children: <Widget>[
                             IconButton(
-                              onPressed: () => ExtendedNavigator.root.push(
-                                  Routes.searchTaggedPostsPage,
-                                  arguments: SearchTaggedPostsPageArguments(
-                                      key: _searchPage)),
+                              onPressed: () =>
+                                  ExtendedNavigator.root.push(Routes.searchTaggedPostsPage, arguments: SearchTaggedPostsPageArguments(key: _searchPage)),
                               icon: Icon(Icons.search),
                             ),
-                            _searchNabor
+                            _searchNabor,
                           ],
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
               ),
-              SliverPostWaterfall(
-                controller: _controller,
-              ),
+              SliverPostWaterfall(controller: _controller),
               // _buildPageNavigator(),
               _buildDatePicker(),
             ],
@@ -236,39 +225,31 @@ class _HomePageState extends State<HomePage>
     if (AppSettings.localUsers.length > 0) {
       switch (AppSettings.currentClient) {
         case ClientType.Yande:
-          var u = AppSettings.localUsers
-              .firstWhere((x) => x.clientType == ClientType.Yande);
+          var u = AppSettings.localUsers.firstWhere((x) => x.clientType == ClientType.Yande);
           return Padding(
             padding: const EdgeInsets.fromLTRB(15, 0, 0, 15),
             child: Row(
               children: <Widget>[
-                CircleAvatar(
-                  backgroundImage: NetworkImage(u.avatarUrl),
-                ),
+                CircleAvatar(backgroundImage: NetworkImage(u.avatarUrl)),
                 Padding(
                   padding: const EdgeInsets.only(left: 15),
-                  child:
-                      Text(u.username, style: TextStyle(color: Colors.black87)),
-                )
+                  child: Text(u.username, style: TextStyle(color: Colors.black87)),
+                ),
               ],
             ),
           );
           break;
         case ClientType.Konachan:
-          var u = AppSettings.localUsers
-              .firstWhere((x) => x.clientType == ClientType.Konachan);
+          var u = AppSettings.localUsers.firstWhere((x) => x.clientType == ClientType.Konachan);
           return Padding(
             padding: const EdgeInsets.fromLTRB(15, 0, 0, 15),
             child: Row(
               children: <Widget>[
-                CircleAvatar(
-                  backgroundImage: NetworkImage(u.avatarUrl),
-                ),
+                CircleAvatar(backgroundImage: NetworkImage(u.avatarUrl)),
                 Padding(
                   padding: const EdgeInsets.only(left: 15),
-                  child:
-                      Text(u.username, style: TextStyle(color: Colors.black87)),
-                )
+                  child: Text(u.username, style: TextStyle(color: Colors.black87)),
+                ),
               ],
             ),
           );
@@ -305,14 +286,10 @@ class _HomePageState extends State<HomePage>
                 children: <Widget>[
                   // Title
                   Container(
-                      margin: EdgeInsets.fromLTRB(15, 20, 0, 20),
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        AppSettings.currentClient == ClientType.Yande
-                            ? "Yande.re"
-                            : "Konachan",
-                        style: TextStyle(fontSize: 30),
-                      )),
+                    margin: EdgeInsets.fromLTRB(15, 20, 0, 20),
+                    alignment: Alignment.centerLeft,
+                    child: Text(AppSettings.currentClient == ClientType.Yande ? "Yande.re" : "Konachan", style: TextStyle(fontSize: 30)),
+                  ),
                   _user(),
                   // Spliter
                   _spliter("${language.content.posts}"),
@@ -320,71 +297,91 @@ class _HomePageState extends State<HomePage>
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: <Widget>[
-                      _buildDrawerButton(() {
-                        Navigator.pop(context);
-                        booruBloc.onReset.add(null);
-                        booruBloc.onUpdate.add(UpdateArg(
-                            fetchType: FetchType.Posts,
-                            arg: PostsArgs(page: 1)));
-                      }, "${language.content.posts}", FetchType.Posts),
+                      _buildDrawerButton(
+                        () {
+                          Navigator.pop(context);
+                          booruBloc.onReset.add(null);
+                          booruBloc.onUpdate.add(UpdateArg(fetchType: FetchType.Posts, arg: PostsArgs(page: 1)));
+                        },
+                        "${language.content.posts}",
+                        FetchType.Posts,
+                      ),
 
                       _buildDrawerButton(
-                          () => ExtendedNavigator.root.push(
-                              Routes.searchTaggedPostsPage,
-                              arguments: SearchTaggedPostsPageArguments(
-                                  key: _searchPage)),
-                          "${language.content.search}",
-                          FetchType.Search),
+                        () => ExtendedNavigator.root.push(Routes.searchTaggedPostsPage, arguments: SearchTaggedPostsPageArguments(key: _searchPage)),
+                        "${language.content.search}",
+                        FetchType.Search,
+                      ),
 
                       // Spliter popular
                       _spliter("${language.content.popularPosts}"),
 
-                      _buildDrawerButton(() {
-                        Navigator.pop(context);
-                        booruBloc.onReset.add(null);
-                        booruBloc.onUpdate.add(UpdateArg(
-                            fetchType: FetchType.PopularRecent,
-                            arg: PopularRecentArgs(period: _period)));
-                      }, "${language.content.popularPostsByRecent}",
-                          FetchType.PopularRecent),
+                      _buildDrawerButton(
+                        () {
+                          Navigator.pop(context);
+                          booruBloc.onReset.add(null);
+                          booruBloc.onUpdate.add(
+                            UpdateArg(
+                              fetchType: FetchType.PopularRecent,
+                              arg: PopularRecentArgs(period: _period),
+                            ),
+                          );
+                        },
+                        "${language.content.popularPostsByRecent}",
+                        FetchType.PopularRecent,
+                      ),
 
-                      _buildDrawerButton(() {
-                        Navigator.pop(context);
-                        booruBloc.onReset.add(null);
-                        booruBloc.onUpdate.add(UpdateArg(
-                            fetchType: FetchType.PopularByDay,
-                            arg: PopularByDayArgs(time: DateTime.now())));
-                        // booruBloc.onDateTime.add((x) => x = DateTime.now());
-                      }, "${language.content.popularPostsByDay}",
-                          FetchType.PopularByDay),
+                      _buildDrawerButton(
+                        () {
+                          Navigator.pop(context);
+                          booruBloc.onReset.add(null);
+                          booruBloc.onUpdate.add(
+                            UpdateArg(
+                              fetchType: FetchType.PopularByDay,
+                              arg: PopularByDayArgs(time: DateTime.now()),
+                            ),
+                          );
+                          // booruBloc.onDateTime.add((x) => x = DateTime.now());
+                        },
+                        "${language.content.popularPostsByDay}",
+                        FetchType.PopularByDay,
+                      ),
 
-                      _buildDrawerButton(() {
-                        Navigator.pop(context);
-                        booruBloc.onReset.add(null);
-                        booruBloc.onUpdate.add(UpdateArg(
-                            fetchType: FetchType.PopularByWeek,
-                            arg: PopularByWeekArgs(time: DateTime.now())));
-                        // booruBloc.onDateTime.add((x) => x = DateTime.now());
-                      }, "${language.content.popularPostsByWeek}",
-                          FetchType.PopularByWeek),
+                      _buildDrawerButton(
+                        () {
+                          Navigator.pop(context);
+                          booruBloc.onReset.add(null);
+                          booruBloc.onUpdate.add(
+                            UpdateArg(
+                              fetchType: FetchType.PopularByWeek,
+                              arg: PopularByWeekArgs(time: DateTime.now()),
+                            ),
+                          );
+                          // booruBloc.onDateTime.add((x) => x = DateTime.now());
+                        },
+                        "${language.content.popularPostsByWeek}",
+                        FetchType.PopularByWeek,
+                      ),
 
-                      _buildDrawerButton(() {
-                        Navigator.pop(context);
-                        booruBloc.onReset.add(null);
-                        booruBloc.onUpdate.add(UpdateArg(
-                            fetchType: FetchType.PopularByMonth,
-                            arg: PopularByMonthArgs(time: DateTime.now())));
-                        // booruBloc.onDateTime.add((x) => x = DateTime.now());
-                      }, "${language.content.popularPostsByMonth}",
-                          FetchType.PopularByMonth),
+                      _buildDrawerButton(
+                        () {
+                          Navigator.pop(context);
+                          booruBloc.onReset.add(null);
+                          booruBloc.onUpdate.add(
+                            UpdateArg(
+                              fetchType: FetchType.PopularByMonth,
+                              arg: PopularByMonthArgs(time: DateTime.now()),
+                            ),
+                          );
+                          // booruBloc.onDateTime.add((x) => x = DateTime.now());
+                        },
+                        "${language.content.popularPostsByMonth}",
+                        FetchType.PopularByMonth,
+                      ),
 
                       _spliter("${language.content.others}"),
-                      _buildDrawerEmptyButton(
-                          () => ExtendedNavigator.root.push(Routes.settingPage),
-                          "${language.content.settings}"),
-                      _buildDrawerEmptyButton(
-                          () => ExtendedNavigator.root.push(Routes.aboutPage),
-                          "${language.content.about}"),
+                      _buildDrawerEmptyButton(() => ExtendedNavigator.root.push(Routes.settingPage), "${language.content.settings}"),
+                      _buildDrawerEmptyButton(() => ExtendedNavigator.root.push(Routes.aboutPage), "${language.content.about}"),
                       // _buildDrawerEmptyButton(
                       //     () => ExtendedNavigator.root
                       //         .push(Routes.testGroundPage),
@@ -401,8 +398,7 @@ class _HomePageState extends State<HomePage>
   }
 
   /// The button used in drawer
-  Widget _buildDrawerButton(
-      Function() onPressed, String text, FetchType fetchType) {
+  Widget _buildDrawerButton(Function() onPressed, String text, FetchType fetchType) {
     var func = () {
       onPressed();
       homePageFetchTypeChanged.add(fetchType);
@@ -415,17 +411,14 @@ class _HomePageState extends State<HomePage>
         color: fetchType == _type ? Colors.pink[300] : Colors.transparent,
         // highlightColor: Colors.amber,
         hoverColor: Colors.pink[50],
-        colorBrightness:
-            fetchType != _type ? Brightness.light : Brightness.dark,
+        colorBrightness: fetchType != _type ? Brightness.light : Brightness.dark,
         child: Container(
-            alignment: Alignment.centerLeft,
-            child: Text(text,
-                style: fetchType == _type
-                    ? Theme.of(context)
-                        .textTheme
-                        .button
-                        .copyWith(color: Colors.grey[200])
-                    : Theme.of(context).textTheme.button)),
+          alignment: Alignment.centerLeft,
+          child: Text(
+            text,
+            style: fetchType == _type ? Theme.of(context).textTheme.button.copyWith(color: Colors.grey[200]) : Theme.of(context).textTheme.button,
+          ),
+        ),
       ),
     );
   }
@@ -440,8 +433,9 @@ class _HomePageState extends State<HomePage>
         highlightColor: Colors.amber,
         hoverColor: Colors.pink[50],
         child: Container(
-            alignment: Alignment.centerLeft,
-            child: Text(text, style: Theme.of(context).textTheme.button)),
+          alignment: Alignment.centerLeft,
+          child: Text(text, style: Theme.of(context).textTheme.button),
+        ),
       ),
     );
   }
@@ -450,10 +444,8 @@ class _HomePageState extends State<HomePage>
 
   /// Peroid picker
   Widget _buildPeroidChip() {
-    TextStyle _unSelected = Theme.of(context).textTheme.button.copyWith(
-        color: Theme.of(context).textTheme.button.color.withOpacity(0.5));
-    TextStyle _selectedTextStyle =
-        Theme.of(context).textTheme.button.copyWith(color: Colors.white70);
+    TextStyle _unSelected = Theme.of(context).textTheme.button.copyWith(color: Theme.of(context).textTheme.button.color.withOpacity(0.5));
+    TextStyle _selectedTextStyle = Theme.of(context).textTheme.button.copyWith(color: Colors.white70);
 
     return SnakeNavigationBar(
       snakeShape: SnakeShape.rectangle,
@@ -461,30 +453,10 @@ class _HomePageState extends State<HomePage>
       snakeColor: Colors.black,
       backgroundColor: Colors.transparent,
       items: [
-        BottomNavigationBarItem(
-          icon: Text(
-            "Last 24h",
-            style: _currentIndex == 0 ? _selectedTextStyle : _unSelected,
-          ),
-        ),
-        BottomNavigationBarItem(
-          icon: Text(
-            "Week",
-            style: _currentIndex == 1 ? _selectedTextStyle : _unSelected,
-          ),
-        ),
-        BottomNavigationBarItem(
-          icon: Text(
-            "Month",
-            style: _currentIndex == 2 ? _selectedTextStyle : _unSelected,
-          ),
-        ),
-        BottomNavigationBarItem(
-          icon: Text(
-            "Year",
-            style: _currentIndex == 3 ? _selectedTextStyle : _unSelected,
-          ),
-        ),
+        BottomNavigationBarItem(icon: Text("Last 24h", style: _currentIndex == 0 ? _selectedTextStyle : _unSelected)),
+        BottomNavigationBarItem(icon: Text("Week", style: _currentIndex == 1 ? _selectedTextStyle : _unSelected)),
+        BottomNavigationBarItem(icon: Text("Month", style: _currentIndex == 2 ? _selectedTextStyle : _unSelected)),
+        BottomNavigationBarItem(icon: Text("Year", style: _currentIndex == 3 ? _selectedTextStyle : _unSelected)),
       ],
       currentIndex: _currentIndex,
       onPositionChanged: (value) {
@@ -494,9 +466,12 @@ class _HomePageState extends State<HomePage>
         });
         refreshController.requestRefresh();
         booruBloc.onReset.add(null);
-        booruBloc.onUpdate.add(UpdateArg(
+        booruBloc.onUpdate.add(
+          UpdateArg(
             fetchType: FetchType.PopularRecent,
-            arg: PopularRecentArgs(period: _period)));
+            arg: PopularRecentArgs(period: _period),
+          ),
+        );
       },
     );
   }
@@ -530,70 +505,67 @@ class _HomePageState extends State<HomePage>
         DateTime time = snapshot.data;
         if (_type == FetchType.PopularByDay) {
           return _bottomNavigator(
-              data: "${time.year}-${time.month}-${time.day}",
-              leftButtonFunction: () {
-                booruBloc.onDateTime.add((x) => x.subtract(Duration(days: 1)));
-              },
-              rightButtonFunction: () {
-                booruBloc.onDateTime.add((x) => x.add(Duration(days: 1)));
-              },
-              middleTextFunction: (x) {
-                // open date picker
-                showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: AppSettings.currentClient == ClientType.Yande
-                            ? AppSettings.yandeFirstday
-                            : AppSettings.konachanFirstday,
-                        lastDate: DateTime.now())
-                    .then((date) {
-                  if (date != null) booruBloc.onDateTime.add((x) => date);
-                });
+            data: "${time.year}-${time.month}-${time.day}",
+            leftButtonFunction: () {
+              booruBloc.onDateTime.add((x) => x.subtract(Duration(days: 1)));
+            },
+            rightButtonFunction: () {
+              booruBloc.onDateTime.add((x) => x.add(Duration(days: 1)));
+            },
+            middleTextFunction: (x) {
+              // open date picker
+              showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: AppSettings.currentClient == ClientType.Yande ? AppSettings.yandeFirstday : AppSettings.konachanFirstday,
+                lastDate: DateTime.now(),
+              ).then((date) {
+                if (date != null) booruBloc.onDateTime.add((x) => date);
               });
+            },
+          );
         } else if (_type == FetchType.PopularByWeek) {
           return _bottomNavigator(
-              data: "${time.year}-${time.month}-${time.day}",
-              leftButtonFunction: () {
-                booruBloc.onDateTime.add((x) => x.subtract(Duration(days: 7)));
-              },
-              rightButtonFunction: () {
-                booruBloc.onDateTime.add((x) => x.add(Duration(days: 7)));
-              },
-              middleTextFunction: (X) {
-                // open date picker
-                showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: AppSettings.currentClient == ClientType.Yande
-                            ? AppSettings.yandeFirstday
-                            : AppSettings.konachanFirstday,
-                        lastDate: DateTime.now())
-                    .then((date) {
-                  if (date != null) booruBloc.onDateTime.add((x) => date);
-                });
+            data: "${time.year}-${time.month}-${time.day}",
+            leftButtonFunction: () {
+              booruBloc.onDateTime.add((x) => x.subtract(Duration(days: 7)));
+            },
+            rightButtonFunction: () {
+              booruBloc.onDateTime.add((x) => x.add(Duration(days: 7)));
+            },
+            middleTextFunction: (X) {
+              // open date picker
+              showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: AppSettings.currentClient == ClientType.Yande ? AppSettings.yandeFirstday : AppSettings.konachanFirstday,
+                lastDate: DateTime.now(),
+              ).then((date) {
+                if (date != null) booruBloc.onDateTime.add((x) => date);
               });
+            },
+          );
         } else if (_type == FetchType.PopularByMonth) {
           return _bottomNavigator(
-              data: "${time.year}-${time.month}",
-              leftButtonFunction: () {
-                booruBloc.onDateTime.add((x) => x.subtract(Duration(days: 31)));
-              },
-              rightButtonFunction: () {
-                booruBloc.onDateTime.add((x) => x.add(Duration(days: 31)));
-              },
-              middleTextFunction: (X) {
-                // open date picker
-                showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: AppSettings.currentClient == ClientType.Yande
-                            ? AppSettings.yandeFirstday
-                            : AppSettings.konachanFirstday,
-                        lastDate: DateTime.now())
-                    .then((date) {
-                  if (date != null) booruBloc.onDateTime.add((x) => date);
-                });
+            data: "${time.year}-${time.month}",
+            leftButtonFunction: () {
+              booruBloc.onDateTime.add((x) => x.subtract(Duration(days: 31)));
+            },
+            rightButtonFunction: () {
+              booruBloc.onDateTime.add((x) => x.add(Duration(days: 31)));
+            },
+            middleTextFunction: (X) {
+              // open date picker
+              showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: AppSettings.currentClient == ClientType.Yande ? AppSettings.yandeFirstday : AppSettings.konachanFirstday,
+                lastDate: DateTime.now(),
+              ).then((date) {
+                if (date != null) booruBloc.onDateTime.add((x) => date);
               });
+            },
+          );
         } else {
           return SliverList(delegate: SliverChildListDelegate([]));
         }
@@ -602,39 +574,31 @@ class _HomePageState extends State<HomePage>
   }
 
   // Page navigation in the bottom
-  Widget _bottomNavigator(
-      {String data,
-      Function leftButtonFunction,
-      Function rightButtonFunction,
-      Function(PointerUpEvent) middleTextFunction}) {
+  Widget _bottomNavigator({String data, Function leftButtonFunction, Function rightButtonFunction, Function(PointerUpEvent) middleTextFunction}) {
     return SliverList(
-        delegate: SliverChildListDelegate([
-      Container(
-        height: 50,
-        margin: EdgeInsets.only(top: 10),
-        alignment: Alignment.center,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            _quadButton(
-                function: leftButtonFunction, child: Icon(Icons.chevron_left)),
-            Listener(
-              onPointerUp: middleTextFunction,
-              child: Container(
-                  margin: EdgeInsets.fromLTRB(15, 0, 10, 0), child: Text(data)),
-            ),
-            _quadButton(
-                function: rightButtonFunction,
-                child: Icon(Icons.chevron_right)),
-          ],
+      delegate: SliverChildListDelegate([
+        Container(
+          height: 50,
+          margin: EdgeInsets.only(top: 10),
+          alignment: Alignment.center,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              _quadButton(function: leftButtonFunction, child: Icon(Icons.chevron_left)),
+              Listener(
+                onPointerUp: middleTextFunction,
+                child: Container(margin: EdgeInsets.fromLTRB(15, 0, 10, 0), child: Text(data)),
+              ),
+              _quadButton(function: rightButtonFunction, child: Icon(Icons.chevron_right)),
+            ],
+          ),
         ),
-      )
-    ]));
+      ]),
+    );
   }
 
   /// Build the square button
-  AspectRatio _quadButton(
-      {@required Function() function, @required Widget child}) {
+  AspectRatio _quadButton({@required Function() function, @required Widget child}) {
     return AspectRatio(
       aspectRatio: 1,
       child: FlatButton(
@@ -652,18 +616,13 @@ class _HomePageState extends State<HomePage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
-          Text(
-            text,
-            style: Theme.of(context).textTheme.headline6.copyWith(fontSize: 28),
-          ),
+          Text(text, style: Theme.of(context).textTheme.headline6.copyWith(fontSize: 28)),
           Flexible(
             fit: FlexFit.tight,
             child: Container(
               height: 0.5,
               margin: EdgeInsets.only(left: 10),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColorLight.withOpacity(0.45),
-              ),
+              decoration: BoxDecoration(color: Theme.of(context).primaryColorLight.withOpacity(0.45)),
             ),
           ),
         ],
@@ -676,20 +635,19 @@ class _HomePageState extends State<HomePage>
     if (link == null) return;
 
     if (link.isNotEmpty) {
-      if (AppSettings.currentClient == ClientType.Konachan &&
-          link.contains("yande")) {
+      if (AppSettings.currentClient == ClientType.Konachan && link.contains("yande")) {
         AppSettings.currentClient = ClientType.Yande;
         booruBloc.onRefresh.add(null);
-      } else if (AppSettings.currentClient == ClientType.Yande &&
-          link.contains("konachan")) {
+      } else if (AppSettings.currentClient == ClientType.Yande && link.contains("konachan")) {
         AppSettings.currentClient = ClientType.Konachan;
         booruBloc.onRefresh.add(null);
       }
       var links = link.split("/");
       ExtendedNavigator.root.pushAndRemoveUntil(
-          Routes.postViewPageByPostID, (route) => false,
-          arguments: PostViewPageByPostIDArguments(
-              postID: links[links.indexOf("show") + 1]));
+        Routes.postViewPageByPostID,
+        (route) => false,
+        arguments: PostViewPageByPostIDArguments(postID: links[links.indexOf("show") + 1]),
+      );
     }
   }
 

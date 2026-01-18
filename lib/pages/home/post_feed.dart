@@ -9,6 +9,7 @@ import 'package:booru_app/models/yande/post.dart';
 import 'package:booru_app/settings/app_settings.dart';
 import 'package:booru_app/settings/language.dart';
 import 'package:booru_app/utils/aura_controller.dart';
+import 'package:booru_app/utils/damped_scroll.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
@@ -20,6 +21,7 @@ class PostFeed extends StatefulWidget {
     required this.booruApi,
     this.period,
     this.tags,
+    this.poolId,
     this.gridPadding,
   });
 
@@ -28,6 +30,7 @@ class PostFeed extends StatefulWidget {
   final BooruAPI booruApi;
   final Period? period;
   final String? tags;
+  final int? poolId;
   final EdgeInsets? gridPadding;
 
   @override
@@ -36,7 +39,7 @@ class PostFeed extends StatefulWidget {
 
 class _PostFeedState extends State<PostFeed> {
   late final BooruBloc bloc;
-  final _DampedScrollController _controller = _DampedScrollController(
+  final DampedScrollController _controller = DampedScrollController(
     wheelDamping: 1.25,
     wheelAnimDuration: const Duration(milliseconds: 300),
   );
@@ -86,6 +89,12 @@ class _PostFeedState extends State<PostFeed> {
           arg: TaggedArgs(tags: widget.tags ?? '', page: 1),
         );
         break;
+      case FetchType.Pool:
+        bloc.bootstrap(
+          fetchType: FetchType.Pool,
+          arg: PoolShowArgs(id: widget.poolId ?? 0, page: 1),
+        );
+        break;
     }
   }
 
@@ -108,6 +117,12 @@ class _PostFeedState extends State<PostFeed> {
         arg: PopularRecentArgs(period: widget.period ?? Period.None),
       );
     }
+    if (widget.initialFetchType == FetchType.Pool && widget.poolId != oldWidget.poolId) {
+      bloc.setFetchType(
+        FetchType.Pool,
+        arg: PoolShowArgs(id: widget.poolId ?? 0, page: 1),
+      );
+    }
   }
 
   @override
@@ -124,6 +139,7 @@ class _PostFeedState extends State<PostFeed> {
   bool get _canLoadMore =>
       widget.initialFetchType == FetchType.Posts ||
       widget.initialFetchType == FetchType.Search ||
+      widget.initialFetchType == FetchType.Pool ||
       widget.initialFetchType == FetchType.PopularByDay ||
       widget.initialFetchType == FetchType.PopularByWeek ||
       widget.initialFetchType == FetchType.PopularByMonth;
@@ -184,7 +200,7 @@ class _PostFeedState extends State<PostFeed> {
             },
             child: CustomScrollView(
               controller: _controller,
-              physics: const _DampedScrollPhysics(
+              physics: const DampedScrollPhysics(
                 parent: ClampingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
               ),
               slivers: [
@@ -228,91 +244,5 @@ class _PostFeedState extends State<PostFeed> {
   int _columnsForWidth(double width) {
     final target = width ~/ 280;
     return target.clamp(2, 6);
-  }
-}
-
-class _DampedScrollPhysics extends ScrollPhysics {
-  const _DampedScrollPhysics({super.parent, this.dragDamping = 0.78, this.velocityDamping = 0.88});
-
-  final double dragDamping;
-  final double velocityDamping;
-
-  @override
-  _DampedScrollPhysics applyTo(ScrollPhysics? ancestor) {
-    return _DampedScrollPhysics(
-      parent: buildParent(ancestor),
-      dragDamping: dragDamping,
-      velocityDamping: velocityDamping,
-    );
-  }
-
-  @override
-  double applyPhysicsToUserOffset(ScrollMetrics position, double offset) {
-    final base = super.applyPhysicsToUserOffset(position, offset);
-    return base * dragDamping;
-  }
-
-  @override
-  Simulation? createBallisticSimulation(ScrollMetrics position, double velocity) {
-    return super.createBallisticSimulation(position, velocity * velocityDamping);
-  }
-}
-
-class _DampedScrollController extends ScrollController {
-  _DampedScrollController({
-    this.wheelDamping = 0.55,
-    this.wheelAnimDuration = const Duration(milliseconds: 120),
-  });
-
-  final double wheelDamping;
-  final Duration wheelAnimDuration;
-
-  @override
-  ScrollPosition createScrollPosition(ScrollPhysics physics, ScrollContext context, ScrollPosition? oldPosition) {
-    return _DampedScrollPosition(
-      physics: physics,
-      context: context,
-      oldPosition: oldPosition,
-      wheelDamping: wheelDamping,
-      wheelAnimDuration: wheelAnimDuration,
-    );
-  }
-}
-
-class _DampedScrollPosition extends ScrollPositionWithSingleContext {
-  _DampedScrollPosition({
-    required super.physics,
-    required super.context,
-    super.oldPosition,
-    required this.wheelDamping,
-    required this.wheelAnimDuration,
-  });
-
-  final double wheelDamping;
-  final Duration wheelAnimDuration;
-
-  double? _wheelTarget;
-  int _wheelSeq = 0;
-
-  @override
-  void pointerScroll(double delta) {
-    if (delta == 0) return;
-
-    final base = _wheelTarget ?? pixels;
-    final target = (base + delta * wheelDamping).clamp(minScrollExtent, maxScrollExtent);
-    _wheelTarget = target;
-
-    final seq = ++_wheelSeq;
-    unawaited(
-      animateTo(
-        _wheelTarget!,
-        duration: wheelAnimDuration,
-        curve: Curves.easeOutCubic,
-      ).catchError((_) {}).whenComplete(() {
-        if (seq == _wheelSeq) {
-          _wheelTarget = null;
-        }
-      }),
-    );
   }
 }
