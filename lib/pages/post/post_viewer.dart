@@ -63,7 +63,7 @@ class _PostViewerState extends State<PostViewer> {
           builder: (context, time, child) => Positioned.fill(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onSecondaryTapDown: (details) => _showContextMenu(details.globalPosition, post),
+              onSecondaryTapDown: (details) => _showContextMenu(details.localPosition, post),
               child: Listener(
                 onPointerSignal: (event) {
                   if (event is! PointerScrollEvent) return;
@@ -200,7 +200,7 @@ class _PostViewerState extends State<PostViewer> {
   Widget _buildHeroAwareImage({required double time, required String heroThumbUrl, required Post post}) {
     final image = CachedNetworkImage(
       fit: BoxFit.cover,
-      imageUrl: post.jpegUrl ?? post.fileUrl ?? post.sampleUrl ?? heroThumbUrl,
+      imageUrl: post.jpegUrl ?? post.fileUrl ?? heroThumbUrl,
       progressIndicatorBuilder: (context, url, progress) => Stack(
         fit: StackFit.expand,
         children: [
@@ -208,9 +208,15 @@ class _PostViewerState extends State<PostViewer> {
             imageFilter: ImageFilter.blur(sigmaX: 12.0 * time, sigmaY: 12.0 * time),
             child: CachedNetworkImage(
               fit: BoxFit.contain,
-              imageUrl: heroThumbUrl,
+              imageUrl: post.sampleUrl ?? post.previewUrl,
               width: post.width.toDouble(),
               height: post.height.toDouble(),
+              progressIndicatorBuilder: (context, url, progress) => CachedNetworkImage(
+                fit: BoxFit.contain,
+                imageUrl: post.previewUrl,
+                width: post.width.toDouble(),
+                height: post.height.toDouble(),
+              ),
             ),
           ),
           const Center(

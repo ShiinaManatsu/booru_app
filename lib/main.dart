@@ -35,7 +35,6 @@ Future<void> main() async {
   if (_useWin11TitleBar) {
     await _initWindowsTitleBar();
   }
-
   runApp(const BooruApp());
 }
 
