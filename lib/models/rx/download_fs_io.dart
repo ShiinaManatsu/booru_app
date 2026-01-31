@@ -59,18 +59,14 @@ Future<String?> prepareTargetPath(Post post, String fileName, {bool skipIfExists
     }
     return _uniquePath(base, fileName);
   } else if (isAndroid) {
-    final dirs = await getExternalStorageDirectories(type: StorageDirectory.pictures);
-    final dir = await AppSettings.savePath();
-    final base = dir.isNotEmpty ? dir : (dirs?.first.path ?? '');
-    if (base.isNotEmpty) {
-      await Directory(base).create(recursive: true);
-      if (skipIfExists) {
-        final candidate = p.join(base, _sanitizeFileNameForFs(fileName));
-        if (await File(candidate).exists()) return candidate;
-      }
-      return _uniquePath(base, fileName);
+    // On Android we save into the system gallery (MediaStore) after download.
+    // Download into a temporary file first.
+    final temp = await getTemporaryDirectory();
+    if (skipIfExists) {
+      final candidate = p.join(temp.path, _sanitizeFileNameForFs(fileName));
+      if (await File(candidate).exists()) return candidate;
     }
-    return null;
+    return _uniquePath(temp.path, fileName);
   } else {
     final temp = await getTemporaryDirectory();
     if (skipIfExists) {

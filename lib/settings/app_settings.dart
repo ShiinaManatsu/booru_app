@@ -176,12 +176,15 @@ class AppSettings {
   }
 
   static Future<void> _initSavePaths() async {
+    // Android uses MediaStore/gallery saving; no user-configurable filesystem paths.
+    if (!kIsWeb && isAndroid) return;
+
     for (final client in ClientType.values) {
       final existing = await savePath(client: client);
       if (existing.isNotEmpty) continue;
 
       String defaultPath = "";
-      if (!kIsWeb && (isAndroid || isIOS)) {
+      if (!kIsWeb && (isIOS)) {
         final dir = await getExternalStorageDirectory();
         if (dir != null) {
           defaultPath = dir.path;

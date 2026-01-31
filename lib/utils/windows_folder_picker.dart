@@ -1,11 +1,12 @@
-import 'dart:io';
-
-import 'package:filepicker_windows/filepicker_windows.dart';
 import 'package:flutter/foundation.dart';
+import 'package:file_selector/file_selector.dart';
 
 /// Opens the native Windows folder picker.
 ///
-/// Uses `filepicker_windows`'s `DirectoryPicker`, which wraps IFileOpenDialog.
+/// Uses `file_selector`'s `getDirectoryPath`.
+///
+/// Note: despite the name, this implementation is cross-platform, but the app
+/// only calls it on Windows today.
 /// Returns the selected folder path, or null if the user cancelled.
 Future<String?> pickWindowsFolder({
   String title = 'Select folder',
@@ -13,21 +14,10 @@ Future<String?> pickWindowsFolder({
   int hwndOwner = 0,
 }) async {
   try {
-    final picker = DirectoryPicker()
-      ..title = title
-      ..hWndOwner = hwndOwner;
-
-    if (initialDirectory != null) {
-      final normalized = initialDirectory.trim();
-      if (normalized.isNotEmpty && Directory(normalized).existsSync()) {
-        picker
-          ..initialDirectory = normalized
-          ..alwaysShowInitialDirectory = true;
-      }
-    }
-
-    final dir = picker.getDirectory();
-    return dir?.path;
+    return await getDirectoryPath(
+      initialDirectory: initialDirectory,
+      confirmButtonText: 'Select',
+    );
   } catch (e, st) {
     // Avoid hard-crashing the app if COM/native APIs throw.
     if (kDebugMode) {

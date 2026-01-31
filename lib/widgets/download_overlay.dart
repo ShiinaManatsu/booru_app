@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:booru_app/models/rx/task_bloc.dart';
 import 'package:booru_app/settings/app_settings.dart';
+import 'package:booru_app/utils/platform.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
@@ -106,9 +107,16 @@ class _DownloadOverlayState extends State<DownloadOverlay> {
     // NOTE: Don't use AnimatedSwitcher here because it keeps the old+new children
     // alive during the transition, which would duplicate our AnimatedList GlobalKey.
     final show = _tasks.isNotEmpty;
+
+    final insets = MediaQuery.of(context).padding;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final panelWidth = (screenWidth - 32).clamp(0.0, _panelWidth);
+
     return Positioned(
-      right: 16,
-      bottom: widget.bottomPadding,
+      left: isAndroid ? 0 : null,
+      right: isAndroid ? 0 : 16,
+      top: isAndroid ? (insets.top + 12) : null,
+      bottom: isAndroid ? null : widget.bottomPadding,
       child: IgnorePointer(
         ignoring: !show,
         child: ExcludeSemantics(
@@ -121,7 +129,7 @@ class _DownloadOverlayState extends State<DownloadOverlay> {
               duration: _panelAnimDuration,
               curve: Curves.easeOutCubic,
               opacity: show ? 1 : 0,
-              child: _buildPanel(context),
+              child: isAndroid ? Center(child: _buildPanel(context, width: panelWidth)) : _buildPanel(context),
             ),
           ),
         ),
@@ -129,11 +137,11 @@ class _DownloadOverlayState extends State<DownloadOverlay> {
     );
   }
 
-  Widget _buildPanel(BuildContext context) {
+  Widget _buildPanel(BuildContext context, {double width = _panelWidth}) {
     final theme = Theme.of(context);
 
     return SizedBox(
-      width: _panelWidth,
+      width: width,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: BackdropFilter(

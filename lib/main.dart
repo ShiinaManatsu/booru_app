@@ -12,6 +12,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:booru_app/utils/aura_controller.dart';
 import 'package:booru_app/widgets/download_overlay.dart';
@@ -25,6 +26,16 @@ final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (isAndroid) {
+    // Prefer the highest refresh rate on supported Android devices.
+    // Safe to ignore failures (e.g., unsupported OEMs / emulators).
+    try {
+      await FlutterDisplayMode.setHighRefreshRate();
+    } catch (_) {
+      // no-op
+    }
+  }
 
   if (isDesktop) {
     SharedPreferencesExtension.windows();

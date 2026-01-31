@@ -95,18 +95,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     setState(() => AppSettings.safeMode = v);
                   },
                 )),
-            SettingsTile.navigation(
-              leading: const Icon(Icons.folder),
-              title: const Text('Yande save path'),
-              value: Text(_yandePath.isEmpty ? 'Not set' : _yandePath),
-              onPressed: (_) => _pickFolder(ClientType.Yande),
-            ),
-            SettingsTile.navigation(
-              leading: const Icon(Icons.folder_special),
-              title: const Text('Konachan save path'),
-              value: Text(_konachanPath.isEmpty ? 'Not set' : _konachanPath),
-              onPressed: (_) => _pickFolder(ClientType.Konachan),
-            ),
+            if (!isAndroid)
+              SettingsTile.navigation(
+                leading: const Icon(Icons.folder),
+                title: const Text('Yande save path'),
+                value: Text(_yandePath.isEmpty ? 'Not set' : _yandePath),
+                onPressed: (_) => _pickFolder(ClientType.Yande),
+              ),
+            if (!isAndroid)
+              SettingsTile.navigation(
+                leading: const Icon(Icons.folder_special),
+                title: const Text('Konachan save path'),
+                value: Text(_konachanPath.isEmpty ? 'Not set' : _konachanPath),
+                onPressed: (_) => _pickFolder(ClientType.Konachan),
+              ),
           ],
         ),
         SettingsSection(

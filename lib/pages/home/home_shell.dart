@@ -310,7 +310,16 @@ class _NavItem extends StatelessWidget {
           children: [
             FaIcon(icon, size: 18, color: color),
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(color: color, fontSize: 12)),
+            SizedBox(
+              width: double.infinity,
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: color, fontSize: 12),
+              ),
+            ),
           ],
         ),
       ),

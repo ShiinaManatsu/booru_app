@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:saver_gallery/saver_gallery.dart';
+import 'package:path/path.dart' as p;
+import 'package:booru_app/settings/app_settings.dart';
 import '../../utils/platform.dart';
 import 'download_fs_stub.dart' if (dart.library.io) 'download_fs_io.dart';
 
@@ -86,11 +89,14 @@ class TaskBloc {
 
 class DownloadTask {
   DownloadTask.fromDownload(this.post, {required this.owner}) {
+    client = AppSettings.currentClient;
     _download(post);
   }
 
   final TaskBloc owner;
   final Post post;
+
+  late final ClientType client;
 
   int totalLength = 1;
   int downloadedLength = 0;
@@ -160,6 +166,7 @@ class DownloadTask {
       isDownloaded = true;
       owner.removeTask.add(this);
       owner.progressCompleteUpdate.add(null);
+      await _maybeSaveToGallery(sourcePath: targetPath, originalFileName: fileName);
       _maybeNotify();
       if (!_completer.isCompleted) _completer.complete(targetPath);
       return;
@@ -174,12 +181,40 @@ class DownloadTask {
       isDownloaded = true;
       owner.removeTask.add(this);
       owner.progressCompleteUpdate.add(null);
+      await _maybeSaveToGallery(sourcePath: targetPath, originalFileName: fileName);
       _maybeNotify();
       if (!_completer.isCompleted) _completer.complete(targetPath);
     } catch (_) {
       owner.removeTask.add(this);
       owner.progressCompleteUpdate.add(null);
       if (!_completer.isCompleted) _completer.complete(null);
+    }
+  }
+
+  Future<void> _maybeSaveToGallery({required String sourcePath, required String originalFileName}) async {
+    if (!isAndroid) return;
+    if (canceled) return;
+
+    final ext = p.extension(originalFileName).replaceFirst('.', '').trim();
+    final safeName = originalFileName.trim().isEmpty ? 'post_${post.id}' : originalFileName.trim();
+    final folder = client == ClientType.Konachan ? 'Konachan' : 'Yande';
+
+    try {
+      final result = await SaverGallery.saveFile(
+        filePath: sourcePath,
+        fileName: safeName,
+        androidRelativePath: 'Pictures/$folder',
+        skipIfExists: true,
+      );
+
+      // If it was successfully copied into MediaStore, we can optionally
+      // delete the temp file. Keep it for now so the "Open" button still works.
+      // ignore: unused_local_variable
+      final _ = result.isSuccess;
+      // ignore: unused_local_variable
+      final __ = ext;
+    } catch (_) {
+      // Best-effort: if it fails, we still keep the downloaded file.
     }
   }
 
