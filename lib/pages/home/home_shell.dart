@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'dart:async';
 
+import 'package:booru_app/constants/glass_settings.dart';
 import 'package:booru_app/models/rx/booru_api.dart';
 import 'package:booru_app/pages/home/post_feed.dart';
 import 'package:booru_app/pages/pool/pool_page.dart';
@@ -11,6 +12,7 @@ import 'package:booru_app/settings/language.dart';
 import 'package:booru_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 class HomeShell extends StatefulWidget {
@@ -252,67 +254,20 @@ class _BottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            color: Colors.black54,
-            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                for (var i = 0; i < tabs.length; i++)
-                  Expanded(
-                    child: _NavItem(
-                      label: tabs[i].label,
-                      icon: tabs[i].icon,
-                      selected: i == index,
-                      onTap: () => onChanged(i),
-                    ),
-                  ),
-              ],
+      child: GlassBottomBar(
+        // Slightly higher quality for a single bottom bar is fine.
+        quality: GlassQuality.premium,
+        selectedIndex: index,
+        indicatorSettings: RecommendedGlassSettings.interactive,
+        onTabSelected: onChanged,
+        tabs: [
+          for (final t in tabs)
+            GlassBottomBarTab(
+              label: t.label,
+              icon: t.icon,
+              selectedIcon: t.icon,
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.label,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = selected ? ShadTheme.of(context).colorScheme.primary : Colors.white70;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-        decoration: BoxDecoration(
-          color: selected ? Colors.white.withValues(alpha: 0.08) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FaIcon(icon, size: 18, color: color),
-            const SizedBox(height: 4),
-            Text(label, style: TextStyle(color: color, fontSize: 12)),
-          ],
-        ),
+        ],
       ),
     );
   }

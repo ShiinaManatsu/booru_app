@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:adaptive_aura/adaptive_aura.dart';
+import 'package:booru_app/constants/glass_settings.dart';
 import 'package:booru_app/extensions/shared_preferences_extension.dart';
 import 'package:booru_app/models/rx/booru_api.dart';
 import 'package:booru_app/models/rx/tag_index.dart';
@@ -12,6 +13,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:booru_app/utils/aura_controller.dart';
 import 'package:booru_app/widgets/download_overlay.dart';
@@ -25,6 +27,16 @@ final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initializes the Liquid Glass library (loads shaders, etc.).
+  // Safe to call on desktop; if it fails we continue with normal UI.
+  try {
+    await LiquidGlassWidgets.initialize();
+  } catch (e) {
+    if (kDebugMode) {
+      debugPrint('[LiquidGlass] initialize failed: $e');
+    }
+  }
 
   if (isDesktop) {
     SharedPreferencesExtension.windows();
@@ -70,27 +82,32 @@ class BooruApp extends StatelessWidget {
                 return Stack(
                   children: [
                     Positioned.fill(
+                      child: AdaptiveLiquidGlassLayer(
+                        settings: RecommendedGlassSettings.standard,
+                        quality: GlassQuality.standard, // Scrollable content - use standard
                         child: _AuraShell(
-                      child: ShadApp(
-                        backgroundColor: Colors.transparent,
-                        debugShowCheckedModeBanner: false,
-                        navigatorKey: _rootNavigatorKey,
-                        theme: ShadThemeData(
-                          brightness: Brightness.dark,
-                          colorScheme: ShadSlateColorScheme.dark(),
-                        ),
-                        builder: (context, child) {
-                          if (child == null) return const SizedBox.shrink();
-                          return _GlobalBackHandler(
-                            child: Padding(
-                              padding: EdgeInsets.only(top: topPadding),
-                              child: child,
+                          child: ShadApp(
+                            backgroundColor: Colors.transparent,
+                            debugShowCheckedModeBanner: false,
+                            navigatorKey: _rootNavigatorKey,
+                            theme: ShadThemeData(
+                              brightness: Brightness.dark,
+                              colorScheme: ShadSlateColorScheme.dark(),
                             ),
-                          );
-                        },
-                        home: const HomeShell(),
+                            builder: (context, child) {
+                              if (child == null) return const SizedBox.shrink();
+                              return _GlobalBackHandler(
+                                child: Padding(
+                                  padding: EdgeInsets.only(top: topPadding),
+                                  child: child,
+                                ),
+                              );
+                            },
+                            home: const HomeShell(),
+                          ),
+                        ),
                       ),
-                    )),
+                    ),
                     if (_useWin11TitleBar)
                       const Positioned(
                         top: 0,

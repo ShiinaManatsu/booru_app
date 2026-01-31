@@ -27,6 +27,7 @@ class _SearchPageState extends State<SearchPage> {
   ClientType _client = AppSettings.currentClient;
   late final VoidCallback _clientListener;
   Timer? _debounce;
+  Timer? _tagIndexTimeoutTimer;
   bool _loadingSuggestions = false;
   List<String> _suggestions = const <String>[];
   int _suggestSeq = 0;
@@ -213,10 +214,24 @@ class _SearchPageState extends State<SearchPage> {
     // Build index in background; keep UI responsive.
     if (mounted) setState(() => _loadingSuggestions = true);
     try {
-      await TagIndexService.instance.ensureLoaded(client: _client).timeout(const Duration(seconds: 6));
+      // Avoid Future.timeout here: it creates an internal Timer that can show
+      // up as a "pending timer" in widget tests when the tree is disposed
+      // quickly. Instead, manage our own cancelable timer.
+      _tagIndexTimeoutTimer?.cancel();
+      final timeout = Completer<void>();
+      _tagIndexTimeoutTimer = Timer(const Duration(seconds: 6), () {
+        if (!timeout.isCompleted) timeout.complete();
+      });
+
+      await Future.any([
+        TagIndexService.instance.ensureLoaded(client: _client).catchError((_) {}),
+        timeout.future,
+      ]);
     } catch (_) {
       // Ignore failures; remote suggestions still work.
     } finally {
+      _tagIndexTimeoutTimer?.cancel();
+      _tagIndexTimeoutTimer = null;
       if (mounted) setState(() => _loadingSuggestions = false);
     }
   }
@@ -380,6 +395,7 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _tagIndexTimeoutTimer?.cancel();
     AppSettings.currentClientListenable.removeListener(_clientListener);
     _controller.dispose();
     _inputFocusNode.dispose();

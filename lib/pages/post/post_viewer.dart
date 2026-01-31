@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:booru_app/constants/glass_settings.dart';
 import 'package:booru_app/main.dart';
 import 'package:booru_app/models/rx/booru_api.dart';
 import 'package:booru_app/models/rx/update_args.dart';
@@ -14,6 +15,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:booru_app/utils/aura_controller.dart';
 import 'package:booru_app/utils/clipboard_image.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PostViewer extends StatefulWidget {
@@ -90,9 +92,9 @@ class _PostViewerState extends State<PostViewer> {
         Positioned(
           top: 16,
           left: 16,
-          child: _GlassButton(
+          child: _ViewerGlassIconButton(
             icon: FontAwesomeIcons.arrowLeft,
-            onTap: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(context).pop(),
           ),
         ),
         Positioned(
@@ -100,10 +102,10 @@ class _PostViewerState extends State<PostViewer> {
           right: 16,
           child: Column(
             children: [
-              _GlassButton(
+              _ViewerGlassIconButton(
                 icon: FontAwesomeIcons.download,
-                onTap: _downloading
-                    ? () {}
+                onPressed: _downloading
+                    ? null
                     : () async {
                         setState(() => _downloading = true);
                         await taskBloc.downloadNow(post);
@@ -112,17 +114,17 @@ class _PostViewerState extends State<PostViewer> {
                       },
               ),
               const SizedBox(height: 12),
-              _GlassButton(
+              _ViewerGlassIconButton(
                 icon: FontAwesomeIcons.heart,
-                onTap: () => BooruAPI.votePost(
+                onPressed: () => BooruAPI.votePost(
                   postID: post.id,
                   type: VoteType.Favorite,
                 ),
               ),
               const SizedBox(height: 12),
-              _GlassButton(
+              _ViewerGlassIconButton(
                 icon: FontAwesomeIcons.circleInfo,
-                onTap: () => _showPostDetails(post),
+                onPressed: () => _showPostDetails(post),
               ),
               const SizedBox(height: 12),
             ],
@@ -329,33 +331,26 @@ class _PostViewerState extends State<PostViewer> {
   }
 
   Future<void> _showPostDetails(Post post) async {
-    await showModalBottomSheet<void>(
+    final maxH = MediaQuery.of(context).size.height * 0.72;
+    await GlassSheet.show<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      barrierColor: Colors.transparent,
+      quality: GlassQuality.premium,
+      padding: const EdgeInsets.all(16),
+      backgroundColor: Colors.black26,
+      settings: RecommendedGlassSettings.interactive.copyWith(
+        blur: 4,
+        lightIntensity: 50,
+        ambientStrength: 0,
+      ),
       builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                child: Material(
-                  color: Colors.black.withAlpha((0.55 * 255).round()),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height * 0.72,
-                    ),
-                    child: _PostDetailsSheet(
-                      post: post,
-                      resolveTagTypes: _resolveTagTypes,
-                      onOpenUrl: _tryOpenExternalUrl,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxH),
+          child: _PostDetailsSheet(
+            post: post,
+            resolveTagTypes: _resolveTagTypes,
+            onOpenUrl: _tryOpenExternalUrl,
           ),
         );
       },
@@ -650,6 +645,8 @@ class _PostDetailsSheetState extends State<_PostDetailsSheet> {
     final source = p.sourceUrl?.trim();
     final sourceIsLink = source != null && source.isNotEmpty && (Uri.tryParse(source)?.hasScheme ?? false);
 
+    // Add a subtle neutral base tint so text stays readable even when the
+    // refracted background is high-contrast.
     return Padding(
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -729,10 +726,17 @@ class _PostDetailsSheetState extends State<_PostDetailsSheet> {
                     children: _tags.map((t) {
                       final type = typeMap[t] ?? TagType.None;
                       final color = TagToColorMap[type] ?? const Color.fromARGB(255, 118, 118, 118);
-                      return Chip(
-                        label: Text(t, style: const TextStyle(color: Colors.white)),
-                        backgroundColor: color.withAlpha((0.35 * 255).round()),
-                        side: BorderSide(color: color.withAlpha((0.70 * 255).round())),
+                      return GlassChip(
+                        label: t,
+                        onTap: () {},
+                        selected: true,
+                        selectedColor: color.withAlpha((0.26 * 255).round()),
+                        labelStyle: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        quality: GlassQuality.standard,
                       );
                     }).toList(growable: false),
                   ),
@@ -765,29 +769,27 @@ class _PostDetailsSheetState extends State<_PostDetailsSheet> {
   }
 }
 
-class _GlassButton extends StatelessWidget {
-  const _GlassButton({required this.icon, required this.onTap});
+class _ViewerGlassIconButton extends StatelessWidget {
+  const _ViewerGlassIconButton({
+    required this.icon,
+    required this.onPressed,
+  });
 
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Material(
-          color: Colors.white.withAlpha((0.08 * 255).round()),
-          child: InkWell(
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: FaIcon(icon, color: Colors.white, size: 18),
-            ),
-          ),
-        ),
-      ),
+    final glow = Theme.of(context).colorScheme.primary.withValues(alpha: 0.35);
+    return GlassIconButton(
+      icon: icon,
+      onPressed: onPressed,
+      size: 44,
+      shape: GlassIconButtonShape.circle,
+      glowColor: glow,
+      useOwnLayer: true,
+      quality: GlassQuality.premium,
+      // Keep defaults for settings; we only need consistent styling here.
     );
   }
 }

@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../liquid_glass_widgets"
 		}
 	],
 	"settings": {}
